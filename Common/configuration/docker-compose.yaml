@@ -1,0 +1,446 @@
+version: '2'
+
+networks:
+  example:
+
+services:
+  tlsca.orderingservice.com:
+    container_name: tlsca.orderingservice.com
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b tls-ca-admin:tls-ca-adminpw'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_PORT=7052
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CA_NAME=tlsca.orderingservice.com
+        - FABRIC_CA_SERVER_CSR_CN=tlsca.orderingservice.com
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+        - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=127.0.0.1:9444
+    volumes:
+        - ${HOME}/ttz/Org1/fabric-ca/server/tls-ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - example
+    ports:
+        - 7052:7052
+
+  orgca.orderingservice.com:
+    container_name: orgca.orderingservice.com
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b org-ca-admin:org-ca-adminpw'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_PORT=7053
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_TLS_CERTFILE=../tls/cert.pem
+        - FABRIC_CA_SERVER_TLS_KEYFILE=../tls/key.pem
+        - FABRIC_CA_SERVER_CSR_CN=orgca.orderingservice.com
+        - FABRIC_CA_SERVER_CA_NAME=orgca.orderingservice.com
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - ${HOME}/ttz/Org1/fabric-ca/server/org-ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - example
+    ports:
+        - 7053:7053
+
+  orderer1.orderingservice.com:
+    container_name: orderer1.orderingservice.com
+    image: hyperledger/fabric-orderer:2.3
+    environment:
+        - ORDERER_HOME=/tmp/hyperledger/orderer1
+        - ORDERER_HOST=orderer1.orderingservice.com
+        - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+        - ORDERER_GENERAL_LOCALMSPID=orderingservice
+        - ORDERER_GENERAL_LOCALMSPDIR=/tmp/hyperledger/orderingservice/orderer1/localMsp/
+        - ORDERER_GENERAL_TLS_ENABLED=true
+        - ORDERER_GENERAL_TLS_CERTIFICATE=/tmp/hyperledger/orderingservice/orderer1/tls/cert.pem
+        - ORDERER_GENERAL_TLS_PRIVATEKEY=/tmp/hyperledger/orderingservice/orderer1/tls/key.pem
+        - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+        - ORDERER_GENERAL_LOGLEVEL=debug
+        - ORDERER_DEBUG_BROADCASTTRACEDIR=/tmp/hyperledger/orderingservice/orderer1/data/logs
+        - ORDERER_FILELEDGER_LOCATION=/tmp/hyperledger/orderingservice/orderer1/ledgers
+        - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+        - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7051
+        - ORDERER_ADMIN_TLS_ENABLED=true
+        - ORDERER_ADMIN_TLS_PRIVATEKEY=/tmp/hyperledger/orderingservice/orderer1/tls/key.pem
+        - ORDERER_ADMIN_TLS_CERTIFICATE=/tmp/hyperledger/orderingservice/orderer1/tls/cert.pem
+        - ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED=true
+        - ORDERER_ADMIN_TLS_CLIENTROOTCAS=/tmp/hyperledger/orderingservice/orderer1/tls/tls-ca-cert.pem
+        - FABRIC_CFG_PATH=/tmp/hyperledger/orderingservice/orderer1/
+        - FABRIC_LOGGING_SPEC=DEBUG
+    volumes:
+        - ${PWD}/orderingservice/orderer1:/tmp/hyperledger/orderingservice/orderer1/
+    ports:
+        - 7050:7050
+        - 7051:7051
+    networks:
+        - example
+
+  tlsca.Org1.com:
+    container_name: tlsca.Org1.com
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b tls-ca-admin:tls-ca-adminpw --port 8052'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CA_NAME=tlsca.Org1.com
+        - FABRIC_CA_SERVER_CSR_CN=tlsca.Org1.com
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+        - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=127.0.0.1:9444
+    volumes:
+        - ${PWD}/Org1/server/tls-ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - example
+    ports:
+        - 8052:8052
+
+
+  orgca.Org1.com:
+    container_name: orgca.Org1.com
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b org-ca-admin:org-ca-adminpw'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_PORT=8053
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_TLS_CERTFILE=../tls/cert.pem
+        - FABRIC_CA_SERVER_TLS_KEYFILE=../tls/key.pem
+        - FABRIC_CA_SERVER_CSR_CN=orgca.Org1.com
+        - FABRIC_CA_SERVER_CA_NAME=orgca.Org1.com
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - ${PWD}/Org1/server/org-ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - example
+    ports:
+        - 8053:8053
+
+
+  peer1.Org1.com:
+    container_name: peer1.Org1.com
+    image: hyperledger/fabric-peer:2.3
+    environment:
+        - CORE_PEER_ID=peer1.Org1.com
+        - CORE_PEER_ADDRESS=192.168.1.38:8054
+        - CORE_PEER_LOCALMSPID=Org1
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:8054
+        - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8055
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org1/peer1/localMsp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric-23_example
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/Org1/peer1/tls/Org1-peer1-tls-cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/Org1/peer1/tls/Org1-peer1-tls-key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org1/peer1/tls/tls-ca-cert.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=false
+        - CORE_PEER_GOSSIP_ORGLEADER=true
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=192.168.1.38:8054
+        - CORE_PEER_GOSSIP_BOOTSTRAP=192.168.1.38:8054
+        - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=peer1.Org1.com.couchdb:5984
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=dbadmin
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=dbadminpw
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/Org1/peer1
+    volumes:
+        - /var/run:/host/var/run
+        - ${PWD}/Org1/peer1:/tmp/hyperledger/Org1/peer1
+    ports:
+        - 8054:8054
+        - 8055:8055
+        - 9443:9443
+    depends_on:
+      - peer1.Org1.com.couchdb
+    networks:
+        - example
+
+  peer1.Org1.com.couchdb:
+    container_name: peer1.Org1.com.couchdb
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=dbadmin
+      - COUCHDB_PASSWORD=dbadminpw
+    ports:
+      - 5984
+    networks:
+      - example
+    volumes:
+      - ${PWD}/Org1/peer1/couchdb:/opt/couchdb/data
+
+  cli.peer1.Org1.com:
+    container_name: cli.peer1.Org1.com
+    image: hyperledger/fabric-tools:2.3
+    tty: true
+    environment:
+      - CORE_PEER_LOCALMSPID=Org1
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=192.168.1.38:8054
+      - FABRIC_CFG_PATH=/tmp/hyperledger
+      - ORDERER_TLS_CA=/tmp/hyperledger/orderingservice/client/tls-ca-cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org1/client/tls-ca-cert.pem
+      - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org1/client/org-ca/orgadmin/msp/
+      - CORE_PEER_TLS_ENABLED=true
+      - ORDERER_ADDRESS=192.168.1.48:7050
+    working_dir: /tmp/hyperledger
+    networks:
+      - example
+    volumes:
+      - .:/tmp/hyperledger
+
+  peer2.Org1.com:
+    container_name: peer2.Org1.com
+    image: hyperledger/fabric-peer:2.3
+    environment:
+        - CORE_PEER_ID=peer2.Org1.com
+        - CORE_PEER_ADDRESS=192.168.1.38:8064
+        - CORE_PEER_LOCALMSPID=Org1
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:8064
+        - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:8065
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org1/peer2/localMsp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric-23_example
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/Org1/peer2/tls/Org1-peer2-tls-cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/Org1/peer2/tls/Org1-peer2-tls-key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org1/peer2/tls/tls-ca-cert.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=false
+        - CORE_PEER_GOSSIP_ORGLEADER=true
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=192.168.1.38:8064
+        - CORE_PEER_GOSSIP_BOOTSTRAP=192.168.1.38:8064
+        - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=peer2.Org1.com.couchdb:5984
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=dbadmin
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=dbadminpw
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/Org1/peer2
+    volumes:
+        - /var/run:/host/var/run
+        - ${PWD}/Org1/peer2:/tmp/hyperledger/Org1/peer2
+    ports:
+        - 8064:8064
+        - 8065:8065
+    depends_on:
+      - peer2.Org1.com.couchdb
+    networks:
+        - example
+
+
+  peer2.Org1.com.couchdb:
+    container_name: peer2.Org1.com.couchdb
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=dbadmin
+      - COUCHDB_PASSWORD=dbadminpw
+    ports:
+      - 5984
+    networks:
+      - example
+    volumes:
+      - ${PWD}/Org1/peer2/couchdb:/opt/couchdb/data
+  
+  cli.peer2.Org1.com:
+    container_name: cli.peer2.Org1.com
+    image: hyperledger/fabric-tools:2.3
+    tty: true
+    environment:
+      - CORE_PEER_LOCALMSPID=Org1
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=192.168.1.38:8064
+      - FABRIC_CFG_PATH=/tmp/hyperledger
+      - ORDERER_TLS_CA=/tmp/hyperledger/orderingservice/client/tls-ca-cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org1/client/tls-ca-cert.pem
+      - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org1/client/org-ca/orgadmin/msp/
+      - CORE_PEER_TLS_ENABLED=true
+      - ORDERER_ADDRESS=192.168.1.48:7050
+    working_dir: /tmp/hyperledger
+    networks:
+      - example
+    volumes:
+      - .:/tmp/hyperledger
+
+  tlsca.Org2.com:
+    container_name: tlsca.Org2.com
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b tls-ca-admin:tls-ca-adminpw --port 9052'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_CA_NAME=Org2-ca-tls
+        - FABRIC_CA_SERVER_CSR_CN=Org2-ca-tls
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+        - FABRIC_CA_SERVER_OPERATIONS_LISTENADDRESS=127.0.0.1:9444
+    volumes:
+        - ${PWD}/Org2/server/tls-ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - example
+    ports:
+        - 9052:9052
+
+  orgca.Org2.com:
+    container_name: orgca.Org2.com
+    image: hyperledger/fabric-ca:latest
+    command: sh -c 'fabric-ca-server start -d -b org-ca-admin:org-ca-adminpw'
+    environment:
+        - FABRIC_CA_SERVER_HOME=/tmp/hyperledger/fabric-ca/crypto
+        - FABRIC_CA_SERVER_PORT=9053
+        - FABRIC_CA_SERVER_TLS_ENABLED=true
+        - FABRIC_CA_SERVER_TLS_CERTFILE=../tls/cert.pem
+        - FABRIC_CA_SERVER_TLS_KEYFILE=../tls/key.pem
+        - FABRIC_CA_SERVER_CSR_CN=Org2-rca
+        - FABRIC_CA_SERVER_CA_NAME=Org2-rca
+        - FABRIC_CA_SERVER_CSR_HOSTS=0.0.0.0
+        - FABRIC_CA_SERVER_DEBUG=true
+    volumes:
+        - ${PWD}/Org2/server/org-ca:/tmp/hyperledger/fabric-ca
+    networks:
+        - example
+    ports:
+        - 9053:9053
+
+
+  peer1.Org2.com:
+    container_name: peer1.Org2.com
+    image: hyperledger/fabric-peer:2.3
+    environment:
+        - CORE_PEER_ID=peer1.Org2.com
+        - CORE_PEER_ADDRESS=192.168.1.38:9054
+        - CORE_PEER_LOCALMSPID=Org2
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:9054
+        - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9055
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org2/peer1/localMsp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric-23_example
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/Org2/peer1/tls/Org2-peer1-tls-cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/Org2/peer1/tls/Org2-peer1-tls-key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org2/peer1/tls/tls-ca-cert.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=false
+        - CORE_PEER_GOSSIP_ORGLEADER=true
+        - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.Org2.com:9054
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.Org2.com:9054
+        - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=peer1.Org2.com.couchdb:5984
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=dbadmin
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=dbadminpw
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/Org2/peer1
+    volumes:
+        - /var/run:/host/var/run
+        - ${PWD}/Org2/peer1:/tmp/hyperledger/Org2/peer1
+    ports:
+        - 9054:9054
+        - 9055:9055
+    networks:
+        - example
+    depends_on:
+      - peer1.Org2.com.couchdb
+
+
+  peer1.Org2.com.couchdb:
+    container_name: peer1.Org2.com.couchdb
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=dbadmin
+      - COUCHDB_PASSWORD=dbadminpw
+    ports:
+      - 5984
+    networks:
+      - example
+    volumes:
+      - ${PWD}/Org2/peer1/couchdb:/opt/couchdb/data
+
+  cli.peer1.Org2.com:
+    container_name: cli.peer1.Org2.com
+    image: hyperledger/fabric-tools:2.3
+    tty: true
+    environment:
+      - CORE_PEER_LOCALMSPID=Org2
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=192.168.1.38:9054
+      - FABRIC_CFG_PATH=/tmp/hyperledger
+      - ORDERER_TLS_CA=/tmp/hyperledger/orderingservice/client/tls-ca-cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org2/client/tls-ca-cert.pem
+      - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org2/client/org-ca/orgadmin/msp/
+      - CORE_PEER_TLS_ENABLED=true
+      - ORDERER_ADDRESS=192.168.1.48:7050
+    working_dir: /tmp/hyperledger
+    networks:
+      - example
+    volumes:
+      - .:/tmp/hyperledger
+
+  peer2.Org2.com:
+    container_name: peer2.Org2.com
+    image: hyperledger/fabric-peer:2.3
+    environment:
+        - CORE_PEER_ID=peer2.Org2.com
+        - CORE_PEER_ADDRESS=192.168.1.38:9064
+        - CORE_PEER_LOCALMSPID=Org2
+        - CORE_PEER_LISTENADDRESS=0.0.0.0:9064
+        - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:9065
+        - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org2/peer2/localMsp
+        - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+        - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric-23_example
+        - FABRIC_LOGGING_SPEC=info
+        - CORE_PEER_TLS_ENABLED=true
+        - CORE_PEER_TLS_CERT_FILE=/tmp/hyperledger/Org2/peer2/tls/Org2-peer2-tls-cert.pem
+        - CORE_PEER_TLS_KEY_FILE=/tmp/hyperledger/Org2/peer2/tls/Org2-peer2-tls-key.pem
+        - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org2/peer2/tls/tls-ca-cert.pem
+        - CORE_PEER_GOSSIP_USELEADERELECTION=false
+        - CORE_PEER_GOSSIP_ORGLEADER=true
+        - CORE_PEER_GOSSIP_EXTERNALENDPOINT=192.168.1.38:9064
+        - CORE_PEER_GOSSIP_BOOTSTRAP=192.168.1.38:9064
+        - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=peer2.Org2.com.couchdb:5984
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=dbadmin
+        - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=dbadminpw
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/Org2/peer2
+    volumes:
+        - /var/run:/host/var/run
+        - ${PWD}/Org2/peer2:/tmp/hyperledger/Org2/peer2
+    ports:
+        - 9064:9064
+        - 9065:9065
+    depends_on:
+      - peer2.Org2.com.couchdb
+    networks:
+        - example
+
+
+  peer2.Org2.com.couchdb:
+    container_name: peer2.Org2.com.couchdb
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=dbadmin
+      - COUCHDB_PASSWORD=dbadminpw
+    ports:
+      - 5984
+    networks:
+      - example
+    volumes:
+      - ${PWD}/Org2/peer2/couchdb:/opt/couchdb/data
+  
+  cli.peer2.Org2.com:
+    container_name: cli.peer2.Org2.com
+    image: hyperledger/fabric-tools:2.3
+    tty: true
+    environment:
+      - CORE_PEER_LOCALMSPID=Org2
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=192.168.1.38:9064
+      - FABRIC_CFG_PATH=/tmp/hyperledger
+      - ORDERER_TLS_CA=/tmp/hyperledger/orderingservice/client/tls-ca-cert.pem
+      - CORE_PEER_TLS_ROOTCERT_FILE=/tmp/hyperledger/Org2/client/tls-ca-cert.pem
+      - CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/Org2/client/org-ca/orgadmin/msp/
+      - CORE_PEER_TLS_ENABLED=true
+      - ORDERER_ADDRESS=192.168.1.48:7050
+    working_dir: /tmp/hyperledger
+    networks:
+      - example
+    volumes:
+      - .:/tmp/hyperledger

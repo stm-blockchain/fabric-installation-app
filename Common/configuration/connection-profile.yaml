@@ -1,0 +1,218 @@
+1: ---
+2: #
+3: # [Required]. A connection profile contains information about a set of network
+4: # components. It is typically used to configure gateway, allowing applications
+5: # interact with a network channel without worrying about the underlying
+6: # topology. A connection profile is normally created by an administrator who
+7: # understands this topology.
+8: #
+9: name: "papernet.magnetocorp.profile.sample"
+10: #
+11: # [Optional]. Analogous to HTTP, properties with an "x-" prefix are deemed
+12: # "application-specific", and ignored by the gateway. For example, property
+13: # "x-type" with value "hlfv1" was originally used to identify a connection
+14: # profile for Fabric 1.x rather than 0.x.
+15: #
+16: x-type: "hlfv1"
+17: #
+18: # [Required]. A short description of the connection profile
+19: #
+20: description: "Sample connection profile for documentation topic"
+21: #
+22: # [Required]. Connection profile schema version. Used by the gateway to
+23: # interpret these data.
+24: #
+25: version: "1.0"
+26: #
+27: # [Optional]. A logical description of each network channel; its peer and
+28: # orderer names and their roles within the channel. The physical details of
+29: # these components (e.g. peer IP addresses) will be specified later in the
+30: # profile; we focus first on the logical, and then the physical.
+31: #
+32: channels:
+33:   #
+34:   # [Optional]. papernet is the only channel in this connection profile
+35:   #
+36:   papernet:
+37:     #
+38:     # [Optional]. Channel orderers for PaperNet. Details of how to connect to
+39:     # them is specified later, under the physical "orderers:" section
+40:     #
+41:     orderers:
+42:     #
+43:     # [Required]. Orderer logical name
+44:     #
+45:       - orderer1.magnetocorp.example.com
+46:     #
+47:     # [Optional]. Peers and their roles
+48:     #
+49:     peers:
+50:     #
+51:     # [Required]. Peer logical name
+52:     #
+53:       peer1.magnetocorp.example.com:
+54:         #
+55:         # [Optional]. Is this an endorsing peer? (It must have chaincode
+56:         # installed.) Default: true
+57:         #
+58:         endorsingPeer: true
+59:         #
+60:         # [Optional]. Is this peer used for query? (It must have chaincode
+61:         # installed.) Default: true
+62:         #
+63:         chaincodeQuery: true
+64:         #
+65:         # [Optional]. Is this peer used for non-chaincode queries? All peers
+66:         # support these types of queries, which include queryBlock(),
+67:         # queryTransaction(), etc. Default: true
+68:         #
+69:         ledgerQuery: true
+70:         #
+71:         # [Optional]. Is this peer used as an event hub? All peers can produce
+72:         # events. Default: true
+73:         #
+74:         eventSource: true
+75:       #
+76:       peer2.magnetocorp.example.com:
+77:         endorsingPeer: true
+78:         chaincodeQuery: true
+79:         ledgerQuery: true
+80:         eventSource: true
+81:       #
+82:       peer3.magnetocorp.example.com:
+83:         endorsingPeer: false
+84:         chaincodeQuery: false
+85:         ledgerQuery: true
+86:         eventSource: true
+87:       #
+88:       peer9.digibank.example.com:
+89:         endorsingPeer: true
+90:         chaincodeQuery: false
+91:         ledgerQuery: false
+92:         eventSource: false
+93: #
+94: # [Required]. List of organizations for all channels. At least one organization
+95: # is required.
+96: #
+97: organizations:
+98:    #
+99:    # [Required]. Organizational information for MagnetoCorp
+100:   #
+101:   MagnetoCorp:
+102:     #
+103:     # [Required]. The MSPID used to identify MagnetoCorp
+104:     #
+105:     mspid: MagnetoCorpMSP
+106:     #
+107:     # [Required]. The MagnetoCorp peers
+108:     #
+109:     peers:
+110:       - peer1.magnetocorp.example.com
+111:       - peer2.magnetocorp.example.com
+112:       - peer3.magnetocorp.example.com
+113:     #
+114:     # [Optional]. Fabric-CA Certificate Authorities.
+115:     #
+116:     certificateAuthorities:
+117:       - ca-magnetocorp
+118:   #
+119:   # [Optional]. Organizational information for DigiBank
+120:   #
+121:   DigiBank:
+122:     #
+123:     # [Required]. The MSPID used to identify DigiBank
+124:     #
+125:     mspid: DigiBankMSP
+126:     #
+127:     # [Required]. The DigiBank peers
+128:     #
+129:     peers:
+130:       - peer9.digibank.example.com
+131: #
+132: # [Optional]. Orderer physical information, by orderer name
+133: #
+134: orderers:
+135:   #
+136:   # [Required]. Name of MagnetoCorp orderer
+137:   #
+138:   orderer1.magnetocorp.example.com:
+139:     #
+140:     # [Required]. This orderer's IP address
+141:     #
+142:     url: grpc://localhost:7050
+143:     #
+144:     # [Optional]. gRPC connection properties used for communication
+145:     #
+146:     grpcOptions:
+147:       ssl-target-name-override: orderer1.magnetocorp.example.com
+148: #
+149: # [Required]. Peer physical information, by peer name. At least one peer is
+150: # required.
+151: #
+152: peers:
+153:   #
+154:   # [Required]. First MagetoCorp peer physical properties
+155:   #
+156:   peer1.magnetocorp.example.com:
+157:     #
+158:     # [Required]. Peer's IP address
+159:     #
+160:     url: grpc://localhost:7151
+161:     #
+162:     # [Optional]. gRPC connection properties used for communication
+163:     #
+164:     grpcOptions:
+165:       ssl-target-name-override: peer1.magnetocorp.example.com
+166:       request-timeout: 120001
+167:   #
+168:   # [Optional]. Other MagnetoCorp peers
+169:   #
+170:   peer2.magnetocorp.example.com:
+171:     url: grpc://localhost:7251
+172:     grpcOptions:
+173:       ssl-target-name-override: peer2.magnetocorp.example.com
+174:       request-timeout: 120001
+175:   #
+176:   peer3.magnetocorp.example.com:
+177:     url: grpc://localhost:7351
+178:     grpcOptions:
+179:       ssl-target-name-override: peer3.magnetocorp.example.com
+180:       request-timeout: 120001
+181:   #
+182:   # [Required]. Digibank peer physical properties
+183:   #
+184:   peer9.digibank.example.com:
+185:     url: grpc://localhost:7951
+186:     grpcOptions:
+187:       ssl-target-name-override: peer9.digibank.example.com
+188:       request-timeout: 120001
+189: #
+190: # [Optional]. Fabric-CA Certificate Authority physical information, by name.
+191: # This information can be used to (e.g.) enroll new users. Communication is via
+192: # REST, hence options relate to HTTP rather than gRPC.
+193: #
+194: certificateAuthorities:
+195:   #
+196:   # [Required]. MagnetoCorp CA
+197:   #
+198:   ca1-magnetocorp:
+199:     #
+200:     # [Required]. CA IP address
+201:     #
+202:     url: http://localhost:7054
+203:     #
+204:     # [Optioanl]. HTTP connection properties used for communication
+205:     #
+206:     httpOptions:
+207:       verify: false
+208:     #
+209:     # [Optional]. Fabric-CA supports Certificate Signing Requests (CSRs). A
+210:     # registrar is needed to enroll new users.
+211:     #
+212:     registrar:
+213:       - enrollId: admin
+214:         enrollSecret: adminpw
+215:     #
+216:     # [Optional]. The name of the CA.
+217:     #
+218:     caName: ca-magnetocorp
