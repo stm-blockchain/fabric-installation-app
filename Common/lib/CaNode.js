@@ -1,4 +1,5 @@
 const BaseNode = require(`./BaseNode`)
+const childProcess = require("child_process");
 
 module.exports = class CertificateAuthority extends BaseNode {
 
@@ -56,6 +57,21 @@ module.exports = class CertificateAuthority extends BaseNode {
         return super.generateEnvFile(this._ENV_FILES);
     }
 
+    arrangeFolderStructure() {
+        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${this.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp/keystore`;
+        childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
+
+        if (!this.isTls) {
+            /**
+             * cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/signcerts/cert.pem $PWD/orderingservice/server/org-ca/tls/
+             * cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/keystore/key.pem $PWD/orderingservice/server/org-ca/tls/
+             */
+            let mspPath = `${this.BASE_PATH}/fabric-ca/client/tls-ca/${this.userName}/msp`;
+            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
+            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
+        }
+    }
+
     get serverStartCmd() {
         return `fabric-ca-server start -d -b ${this._userName}:${this._password}`
     }
@@ -88,6 +104,10 @@ module.exports = class CertificateAuthority extends BaseNode {
         return `${this._port}:7052`;
     }
 
+    get hostPort() {
+        return this._port;
+    }
+
     get mspDir() {
         return this._mspDir;
     }
@@ -107,5 +127,10 @@ module.exports = class CertificateAuthority extends BaseNode {
     get type() {
         return this._type;
     }
+    
+    get host() {
+        return this._host;
+    }
+    
 }
 

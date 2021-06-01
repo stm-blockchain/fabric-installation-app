@@ -33,6 +33,10 @@ module.exports = class BaseNode {
         return fullPath;
     }
 
+    arrangeFolderStructure() {
+        // This method will be overridden
+    }
+
     getVolume() {
         // To be overridden
     }
