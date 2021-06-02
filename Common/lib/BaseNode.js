@@ -33,7 +33,7 @@ module.exports = class BaseNode {
         return fullPath;
     }
 
-    arrangeFolderStructure() {
+    arrangeFolderStructure(caNode) {
         // This method will be overridden
     }
 

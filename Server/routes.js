@@ -7,14 +7,4 @@ module.exports = (app) => {
         CaController.startContainer,
         CaController.enroll)
 
-    app.post(`/enroll`,
-        CaController.enroll)
-
-    app.post(`/registerTest`,
-        CaController.registerAndEnroll)
-
-    // app.post(`/initTest`,
-    //     CaController.init,
-    //     CaController.register,
-    //     CaController.enroll)
 }

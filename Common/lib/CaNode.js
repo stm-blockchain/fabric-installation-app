@@ -57,15 +57,11 @@ module.exports = class CertificateAuthority extends BaseNode {
         return super.generateEnvFile(this._ENV_FILES);
     }
 
-    arrangeFolderStructure() {
-        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${this.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp/keystore`;
+    arrangeFolderStructure(caNode) {
+        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp/keystore`;
         childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
 
         if (!this.isTls) {
-            /**
-             * cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/signcerts/cert.pem $PWD/orderingservice/server/org-ca/tls/
-             * cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/keystore/key.pem $PWD/orderingservice/server/org-ca/tls/
-             */
             let mspPath = `${this.BASE_PATH}/fabric-ca/client/tls-ca/${this.userName}/msp`;
             childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
             childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
