@@ -40,4 +40,8 @@ module.exports = class BaseNode {
     getVolume() {
         // To be overridden
     }
+
+    get getNetwork() {
+        return this.network;
+    }
 }
