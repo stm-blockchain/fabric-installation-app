@@ -1,6 +1,7 @@
 const childProcess = require("child_process")
 const CertificateAuthority = require(`./CaNode`)
 const BaseNode = require(`./BaseNode`)
+const PeerNode = require(`./PeerNode`)
 const fileManager = require("./files");
 
 const Commands = {
@@ -10,39 +11,11 @@ const Commands = {
     REGISTER: "register"
 }
 
-let ComposeParams = {
-    projectName: "-p installation-sample",
-    composeFile: "-f ./configuration/docker-compose.yaml",
-    subCommandUp: "up",
-    subCommandDown: "down",
-    subParameter: "-d",
-    serviceName: "tlsca.orderingservice.com"
-}
-
-let enrollTestParams = {
-    username: "org-ca-admin",
-    password: "org-ca-adminpw",
-    host: "0.0.0.0",
-    port: "7052",
-    url: function () {
-        return "https://" + this.username
-            + ":" + this.password
-            + "@" + this.host
-            + ":" + this.port
-    },
-    mspDir: "tls-ca/org-ca-admin/msp",
-    csrHosts: "\"0.0.0.0,*.Org1.com\"",
-    enrollmentProfile: "tls"
-}
-
-let enrollOrgCa = new CertificateAuthority("org-ca-admin", "org-ca-adminpw",
-    "9000", "Org1", true);
-
 module.exports = class Installation {
     CA_NODES = {tlsCaNode: {}, orgCaNode: {yooo:`ld;kf;lasfa`}};
 
     generateEnrollCommand(candidateNode, caNode) {
-        if (!(candidateNode instanceof CertificateAuthority)) {
+        if (caNode && !(caNode instanceof CertificateAuthority)) {
             console.log(`Not an instance`);
             return;
         }
@@ -51,13 +24,16 @@ module.exports = class Installation {
             "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.userName}/msp`}`,
             "--csr.hosts", candidateNode.csrHosts];
 
-        if (candidateNode.isTls) command = command.concat(["--enrollment.profile", `tls`]);
+        if ((caNode && caNode.isTls)
+            || (candidateNode instanceof CertificateAuthority
+                && candidateNode.isTls))
+            command = command.concat(["--enrollment.profile", `tls`]);
 
         return command.join(" ");
     }
 
     generateRegisterCommand(candidateNode, caNode) {
-        if (!(candidateNode instanceof CertificateAuthority)) {
+        if (!(caNode instanceof CertificateAuthority)) {
             console.log(`Not an instance`);
             return;
         }
@@ -67,7 +43,7 @@ module.exports = class Installation {
             `--id.name ${candidateNode.userName}`,
             `--id.secret ${candidateNode.password}`,
             `--id.type ${candidateNode.type}`,
-            "-u", caNode.url,
+            "-u", `https://${candidateNode.userName}:${candidateNode.password}@${caNode.host}:${caNode.hostPort}`,
             "-M", caNode.mspDir];
 
         return command.join(` `);
@@ -81,7 +57,7 @@ module.exports = class Installation {
             return;
         }
         let command = `docker run -d --name ${node.containerName} --net ${node.network} -p ${node.hostPort}:${node.hostPort} `
-            + `--volume ${node.volume} --env-file ${node.generateEnvFile()} ${node.imageName}`
+            + `${node.volume} --env-file ${node.generateEnvFile()} ${node.imageName}`
             + ` ${node.serverStartCmd} && sleep 3`
 
         console.log(command)
@@ -129,12 +105,24 @@ module.exports = class Installation {
             `${process.env.HOME}/ttz/envFiles`]
             fileManager.mkdir(paths);
     }
+
+    runBasicCmd(cmd) {
+        childProcess.execSync(cmd);
+    }
+
+    printLog(error) {
+        console.log(`ERROR\n${error.message}\n------------------\n${error.stack}`)
+    }
 }
 
 if (require.main === module) {
     console.log('called directly');
+    let testPeer = new PeerNode(`peer1`, `peer1pw`, `Org1`
+        , 8053, `\`0.0.0.0,*.Org1.com\``)
     let installation = new Installation();
-    // installation.generateEnrollCommand(enrollOrgCa)
+    let str = installation.generateEnrollCommand(testPeer,
+        installation.CA_NODES.tlsCaNode);
+    console.log(str)
 } else {
     console.log('required as a module');
 }
