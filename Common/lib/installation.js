@@ -43,7 +43,7 @@ module.exports = class Installation {
             `--id.name ${candidateNode.userName}`,
             `--id.secret ${candidateNode.password}`,
             `--id.type ${candidateNode.type}`,
-            "-u", `https://${candidateNode.userName}:${candidateNode.password}@${caNode.host}:${caNode.hostPort}`,
+            "-u", `https://${caNode.host}:${caNode.hostPort}`,
             "-M", caNode.mspDir];
 
         return command.join(` `);
