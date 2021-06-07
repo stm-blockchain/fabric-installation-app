@@ -42,7 +42,7 @@ module.exports = {
             installation.caEnroll(req.caNode)
             res.send(`ok`)
         } catch (e) {
-            res.send(e.message)
+            res.send(e.stack)
         }
     }
 }

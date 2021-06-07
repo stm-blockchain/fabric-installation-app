@@ -37,7 +37,17 @@ module.exports = class BaseNode {
         // This method will be overridden
     }
 
-    getVolume() {
+    getVolume(volumes) {
         // To be overridden
+        let volumeString = ``
+        volumes.forEach(volume => {
+            volumeString += `-v ${volume} `;
+        })
+
+        return volumeString;
+    }
+
+    get getNetwork() {
+        return this.network;
     }
 }

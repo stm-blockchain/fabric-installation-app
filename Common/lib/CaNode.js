@@ -73,7 +73,8 @@ module.exports = class CertificateAuthority extends BaseNode {
     }
 
     get volume() {
-        return `${this.BASE_PATH}/fabric-ca/server/${this._isTls ? `tls-ca` : `org-ca`}:/tmp/hyperledger/fabric-ca`
+        let volumes = [`${this.BASE_PATH}/fabric-ca/server/${this._isTls ? `tls-ca` : `org-ca`}:/tmp/hyperledger/fabric-ca`]
+        return super.getVolume(volumes);
     }
 
     get imageName() {
