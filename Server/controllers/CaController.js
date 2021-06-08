@@ -1,4 +1,4 @@
-const { CaNode, Installation } = require('../../Common/index');
+const { CaNode } = require('../../Common/index');
 let installation;
 
 module.exports = {
