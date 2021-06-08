@@ -1,7 +1,10 @@
 const { CaNode, Installation } = require('../../Common/index');
-const installation = new Installation();
+let installation;
 
 module.exports = {
+    set installation (installationRef) {
+      installation = installationRef;
+    },
     async buildCaNode(req, res, next) {
         try {
             if (!req.body) res.send("The request body is empty")
