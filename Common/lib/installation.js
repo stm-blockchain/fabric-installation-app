@@ -1,6 +1,7 @@
 const childProcess = require("child_process")
 const CertificateAuthority = require(`./CaNode`)
 const BaseNode = require(`./BaseNode`)
+const PeerNode = require(`./PeerNode`)
 const fileManager = require("./files");
 
 const Commands = {
@@ -10,54 +11,29 @@ const Commands = {
     REGISTER: "register"
 }
 
-let ComposeParams = {
-    projectName: "-p installation-sample",
-    composeFile: "-f ./configuration/docker-compose.yaml",
-    subCommandUp: "up",
-    subCommandDown: "down",
-    subParameter: "-d",
-    serviceName: "tlsca.orderingservice.com"
-}
-
-let enrollTestParams = {
-    username: "org-ca-admin",
-    password: "org-ca-adminpw",
-    host: "0.0.0.0",
-    port: "7052",
-    url: function () {
-        return "https://" + this.username
-            + ":" + this.password
-            + "@" + this.host
-            + ":" + this.port
-    },
-    mspDir: "tls-ca/org-ca-admin/msp",
-    csrHosts: "\"0.0.0.0,*.Org1.com\"",
-    enrollmentProfile: "tls"
-}
-
-let enrollOrgCa = new CertificateAuthority("org-ca-admin", "org-ca-adminpw",
-    "9000", "Org1", true);
-
 module.exports = class Installation {
     CA_NODES = {tlsCaNode: {}, orgCaNode: {yooo:`ld;kf;lasfa`}};
 
-    generateEnrollCommand(enrollParams) {
-        if (!(enrollParams instanceof CertificateAuthority)) {
+    generateEnrollCommand(candidateNode, caNode) {
+        if (caNode && !(caNode instanceof CertificateAuthority)) {
             console.log(`Not an instance`);
             return;
         }
         let command = [Commands.FABRIC_CA_CLIENT, Commands.ENROLL,
-            "-u", enrollParams.url,
-            "-M", enrollParams.mspDir,
-            "--csr.hosts", enrollParams.csrHosts];
+            "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.userName}:${candidateNode.password}@${caNode.host}:${caNode.hostPort}`}`,
+            "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.userName}/msp`}`,
+            "--csr.hosts", candidateNode.csrHosts];
 
-        if (enrollParams.isTls) command = command.concat(["--enrollment.profile", `tls`]);
+        if ((caNode && caNode.isTls)
+            || (candidateNode instanceof CertificateAuthority
+                && candidateNode.isTls))
+            command = command.concat(["--enrollment.profile", `tls`]);
 
         return command.join(" ");
     }
 
     generateRegisterCommand(candidateNode, caNode) {
-        if (!(candidateNode instanceof CertificateAuthority)) {
+        if (!(caNode instanceof CertificateAuthority)) {
             console.log(`Not an instance`);
             return;
         }
@@ -67,7 +43,7 @@ module.exports = class Installation {
             `--id.name ${candidateNode.userName}`,
             `--id.secret ${candidateNode.password}`,
             `--id.type ${candidateNode.type}`,
-            "-u", caNode.url,
+            "-u", `https://${caNode.host}:${caNode.hostPort}`,
             "-M", caNode.mspDir];
 
         return command.join(` `);
@@ -80,8 +56,8 @@ module.exports = class Installation {
             console.log(`Not an instance`);
             return;
         }
-        let command = `docker run -d --name ${node.containerName} --net ${node.network} -p ${node.port} `
-            + `--volume ${node.volume} --env-file ${node.generateEnvFile()} ${node.imageName}`
+        let command = `docker run -d --name ${node.containerName} --net ${node.network} -p ${node.hostPort}:${node.hostPort} `
+            + `${node.volume} --env-file ${node.generateEnvFile()} ${node.imageName}`
             + ` ${node.serverStartCmd} && sleep 3`
 
         console.log(command)
@@ -94,37 +70,30 @@ module.exports = class Installation {
         process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
         childProcess.execSync(command);
-        /**
-         mv $PWD/orderingservice/client/tls-ca/orgadmin/msp/keystore/*_sk $PWD/orderingservice/client/tls-ca/orgadmin/msp/keystore/key.pem
-         cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/signcerts/cert.pem $PWD/orderingservice/server/org-ca/tls/
-         cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/keystore/key.pem $PWD/orderingservice/server/org-ca/tls/
-         */
-        let mspPath = `${candidateNode.BASE_PATH}/fabric-ca/client/${candidateNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.userName}/msp`;
-        childProcess.execSync(`mv ${mspPath}/keystore`)
     }
 
-    caEnroll(node) {
-        let command = this.generateEnrollCommand(node);
-        childProcess.execSync(`cp ${node.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${node.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
-        process.env.FABRIC_CA_CLIENT_HOME = `${node.BASE_PATH}/fabric-ca/client`
-        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${node.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
+    registerAndEnroll(candidateNode, caNode) {
+        this.register(candidateNode, caNode);
+        this.caEnroll(candidateNode, caNode);
+        candidateNode.arrangeFolderStructure(caNode);
+    }
+
+    caEnroll(candidateNode, caNode) {
+        let command = caNode ? this.generateEnrollCommand(candidateNode, caNode)
+            : this.generateEnrollCommand(candidateNode);
+        childProcess.execSync(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
+        process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
+        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
         console.log(`ENROLL CMD: ${command}`)
         childProcess.execSync(command)
-        let baseKeyPath = `${node.BASE_PATH}/fabric-ca/client/${node.isTls ? `tls-ca` : `org-ca`}/${node.userName}/msp/keystore`;
-        childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
-        if (node instanceof CertificateAuthority && !node.isTls) {
-            /**
-             * cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/signcerts/cert.pem $PWD/orderingservice/server/org-ca/tls/
-             * cp $PWD/orderingservice/client/tls-ca/orgadmin/msp/keystore/key.pem $PWD/orderingservice/server/org-ca/tls/
-             */
-            let mspPath = `${node.BASE_PATH}/fabric-ca/client/${node.isTls ? `tls-ca` : `org-ca`}/${node.userName}/msp`;
-            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${node.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
-            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${node.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
-        }
     }
 
-    initCaServer(caObj) {
-
+    initCaServer(node) {
+        this.caInitFolderPrep(node)
+        if (!node.isTls) {
+            this.register(node, this.CA_NODES.tlsCaNode);
+        }
+        this.runContainer(node)
     }
 
     caInitFolderPrep(node) {
@@ -137,12 +106,23 @@ module.exports = class Installation {
             fileManager.mkdir(paths);
     }
 
+    runBasicCmd(cmd) {
+        childProcess.execSync(cmd);
+    }
+
+    printLog(error) {
+        console.log(`ERROR\n${error.message}\n------------------\n${error.stack}`)
+    }
 }
 
 if (require.main === module) {
     console.log('called directly');
+    let testPeer = new PeerNode(`peer1`, `peer1pw`, `Org1`
+        , 8053, `\`0.0.0.0,*.Org1.com\``)
     let installation = new Installation();
-    // installation.generateEnrollCommand(enrollOrgCa)
+    let str = installation.generateEnrollCommand(testPeer,
+        installation.CA_NODES.tlsCaNode);
+    console.log(str)
 } else {
     console.log('required as a module');
 }

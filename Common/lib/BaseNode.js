@@ -33,7 +33,21 @@ module.exports = class BaseNode {
         return fullPath;
     }
 
-    getVolume() {
+    arrangeFolderStructure(caNode) {
+        // This method will be overridden
+    }
+
+    getVolume(volumes) {
         // To be overridden
+        let volumeString = ``
+        volumes.forEach(volume => {
+            volumeString += `-v ${volume} `;
+        })
+
+        return volumeString;
+    }
+
+    get getNetwork() {
+        return this.network;
     }
 }
