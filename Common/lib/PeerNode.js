@@ -124,7 +124,7 @@ module.exports = class PeerNode extends BaseNode {
     }
 
     get csrHosts() {
-        return this._csrHosts;
+        return `\"${this._csrHosts}\"`;
     }
 
     get imageName() {
@@ -155,7 +155,7 @@ module.exports = class PeerNode extends BaseNode {
         let paths = [`${this.BASE_PATH}/peers/${this.userName}/msp`,
             `${this.BASE_PATH}/peers/${this.userName}/tls`]
         fileManager.mkdir(paths);
-        fileManager.copyFile(`/home/anil/fabric-installation-app/Common/configuration/config.yaml`,
+        fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
             `${this.BASE_PATH}/peers/${this.userName}/msp/config.yaml`);
     }
 
