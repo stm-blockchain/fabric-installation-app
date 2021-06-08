@@ -1,4 +1,4 @@
-const { OrdererNode, CaNode } = require("../../Common/index")
+const { OrdererNode } = require("../../Common/index")
 let installation;
 
 module.exports = {
@@ -23,7 +23,6 @@ module.exports = {
             process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${ordererNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
             installation.runBasicCmd(ordererNode.generateAdminRegisterCommand(installation.CA_NODES.tlsCaNode));
             installation.runBasicCmd(ordererNode.generateAdminEnrollCommand(installation.CA_NODES.tlsCaNode));
-            // ordererNode.arrangeFolderStructure(new CaNode(`tls-ca-admin`, `tls-ca-adminpw`, `7052`, `Org1`, true));
             next()
         } catch (e) {
             installation.printLog(e)
@@ -33,7 +32,7 @@ module.exports = {
     async tlsRegisterEnroll(req, res, next) {
         try {
             installation.registerAndEnroll(req.ordererNode,
-                new CaNode(`tls-ca-admin`, `tls-ca-adminpw`, `7052`, `Org1`, true)); // will be replaced with installtion.CA_NODES.tlscanode
+                installation.CA_NODES.tlsCaNode);
             next()
         } catch (e) {
             installation.printLog(e)
@@ -43,7 +42,7 @@ module.exports = {
     async orgRegisterEnroll(req, res, next) {
         try {
             installation.registerAndEnroll(req.ordererNode,
-                new CaNode(`org-ca-admin`, `org-ca-adminpw`, `7053`, `Org1`, false)) // will be replaced with installtion.CA_NODES.orgcanode
+                installation.CA_NODES.orgCaNode)
             next()
         } catch (e) {
             installation.printLog(e)
