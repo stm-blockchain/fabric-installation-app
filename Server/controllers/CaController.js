@@ -9,7 +9,7 @@ module.exports = {
         try {
             if (!req.body) res.send("The request body is empty")
             let caNode = new CaNode(req.body.userName, req.body.password,
-                req.body.port, req.body.orgName, req.body.isTls);
+                req.body.port, req.body.orgName, req.body.isTls, req.body.csrHosts);
             caNode.isTls ? installation.CA_NODES.tlsCaNode = caNode
                 : installation.CA_NODES.orgCaNode = caNode;
             req.caNode = caNode;
