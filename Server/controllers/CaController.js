@@ -10,8 +10,13 @@ module.exports = {
             if (!req.body) res.send("The request body is empty")
             let caNode = new CaNode(req.body.userName, req.body.password,
                 req.body.port, req.body.orgName, req.body.isTls, req.body.csrHosts);
-            caNode.isTls ? installation.CA_NODES.tlsCaNode = caNode
-                : installation.CA_NODES.orgCaNode = caNode;
+            if (caNode.isTls) {
+                installation.CA_NODES.tlsCaNode = caNode;
+            } else {
+                caNode.adminName = req.body.adminName;
+                caNode.adminSecret = req.body.adminSecret;
+                installation.CA_NODES.orgCaNode = caNode;
+            }
             req.caNode = caNode;
             next();
         } catch (e) {
@@ -48,12 +53,20 @@ module.exports = {
             res.send(e.stack)
         }
     },
-    async createOrgMsp(req, res) {
+    async createOrgMsp(req, res, next) {
         if (req.caNode.isTls) {
             res.send("ok\n");
         } else {
             installation.createMspFolder(req.caNode);
-            res.send("ok\n");
+            next();
         }
+    },
+    async orgAdminRegisterAndEnroll(req, res) {
+        process.env.FABRIC_CA_CLIENT_HOME =`${req.caNode.BASE_PATH}/fabric-ca/client`;
+        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${req.caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
+        installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
+        installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
+        installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`)
+        res.send("ok\n");
     }
 }

@@ -68,6 +68,44 @@ module.exports = class CertificateAuthority extends BaseNode {
         }
     }
 
+    generateOrgAdminRegisterCommand() {
+        if (this.isTls) throw Error("This method can only be called by a org-ca node");
+
+        let commandParams = [`fabric-ca-client register -d`,
+        `--id.name ${this._adminName}`,
+        `--id.secret ${this._adminSecret}`,
+        `--id.type admin`,
+        `-u https://${this.host}:${this.hostPort}`,
+        `-M ${this.mspDir}`];
+
+        return commandParams.join(" ");
+    }
+
+    generateOrgAdminEnrollCommand() {
+        if (this.isTls) throw Error("This method can only be called by a org-ca node");
+
+        process.env.FABRIC_CA_CLIENT_HOME =`${this.BASE_PATH}/fabric-ca/client`;
+        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
+        let commandParams = [`fabric-ca-client enroll`,
+        `-u https://${this._adminName}:${this._adminSecret}@${this.host}:${this.hostPort}`,
+        `-M org-ca/${this._adminName}/msp`,
+        `--csr.hosts ${this.csrHosts}`]
+
+        return commandParams.join(" ");
+    }
+
+    set adminName(name) {
+        this._adminName = name;
+    }
+
+    set adminSecret(secret) {
+        this._adminSecret = secret;
+    }
+
+    get adminName() {
+        return this._adminName;
+    }
+
     get serverStartCmd() {
         return `fabric-ca-server start -d -b ${this._userName}:${this._password}`
     }
