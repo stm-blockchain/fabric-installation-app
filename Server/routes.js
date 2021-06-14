@@ -14,7 +14,8 @@ module.exports = (app) => {
         CaController.buildCaNode,
         CaController.registerAndEnroll,
         CaController.startContainer,
-        CaController.enroll)
+        CaController.enroll,
+        CaController.createOrgMsp)
 
     app.post(`/initPeer`,
         (req, res, next) => {
