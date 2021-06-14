@@ -40,12 +40,20 @@ module.exports = {
             res.send("Error starting container: " + e.message);
         }
     },
-    async enroll(req, res) {
+    async enroll(req, res, next) {
         try {
             installation.caEnroll(req.caNode)
-            res.send(`ok`)
+            next()
         } catch (e) {
             res.send(e.stack)
+        }
+    },
+    async createOrgMsp(req, res) {
+        if (req.caNode.isTls) {
+            res.send("ok\n");
+        } else {
+            installation.createMspFolder(req.caNode);
+            res.send("ok\n");
         }
     }
 }
