@@ -113,6 +113,21 @@ module.exports = class Installation {
     printLog(error) {
         console.log(`ERROR\n${error.message}\n------------------\n${error.stack}`)
     }
+
+    createMspFolder(caNode) {
+        if (!(caNode instanceof CertificateAuthority)) {
+            throw Error("Not an Ca instance")
+        }
+
+        let paths = [
+            `${caNode.BASE_PATH}/msp/cacerts`,
+            `${caNode.BASE_PATH}/msp/tlscacerts`
+        ]
+        fileManager.mkdir(paths);
+        fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`, `${caNode.BASE_PATH}/msp/config.yaml`);
+        childProcess.execSync(`cp ${caNode.BASE_PATH}/fabric-ca/client/org-ca/org-ca-admin/msp/cacerts/* ${caNode.BASE_PATH}/msp/cacerts/`)
+        fileManager.copyFile(`${caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`, `${caNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`);
+    }
 }
 
 if (require.main === module) {
