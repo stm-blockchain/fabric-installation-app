@@ -1,5 +1,6 @@
-const { CaNode } = require('../../Common/index');
+const { CaNode, DockerApi } = require('../../Common/index');
 let installation;
+const dockerApi = new DockerApi();
 
 module.exports = {
     set installation (installationRef) {
@@ -68,5 +69,29 @@ module.exports = {
         installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
         installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`)
         res.send("ok\n");
+    },
+
+    async createContainer(req, res, next) {
+        try {
+            let response = await dockerApi.createContainer({
+                Image: "alpine",
+                Cmd: ["echo", "Hello World!"],
+                Tty: true
+            });
+            req.Id = response.data.Id;
+            next();
+        } catch (e) {
+            res.send(e)
+        }
+    },
+    async startContainerViaApi(req, res) {
+        try {
+            let response = await dockerApi.startContainer({
+                Id: req.Id
+            });
+            res.send(response.data);
+        } catch (e) {
+            res.send(e)
+        }
     }
 }

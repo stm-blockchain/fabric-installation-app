@@ -40,4 +40,7 @@ module.exports = (app) => {
         OrdererController.orgRegisterEnroll,
         OrdererController.startOrderer)
 
+    app.post(`/containerTest`,
+        CaController.createContainer,
+        CaController.startContainerViaApi)
 }
