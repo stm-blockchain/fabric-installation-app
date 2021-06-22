@@ -1,8 +1,9 @@
-const childProcess = require("child_process")
-const CertificateAuthority = require(`./CaNode`)
-const BaseNode = require(`./BaseNode`)
-const PeerNode = require(`./PeerNode`)
+const childProcess = require("child_process");
+const CertificateAuthority = require(`./CaNode`);
+const BaseNode = require(`./BaseNode`);
+const PeerNode = require(`./PeerNode`);
 const fileManager = require("./files");
+const DockerApi = require(`./dockerApi`).DockerApi;
 
 const Commands = {
     DOCKER_COMPOSE: "docker-compose",
@@ -11,7 +12,13 @@ const Commands = {
     REGISTER: "register"
 }
 
+let dockerNetworkExists = false;
+
 module.exports = class Installation {
+    constructor() {
+        this.dockerService = new DockerApi();
+        this.dockerNetworkName = "ttz_docker_network"
+    }
     CA_NODES = {tlsCaNode: {}, orgCaNode: {yooo:`ld;kf;lasfa`}};
 
     generateEnrollCommand(candidateNode, caNode) {
@@ -50,6 +57,50 @@ module.exports = class Installation {
     }
 
     // docker run --name --network --port --volume --env-file IMAGE COMMAND
+
+    async runContainerViaEngineApi(node) {
+        if (!(node instanceof BaseNode)) {
+            console.log(`Not an instance`);
+            return;
+        }
+
+        await this.handleDockerNetwork();
+
+        let createResponse = await this.dockerService.createContainer(node.generateDockerConfiguration());
+        await this.dockerService.connectContainerToNetwork(this.dockerNetworkName, {Container: createResponse.data.Id});
+        await this.dockerService.startContainer({ Id: createResponse.data.Id });
+    }
+
+    async handleDockerNetwork() {
+        if (!dockerNetworkExists) {
+            try {
+                await this.dockerService.checkNetwork(this.dockerNetworkName);
+                dockerNetworkExists = true;
+            } catch (e) {
+                if(e.response.status === 404 )  {
+                    await this.createNetwork();
+                    return;
+                }
+                throw e;
+            }
+        }
+    }
+    
+    async createNetwork() {
+        try {
+            await this.dockerService.createNetwork({Name: this.dockerNetworkName});
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    async connectContainerToNetwork(containerId) {
+        try {
+
+        } catch (e) {
+
+        }
+    }
 
     runContainer(node) {
         if (!(node instanceof BaseNode)) {

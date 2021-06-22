@@ -40,10 +40,11 @@ module.exports = {
         try {
             let caNode = req.caNode;
             installation.caInitFolderPrep(caNode);
-            installation.runContainer(caNode);
+            await installation.runContainerViaEngineApi(caNode);
             next();
         } catch (e) {
             res.send("Error starting container: " + e.message);
+            console.trace(e);
         }
     },
     async enroll(req, res, next) {

@@ -33,6 +33,19 @@ module.exports = class BaseNode {
         return fullPath;
     }
 
+    generateDockerConfiguration() {
+        // This method will be overridden
+        /*
+        * create env variable list
+        * set HostConfig.Binds (for the volume)
+        * connect the network to the container
+        * set Image
+        * set Cmd
+        * set ExposedPorts
+        * set HostConfig.PortBindings: {:[{}]}
+        * */
+    }
+
     arrangeFolderStructure(caNode) {
         // This method will be overridden
     }
