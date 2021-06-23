@@ -97,12 +97,6 @@ module.exports = class PeerNode extends BaseNode {
         ]
     }
 
-    get volume() {
-        let volumes = [`/var/run:/host/var/run`,
-            `${this.BASE_PATH}/peers/${this._userName}:/tmp/hyperledger/${this._orgName}/${this._userName}`]
-        return super.getVolume(volumes);
-    }
-
     get containerName() {
         return `${this._userName}.${this._orgName}.com`
     }
@@ -127,28 +121,34 @@ module.exports = class PeerNode extends BaseNode {
         return `\"${this._csrHosts}\"`;
     }
 
-    get imageName() {
-        return this.IMAGES.FABRIC_PEER;
+    generateDockerConfiguration() {
+        const port = `${this._port}/tcp`;
+        return {
+            Name: this.containerName,
+            Image: this.IMAGES.FABRIC_PEER,
+            Env: super.createEnvForDockerConf(this.ENV_FILE),
+            ExposedPorts: {
+                [port]: {}
+            },
+            HostConfig: {
+                Binds: [`/var/run:/host/var/run`,
+                    `${this.BASE_PATH}/peers/${this._userName}:/tmp/hyperledger/${this._orgName}/${this._userName}`],
+                PortBindings: {
+                    [port]: [{HostPort: `${port}`}]
+                }
+            }
+        };
     }
 
-    get serverStartCmd() {
-        return ``
-    }
-
-    generateEnvFile() {
-        return super.generateEnvFile(this.ENV_FILE);
-    }
-
-    generateCouchDBCmd() {
-        // `docker run -d --name ${this.userName}.${this._orgName} `
-        let cmdComponents = [`docker run -d`,
-            `--name ${this.userName}.${this._orgName}.com.couchdb`,
-            `--net ${this.network}`,
-            `-v ${this.BASE_PATH}/peers/${this._userName}/couchdb:/opt/couchdb/data`,
-            `-e COUCHDB_USER=dbadmin -e COUCHDB_PASSWORD=dbadminpw`,
-            `hyperledger/fabric-couchdb`,
-            `&& sleep 3`];
-        return cmdComponents.join(" ");
+    generateCouchDBConfig() {
+        return {
+            Name: `${this.userName}.${this._orgName}.com.couchdb`,
+            Image: this.IMAGES.FABRIC_COUCHDB,
+            Env: ["COUCHDB_USER=dbadmin", "COUCHDB_PASSWORD=dbadminpw"],
+            HostConfig: {
+                Binds: [`${this.BASE_PATH}/peers/${this._userName}/couchdb:/opt/couchdb/data`],
+            }
+        };
     }
 
     folderPrep() {

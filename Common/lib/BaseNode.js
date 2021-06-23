@@ -5,15 +5,8 @@ module.exports = class BaseNode {
     constructor(orgName, userName) {
         this._orgName = orgName;
         this._userName = userName;
-        this.network = `test_example`;
+        this.network = `ttz_docker_network`;
         this.BASE_PATH = `${process.env.HOME}/ttz/${this._orgName}`
-    }
-
-    SHARED = {
-        FABRIC_LOGGING_SPEC: {
-            name: `FABRIC_LOGGING_SPEC`,
-            value: `DEBUG`
-        }
     }
 
     IMAGES = {
@@ -31,6 +24,27 @@ module.exports = class BaseNode {
         let fullPath = `${process.env.HOME}/ttz/envFiles/${this._userName}.env`;
         fileManager.createEnvFile(envObj, fullPath);
         return fullPath;
+    }
+
+    createEnvForDockerConf(envObj) {
+        let envDocker = []
+        envObj.forEach(element => {
+            envDocker.push(`${element.name}=${element.value}`);
+        });
+        return envDocker;
+    }
+
+    generateDockerConfiguration() {
+        // This method will be overridden
+        /*
+        * create env variable list
+        * set HostConfig.Binds (for the volume)
+        * connect the network to the container
+        * set Image
+        * set Cmd
+        * set ExposedPorts
+        * set HostConfig.PortBindings: {:[{}]}
+        * */
     }
 
     arrangeFolderStructure(caNode) {

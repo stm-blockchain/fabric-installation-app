@@ -57,6 +57,34 @@ module.exports = class CertificateAuthority extends BaseNode {
         return super.generateEnvFile(this._ENV_FILES);
     }
 
+    generateDockerConfiguration() {
+        const port = `${this.hostPort}/tcp`;
+        return {
+            Name: `${this._isTls ? "tls-ca" : "org-ca"}.${this.orgName}.com`,
+            Image: this.IMAGES.FABRIC_CA,
+            Env: this.createEnvForDockerConf(),
+            Cmd: [`sh`,`-c`,`fabric-ca-server start -d -b ${this._userName}:${this._password}`],
+            ExposedPorts: {
+                [port]: {}
+            },
+            HostConfig: {
+                Binds: [`${this.BASE_PATH}/fabric-ca/server/${this._isTls ? `tls-ca` : `org-ca`}:/tmp/hyperledger/fabric-ca`],
+                PortBindings: {
+                    [port]: [{HostPort: `${this.hostPort}`}]
+                }
+            }
+        };
+    }
+
+    createEnvForDockerConf() {
+        if (!this.isTls) {
+            this._ENV_FILES.push({name: `FABRIC_CA_SERVER_TLS_CERTFILE`, value: `../tls/cert.pem`})
+            this._ENV_FILES.push({name: `FABRIC_CA_SERVER_TLS_KEYFILE`, value: `../tls/key.pem`})
+        }
+
+        return super.createEnvForDockerConf(this._ENV_FILES);
+    }
+
     arrangeFolderStructure(caNode) {
         let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp/keystore`;
         childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)

@@ -28,8 +28,8 @@ module.exports = {
             next();
         } else {
             try {
-                installation.registerAndEnroll(req.caNode, installation.CA_NODES.tlsCaNode)
-                next()
+                installation.registerAndEnroll(req.caNode, installation.CA_NODES.tlsCaNode);
+                next();
             } catch (e) {
                 res.send("Error during register & enroll: " + e.message);
             }
@@ -39,18 +39,22 @@ module.exports = {
         try {
             let caNode = req.caNode;
             installation.caInitFolderPrep(caNode);
-            installation.runContainer(caNode);
+            await installation.runContainerViaEngineApi(caNode.generateDockerConfiguration());
+            console.log("[TIME] => Waiting for the ca server to start");
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("[TIME] => Ca server started");
             next();
         } catch (e) {
             res.send("Error starting container: " + e.message);
+            console.trace(e);
         }
     },
     async enroll(req, res, next) {
         try {
-            installation.caEnroll(req.caNode)
-            next()
+            installation.caEnroll(req.caNode);
+            next();
         } catch (e) {
-            res.send(e.stack)
+            res.send(e.stack);
         }
     },
     async createOrgMsp(req, res, next) {
@@ -66,7 +70,7 @@ module.exports = {
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${req.caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
         installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
         installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
-        installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`)
+        installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
         res.send("ok\n");
     }
 }

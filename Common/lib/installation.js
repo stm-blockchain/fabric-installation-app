@@ -1,8 +1,9 @@
-const childProcess = require("child_process")
-const CertificateAuthority = require(`./CaNode`)
-const BaseNode = require(`./BaseNode`)
-const PeerNode = require(`./PeerNode`)
+const childProcess = require("child_process");
+const CertificateAuthority = require(`./CaNode`);
+const BaseNode = require(`./BaseNode`);
+const PeerNode = require(`./PeerNode`);
 const fileManager = require("./files");
+const DockerApi = require(`./dockerApi`);
 
 const Commands = {
     DOCKER_COMPOSE: "docker-compose",
@@ -11,7 +12,13 @@ const Commands = {
     REGISTER: "register"
 }
 
+let dockerNetworkExists = false;
+
 module.exports = class Installation {
+    constructor() {
+        this.dockerService = new DockerApi();
+        this.dockerNetworkName = "ttz_docker_network"
+    }
     CA_NODES = {tlsCaNode: {}, orgCaNode: {yooo:`ld;kf;lasfa`}};
 
     generateEnrollCommand(candidateNode, caNode) {
@@ -51,18 +58,35 @@ module.exports = class Installation {
 
     // docker run --name --network --port --volume --env-file IMAGE COMMAND
 
-    runContainer(node) {
-        if (!(node instanceof BaseNode)) {
-            console.log(`Not an instance`);
-            return;
-        }
-        let command = `docker run -d --name ${node.containerName} --net ${node.network} -p ${node.hostPort}:${node.hostPort} `
-            + `${node.volume} --env-file ${node.generateEnvFile()} ${node.imageName}`
-            + ` ${node.serverStartCmd} && sleep 3`
+    async runContainerViaEngineApi(config) {
+        await this.handleDockerNetwork();
 
-        console.log(command)
-        childProcess.execSync(command)
-        console.log("done")
+        let createResponse = await this.dockerService.createContainer(config);
+        await this.dockerService.connectContainerToNetwork(this.dockerNetworkName, {Container: createResponse.data.Id});
+        await this.dockerService.startContainer({ Id: createResponse.data.Id });
+    }
+
+    async handleDockerNetwork() {
+        if (!dockerNetworkExists) {
+            try {
+                await this.dockerService.checkNetwork(this.dockerNetworkName);
+                dockerNetworkExists = true;
+            } catch (e) {
+                if(e.response.status === 404 )  {
+                    await this.createNetwork();
+                    return;
+                }
+                throw e;
+            }
+        }
+    }
+    
+    async createNetwork() {
+        try {
+            await this.dockerService.createNetwork({Name: this.dockerNetworkName});
+        } catch (e) {
+            throw e;
+        }
     }
 
     register(candidateNode, caNode) {
@@ -86,14 +110,6 @@ module.exports = class Installation {
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
         console.log(`ENROLL CMD: ${command}`)
         childProcess.execSync(command)
-    }
-
-    initCaServer(node) {
-        this.caInitFolderPrep(node)
-        if (!node.isTls) {
-            this.register(node, this.CA_NODES.tlsCaNode);
-        }
-        this.runContainer(node)
     }
 
     caInitFolderPrep(node) {
@@ -132,12 +148,6 @@ module.exports = class Installation {
 
 if (require.main === module) {
     console.log('called directly');
-    let testPeer = new PeerNode(`peer1`, `peer1pw`, `Org1`
-        , 8053, `\`0.0.0.0,*.Org1.com\``)
-    let installation = new Installation();
-    let str = installation.generateEnrollCommand(testPeer,
-        installation.CA_NODES.tlsCaNode);
-    console.log(str)
 } else {
     console.log('required as a module');
 }

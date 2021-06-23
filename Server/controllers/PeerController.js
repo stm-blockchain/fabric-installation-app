@@ -9,10 +9,10 @@ module.exports = {
       try {
           req.peerNode = new PeerNode(req.body.peerName, req.body.password,
               req.body.orgName, req.body.port, `${req.body.csrHosts}`);
-          next()
+          next();
       } catch (e) {
-          installation.printLog(e)
-          res.send("Faulty request body")
+          installation.printLog(e);
+          res.send("Faulty request body");
       }
     },
     async tlsRegisterEnroll(req, res, next) {
@@ -21,36 +21,36 @@ module.exports = {
                 installation.CA_NODES.tlsCaNode);
             next();
         } catch (e) {
-            installation.printLog(e)
+            installation.printLog(e);
             res.send(`TlsCa register&enroll error: ${e.message}`);
         }
     },
     async orgRegisterEnroll(req, res, next) {
         try {
             installation.registerAndEnroll(req.peerNode,
-                installation.CA_NODES.orgCaNode)
-            next()
+                installation.CA_NODES.orgCaNode);
+            next();
         } catch (e) {
-            installation.printLog(e)
-            res.send(`OrgCa register&enroll error: ${e.message}`)
+            installation.printLog(e);
+            res.send(`OrgCa register&enroll error: ${e.message}`);
         }
     },
     async startCouchDB(req, res, next) {
       try {
-          installation.runBasicCmd(req.peerNode.generateCouchDBCmd());
-          next()
+          await installation.runContainerViaEngineApi(req.peerNode.generateCouchDBConfig());
+          next();
       } catch (e) {
-          installation.printLog(e)
-          res.send(`Error starting couchDb: ${e.message}`)
+          installation.printLog(e);
+          res.send(`Error starting couchDb: ${e.message}`);
       }
     },
     async startPeer(req, res) {
         try {
-          installation.runContainer(req.peerNode);
-          res.send(`ok`)
+          await installation.runContainerViaEngineApi(req.peerNode.generateDockerConfiguration());
+          res.send(`ok\n`);
         } catch (e) {
-            installation.printLog(e)
-            res.send(`Error starting container: ${e.message}`)
+            installation.printLog(e);
+            res.send(`Error starting container: ${e.message}`);
         }
     }
 }

@@ -127,6 +127,27 @@ module.exports = class OrdererNode extends BaseNode {
         }
     }
 
+    generateDockerConfiguration() {
+        const port = `${this._port}/tcp`;
+        const adminPort = `${this._port + 1}/tcp`;
+        return {
+            Name: this.containerName,
+            Image: this.IMAGES.FABRIC_ORDERER,
+            Env: super.createEnvForDockerConf(this.ENV_FILE),
+            ExposedPorts: {
+                [port]: {},
+                [adminPort]: {}
+            },
+            HostConfig: {
+                Binds: [`${this.BASE_PATH}/orderers:/tmp/hyperledger/${this._orgName}/orderers`],
+                PortBindings: {
+                    [port]: [{HostPort: `${port}`}],
+                    [adminPort]: [{HostPort: `${adminPort}`}]
+                }
+            }
+        };
+    }
+
     generateAdminRegisterCommand(caNode) {
         if (!(caNode instanceof CaNode)) {
             throw Error("CaNode is not an instance")
@@ -156,11 +177,6 @@ module.exports = class OrdererNode extends BaseNode {
         return commandList.join(` `);
     }
 
-    get volume(){
-        let volumes = [`${this.BASE_PATH}/orderers:/tmp/hyperledger/${this._orgName}/orderers`];
-        return super.getVolume(volumes);
-    }
-
     get containerName() {
         return `${this._userName}.${this._orgName}.com`;
     }
@@ -183,17 +199,5 @@ module.exports = class OrdererNode extends BaseNode {
 
     get csrHosts() {
         return `\"${this._csrHosts}\"`;
-    }
-
-    get imageName() {
-        return this.IMAGES.FABRIC_ORDERER;
-    }
-
-    get serverStartCmd() {
-        return ``
-    }
-
-    generateEnvFile() {
-        return super.generateEnvFile(this.ENV_FILE);
     }
 }
