@@ -127,6 +127,27 @@ module.exports = class OrdererNode extends BaseNode {
         }
     }
 
+    generateDockerConfiguration() {
+        const port = `${this._port}/tcp`;
+        const adminPort = `${this._port + 1}/tcp`;
+        return {
+            Name: `${this._userName}.${this._orgName}.com`,
+            Image: this.IMAGES.FABRIC_ORDERER,
+            Env: super.createEnvForDockerConf(this.ENV_FILE),
+            ExposedPorts: {
+                [port]: {},
+                [adminPort]: {}
+            },
+            HostConfig: {
+                Binds: [`${this.BASE_PATH}/orderers:/tmp/hyperledger/${this._orgName}/orderers`],
+                PortBindings: {
+                    [port]: [{HostPort: `${port}`}],
+                    [adminPort]: [{HostPort: `${adminPort}`}]
+                }
+            }
+        };
+    }
+
     generateAdminRegisterCommand(caNode) {
         if (!(caNode instanceof CaNode)) {
             throw Error("CaNode is not an instance")

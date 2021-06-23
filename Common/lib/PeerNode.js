@@ -139,6 +139,36 @@ module.exports = class PeerNode extends BaseNode {
         return super.generateEnvFile(this.ENV_FILE);
     }
 
+    generateDockerConfiguration() {
+        const port = `${this._port}/tcp`;
+        return {
+            Name: this.containerName,
+            Image: this.IMAGES.FABRIC_PEER,
+            Env: super.createEnvForDockerConf(this.ENV_FILE),
+            ExposedPorts: {
+                [port]: {}
+            },
+            HostConfig: {
+                Binds: [`/var/run:/host/var/run`,
+                    `${this.BASE_PATH}/peers/${this._userName}:/tmp/hyperledger/${this._orgName}/${this._userName}`],
+                PortBindings: {
+                    [port]: [{HostPort: `${port}`}]
+                }
+            }
+        };
+    }
+
+    generateCouchDBConfig() {
+        return {
+            Name: `${this.userName}.${this._orgName}.com.couchdb`,
+            Image: this.IMAGES.FABRIC_COUCHDB,
+            Env: ["COUCHDB_USER=dbadmin", "COUCHDB_PASSWORD=dbadminpw"],
+            HostConfig: {
+                Binds: [`${this.BASE_PATH}/peers/${this._userName}/couchdb:/opt/couchdb/data`],
+            }
+        };
+    }
+
     generateCouchDBCmd() {
         // `docker run -d --name ${this.userName}.${this._orgName} `
         let cmdComponents = [`docker run -d`,

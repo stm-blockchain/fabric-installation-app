@@ -51,7 +51,7 @@ module.exports = {
     },
     async startOrderer(req, res) {
         try {
-            installation.runContainer(req.ordererNode);
+            await installation.runContainerViaEngineApi(req.ordererNode.generateDockerConfiguration());
             res.send(`ok\n`)
         } catch (e) {
             installation.printLog(e)

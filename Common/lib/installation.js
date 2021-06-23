@@ -58,15 +58,10 @@ module.exports = class Installation {
 
     // docker run --name --network --port --volume --env-file IMAGE COMMAND
 
-    async runContainerViaEngineApi(node) {
-        if (!(node instanceof BaseNode)) {
-            console.log(`Not an instance`);
-            return;
-        }
-
+    async runContainerViaEngineApi(config) {
         await this.handleDockerNetwork();
 
-        let createResponse = await this.dockerService.createContainer(node.generateDockerConfiguration());
+        let createResponse = await this.dockerService.createContainer(config);
         await this.dockerService.connectContainerToNetwork(this.dockerNetworkName, {Container: createResponse.data.Id});
         await this.dockerService.startContainer({ Id: createResponse.data.Id });
     }

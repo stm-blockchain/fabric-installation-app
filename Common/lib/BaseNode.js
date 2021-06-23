@@ -5,7 +5,7 @@ module.exports = class BaseNode {
     constructor(orgName, userName) {
         this._orgName = orgName;
         this._userName = userName;
-        this.network = `test_example`;
+        this.network = `ttz_docker_network`;
         this.BASE_PATH = `${process.env.HOME}/ttz/${this._orgName}`
     }
 
@@ -31,6 +31,14 @@ module.exports = class BaseNode {
         let fullPath = `${process.env.HOME}/ttz/envFiles/${this._userName}.env`;
         fileManager.createEnvFile(envObj, fullPath);
         return fullPath;
+    }
+
+    createEnvForDockerConf(envObj) {
+        let envDocker = []
+        envObj.forEach(element => {
+            envDocker.push(`${element.name}=${element.value}`);
+        });
+        return envDocker;
     }
 
     generateDockerConfiguration() {

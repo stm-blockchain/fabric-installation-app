@@ -40,7 +40,10 @@ module.exports = {
         try {
             let caNode = req.caNode;
             installation.caInitFolderPrep(caNode);
-            await installation.runContainerViaEngineApi(caNode);
+            await installation.runContainerViaEngineApi(caNode.generateDockerConfiguration());
+            console.log("[TIME] => Waiting for the ca server to start");
+            await new Promise(r => setTimeout(r, 2000));
+            console.log("[TIME] => Ca server started");
             next();
         } catch (e) {
             res.send("Error starting container: " + e.message);

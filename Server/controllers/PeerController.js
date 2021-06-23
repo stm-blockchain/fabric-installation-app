@@ -37,8 +37,8 @@ module.exports = {
     },
     async startCouchDB(req, res, next) {
       try {
-          installation.runBasicCmd(req.peerNode.generateCouchDBCmd());
-          next()
+          await installation.runContainerViaEngineApi(req.peerNode.generateCouchDBConfig());
+          next();
       } catch (e) {
           installation.printLog(e)
           res.send(`Error starting couchDb: ${e.message}`)
@@ -46,8 +46,8 @@ module.exports = {
     },
     async startPeer(req, res) {
         try {
-          installation.runContainer(req.peerNode);
-          res.send(`ok`)
+          await installation.runContainerViaEngineApi(req.peerNode.generateDockerConfiguration());
+          res.send(`ok\n`);
         } catch (e) {
             installation.printLog(e)
             res.send(`Error starting container: ${e.message}`)

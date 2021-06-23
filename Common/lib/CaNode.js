@@ -91,11 +91,7 @@ module.exports = class CertificateAuthority extends BaseNode {
             this._ENV_FILES.push({name: `FABRIC_CA_SERVER_TLS_KEYFILE`, value: `../tls/key.pem`})
         }
 
-        let envDocker = []
-        this._ENV_FILES.forEach(element => {
-            envDocker.push(`${element.name}=${element.value}`);
-        });
-        return envDocker;
+        return super.createEnvForDockerConf(this._ENV_FILES);
     }
 
     arrangeFolderStructure(caNode) {
