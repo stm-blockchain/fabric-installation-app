@@ -16,7 +16,7 @@ module.exports = (app) => {
         CaController.startContainer,
         CaController.enroll,
         CaController.createOrgMsp,
-        CaController.orgAdminRegisterAndEnroll)
+        CaController.orgAdminRegisterAndEnroll);
 
     app.post(`/initPeer`,
         (req, res, next) => {
@@ -27,7 +27,7 @@ module.exports = (app) => {
         PeerController.tlsRegisterEnroll,
         PeerController.orgRegisterEnroll,
         PeerController.startCouchDB,
-        PeerController.startPeer)
+        PeerController.startPeer);
 
     app.post(`/initOrderer`,
         (req, res, next) => {
@@ -38,9 +38,6 @@ module.exports = (app) => {
         OrdererController.registerAndEnrollAdmin,
         OrdererController.tlsRegisterEnroll,
         OrdererController.orgRegisterEnroll,
-        OrdererController.startOrderer)
+        OrdererController.startOrderer);
 
-    app.post(`/containerTest`,
-        CaController.createContainer,
-        CaController.startContainerViaApi)
 }

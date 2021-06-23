@@ -3,7 +3,7 @@ const CertificateAuthority = require(`./CaNode`);
 const BaseNode = require(`./BaseNode`);
 const PeerNode = require(`./PeerNode`);
 const fileManager = require("./files");
-const DockerApi = require(`./dockerApi`).DockerApi;
+const DockerApi = require(`./dockerApi`);
 
 const Commands = {
     DOCKER_COMPOSE: "docker-compose",
@@ -89,28 +89,6 @@ module.exports = class Installation {
         }
     }
 
-    async connectContainerToNetwork(containerId) {
-        try {
-
-        } catch (e) {
-
-        }
-    }
-
-    runContainer(node) {
-        if (!(node instanceof BaseNode)) {
-            console.log(`Not an instance`);
-            return;
-        }
-        let command = `docker run -d --name ${node.containerName} --net ${node.network} -p ${node.hostPort}:${node.hostPort} `
-            + `${node.volume} --env-file ${node.generateEnvFile()} ${node.imageName}`
-            + ` ${node.serverStartCmd} && sleep 3`
-
-        console.log(command)
-        childProcess.execSync(command)
-        console.log("done")
-    }
-
     register(candidateNode, caNode) {
         let command = this.generateRegisterCommand(candidateNode, caNode);
         process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
@@ -132,14 +110,6 @@ module.exports = class Installation {
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
         console.log(`ENROLL CMD: ${command}`)
         childProcess.execSync(command)
-    }
-
-    initCaServer(node) {
-        this.caInitFolderPrep(node)
-        if (!node.isTls) {
-            this.register(node, this.CA_NODES.tlsCaNode);
-        }
-        this.runContainer(node)
     }
 
     caInitFolderPrep(node) {
@@ -178,12 +148,6 @@ module.exports = class Installation {
 
 if (require.main === module) {
     console.log('called directly');
-    let testPeer = new PeerNode(`peer1`, `peer1pw`, `Org1`
-        , 8053, `\`0.0.0.0,*.Org1.com\``)
-    let installation = new Installation();
-    let str = installation.generateEnrollCommand(testPeer,
-        installation.CA_NODES.tlsCaNode);
-    console.log(str)
 } else {
     console.log('required as a module');
 }

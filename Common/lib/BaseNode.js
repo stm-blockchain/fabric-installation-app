@@ -9,13 +9,6 @@ module.exports = class BaseNode {
         this.BASE_PATH = `${process.env.HOME}/ttz/${this._orgName}`
     }
 
-    SHARED = {
-        FABRIC_LOGGING_SPEC: {
-            name: `FABRIC_LOGGING_SPEC`,
-            value: `DEBUG`
-        }
-    }
-
     IMAGES = {
         FABRIC_CA: `hyperledger/fabric-ca:latest`,
         FABRIC_PEER: `hyperledger/fabric-peer:2.3`,

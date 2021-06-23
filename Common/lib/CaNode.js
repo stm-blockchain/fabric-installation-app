@@ -58,15 +58,6 @@ module.exports = class CertificateAuthority extends BaseNode {
     }
 
     generateDockerConfiguration() {
-        /*
-        * create env variable list +
-        * set HostConfig.Binds (for the volume)+
-        * connect the network to the container
-        * set Image +
-        * set Cmd +
-        * set ExposedPorts +
-        * set HostConfig.PortBindings: {:[{}]} +
-        * */
         const port = `${this.hostPort}/tcp`;
         return {
             Name: `${this._isTls ? "tls-ca" : "org-ca"}.${this.orgName}.com`,

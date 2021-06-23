@@ -6,7 +6,7 @@ const axios = axiosRef.create({
     socketPath: "/var/run/docker.sock"
 })
 
-class DockerApi {
+module.exports = class DockerApi {
     createContainer(configParams) {
         let queryParams = { name: `${configParams.Name}`}
         const params = new url.URLSearchParams(queryParams);
@@ -29,5 +29,3 @@ class DockerApi {
         return axios.post(`/networks/${networkId}/connect`, configParams);
     }
 }
-
-module.exports.DockerApi = DockerApi;
