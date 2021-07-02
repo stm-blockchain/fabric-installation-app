@@ -2,11 +2,15 @@ const fileManager = require(`./files`)
 
 module.exports = class BaseNode {
 
-    constructor(orgName, userName) {
+    constructor(userName, secret, orgName, csrHosts, port, type) {
+        this._name = userName;
+        this.secret = secret;
         this._orgName = orgName;
-        this._userName = userName;
+        this._csrHosts = csrHosts;
+        this._port = port;
+        this._type = type;
         this.network = `ttz_docker_network`;
-        this.BASE_PATH = `${process.env.HOME}/ttz/${this._orgName}`
+        this.BASE_PATH = `${process.env.HOME}/ttz/${this.orgName}`
     }
 
     IMAGES = {
@@ -21,7 +25,7 @@ module.exports = class BaseNode {
 
     generateEnvFile(envObj) {
         // This method will be overridden
-        let fullPath = `${process.env.HOME}/ttz/envFiles/${this._userName}.env`;
+        let fullPath = `${process.env.HOME}/ttz/envFiles/${this.name}.env`;
         fileManager.createEnvFile(envObj, fullPath);
         return fullPath;
     }

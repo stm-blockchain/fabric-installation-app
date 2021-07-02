@@ -4,7 +4,7 @@ const childProcess = require(`child_process`)
 
 module.exports = class PeerNode extends BaseNode {
     constructor(peerName, password, orgName, port, csrHosts) {
-        super(orgName, peerName);
+        super(peerName, password, orgName, csrHosts, port, 2);
         this._port = port;
         this._password = password;
         this._csrHosts = csrHosts;
@@ -106,7 +106,7 @@ module.exports = class PeerNode extends BaseNode {
     }
 
     get userName() {
-        return this._userName;
+        return this._name;
     }
 
     get type() {

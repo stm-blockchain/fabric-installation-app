@@ -44,10 +44,10 @@ module.exports = {
           res.send(`Error starting couchDb: ${e.message}`);
       }
     },
-    async startPeer(req, res) {
+    async startPeer(req, res, next) {
         try {
           await installation.runContainerViaEngineApi(req.peerNode.generateDockerConfiguration());
-          res.send(`ok\n`);
+          next();
         } catch (e) {
             installation.printLog(e);
             res.send(`Error starting container: ${e.message}`);

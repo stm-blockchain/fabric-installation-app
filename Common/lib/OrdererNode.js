@@ -6,7 +6,7 @@ const childProcess = require(`child_process`)
 module.exports = class OrdererNode extends BaseNode {
     constructor(userName, password, orgName, port, csrHosts,
                 adminName, adminPw) {
-        super(orgName, userName);
+        super(userName, password, orgName, csrHosts, port, 3);
         this._port = port;
         this._password = password;
         this._csrHosts = csrHosts;
@@ -186,7 +186,7 @@ module.exports = class OrdererNode extends BaseNode {
     }
 
     get userName() {
-        return this._userName;
+        return this._name;
     }
 
     get type() {
@@ -200,4 +200,12 @@ module.exports = class OrdererNode extends BaseNode {
     get csrHosts() {
         return `\"${this._csrHosts}\"`;
     }
+
+    get adminName() {
+        return this._adminName;
+    }
+     get adminPw() {
+        return this._adminPw;
+     }
+
 }

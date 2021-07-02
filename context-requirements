@@ -7,7 +7,7 @@ Types
 3 - Orderer
 
 Ca Node
-prime_key(uuid) | foreign_key(uuid) | isTls(bool)
+prime_key(uuid) | forei  return `\'${this._csrHosts}\'`;gn_key(uuid) | isTls(bool)
 
 Orderer Node
 prime_key(uuid) | foreign_key(uuid) | adminName(str) | adminSecret(str)
@@ -35,4 +35,5 @@ INSERT INTO base_nodes(node_id, name, secret, org_name, csr_hosts, port, type) V
 INSERT INTO orderer_nodes(node_id, admin_name, admin_secret) VALUES (4, 'osn-admin1', 'osn-admin1pw');
 
 SELECT * FROM base_node INNER JOIN orderer_node ON base_node.node_id = orderer_node.node_id;
+SELECT * FROM base_nodes INNER JOIN ca_nodes ON base_nodes.node_id = ca_nodes.node_id;
 SELECT * FROM base_nodes WHERE base_nodes.type = 2;

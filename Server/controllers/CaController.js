@@ -1,9 +1,13 @@
 const { CaNode } = require('../../Common/index');
 let installation;
+let context;
 
 module.exports = {
     set installation (installationRef) {
       installation = installationRef;
+    },
+    set context(contextRef) {
+        context = contextRef;
     },
     async buildCaNode(req, res, next) {
         try {
@@ -65,12 +69,16 @@ module.exports = {
             next();
         }
     },
-    async orgAdminRegisterAndEnroll(req, res) {
+    async orgAdminRegisterAndEnroll(req, res, next) {
         process.env.FABRIC_CA_CLIENT_HOME =`${req.caNode.BASE_PATH}/fabric-ca/client`;
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${req.caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
         installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
         installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
         installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
-        res.send("ok\n");
+        next();
+    },
+    async writeNode(req, res) {
+        await context.writeNode(req.caNode);
+        res.send("\nk from postgres");
     }
 }

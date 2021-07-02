@@ -49,10 +49,10 @@ module.exports = {
             res.send(`OrgCa register&enroll error: ${e.message}`);
         }
     },
-    async startOrderer(req, res) {
+    async startOrderer(req, res, next) {
         try {
             await installation.runContainerViaEngineApi(req.ordererNode.generateDockerConfiguration());
-            res.send(`ok\n`);
+            next();
         } catch (e) {
             installation.printLog(e);
             res.send(`Error starting container: ${e.message}`);

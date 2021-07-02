@@ -14,8 +14,8 @@ app.use(bodyParser.json())
 - return the context object
  */
 context.init().then(() => {
-    require('./routes')(app)
-    app.listen(8080)
+    require('./routes')(app, context);
+    app.listen(8080);
 }).catch(e => {
     console.log(e.stack);
 });

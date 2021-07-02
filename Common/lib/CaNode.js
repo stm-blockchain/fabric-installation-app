@@ -1,12 +1,11 @@
 const BaseNode = require(`./BaseNode`)
 const childProcess = require("child_process");
 
-module.exports = class CertificateAuthority extends BaseNode {
+module.exports = class CaNode extends BaseNode {
 
     constructor(userName, password, port, orgName, isTls, csrHosts) {
-        super(orgName, userName);
+        super(userName, password, orgName, csrHosts, port, 1);
         this._password = password;
-        this._port = port;
         this._mspDir = `${isTls ? `tls-ca` : `org-ca`}/${userName}/msp`;
         this._isTls = isTls;
         this._host = `0.0.0.0`;
@@ -15,7 +14,7 @@ module.exports = class CertificateAuthority extends BaseNode {
             `@` + this._host +
             `:` + this._port;
         this._csrHosts = csrHosts;
-        this._type = `admin`
+        this._nodeType = `admin`
 
         this._ENV_FILES = [
             {
@@ -156,7 +155,7 @@ module.exports = class CertificateAuthority extends BaseNode {
     }
 
     get userName() {
-        return this._userName;
+        return this._name;
     }
 
     get password() {
@@ -164,7 +163,7 @@ module.exports = class CertificateAuthority extends BaseNode {
     }
 
     get port() {
-        return `${this._port}:7052`;
+        return this._port;
     }
 
     get hostPort() {
@@ -189,6 +188,10 @@ module.exports = class CertificateAuthority extends BaseNode {
 
     get type() {
         return this._type;
+    }
+
+    get nodeType() {
+        return this._nodeType;
     }
     
     get host() {
