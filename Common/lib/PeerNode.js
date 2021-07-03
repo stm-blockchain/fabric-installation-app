@@ -98,7 +98,7 @@ module.exports = class PeerNode extends BaseNode {
     }
 
     get containerName() {
-        return `${this._userName}.${this._orgName}.com`
+        return `${this._name}.${this._orgName}.com`
     }
 
     get hostPort() {
@@ -110,7 +110,11 @@ module.exports = class PeerNode extends BaseNode {
     }
 
     get type() {
-        return "peer";
+        return this._type;
+    }
+
+    get nodeType() {
+        return `peer`;
     }
 
     get password() {
@@ -118,7 +122,15 @@ module.exports = class PeerNode extends BaseNode {
     }
 
     get csrHosts() {
-        return `\"${this._csrHosts}\"`;
+        return `\'${this._csrHosts}\'`;
+    }
+
+    get orgName() {
+        return this._orgName;
+    }
+
+    get port() {
+        return this._port;
     }
 
     generateDockerConfiguration() {
@@ -132,7 +144,7 @@ module.exports = class PeerNode extends BaseNode {
             },
             HostConfig: {
                 Binds: [`/var/run:/host/var/run`,
-                    `${this.BASE_PATH}/peers/${this._userName}:/tmp/hyperledger/${this._orgName}/${this._userName}`],
+                    `${this.BASE_PATH}/peers/${this._name}:/tmp/hyperledger/${this._orgName}/${this._name}`],
                 PortBindings: {
                     [port]: [{HostPort: `${port}`}]
                 }
@@ -146,7 +158,7 @@ module.exports = class PeerNode extends BaseNode {
             Image: this.IMAGES.FABRIC_COUCHDB,
             Env: ["COUCHDB_USER=dbadmin", "COUCHDB_PASSWORD=dbadminpw"],
             HostConfig: {
-                Binds: [`${this.BASE_PATH}/peers/${this._userName}/couchdb:/opt/couchdb/data`],
+                Binds: [`${this.BASE_PATH}/peers/${this._name}/couchdb:/opt/couchdb/data`],
             }
         };
     }

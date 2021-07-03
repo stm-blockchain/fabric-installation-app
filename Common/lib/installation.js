@@ -1,5 +1,5 @@
 const childProcess = require("child_process");
-const CertificateAuthority = require(`./CaNode`);
+const CaNode = require(`./CaNode`);
 const BaseNode = require(`./BaseNode`);
 const PeerNode = require(`./PeerNode`);
 const fileManager = require("./files");
@@ -22,7 +22,7 @@ module.exports = class Installation {
     CA_NODES = {tlsCaNode: {}, orgCaNode: {yooo:`ld;kf;lasfa`}};
 
     generateEnrollCommand(candidateNode, caNode) {
-        if (caNode && !(caNode instanceof CertificateAuthority)) {
+        if (caNode && !(caNode instanceof CaNode)) {
             console.log(`Not an instance`);
             return;
         }
@@ -32,7 +32,7 @@ module.exports = class Installation {
             "--csr.hosts", candidateNode.csrHosts];
 
         if ((caNode && caNode.isTls)
-            || (candidateNode instanceof CertificateAuthority
+            || (candidateNode instanceof CaNode
                 && candidateNode.isTls))
             command = command.concat(["--enrollment.profile", `tls`]);
 
@@ -40,7 +40,7 @@ module.exports = class Installation {
     }
 
     generateRegisterCommand(candidateNode, caNode) {
-        if (!(caNode instanceof CertificateAuthority)) {
+        if (!(caNode instanceof CaNode)) {
             console.log(`Not an instance`);
             return;
         }
@@ -49,7 +49,7 @@ module.exports = class Installation {
             `-d`,
             `--id.name ${candidateNode.userName}`,
             `--id.secret ${candidateNode.password}`,
-            `--id.type ${candidateNode.type}`,
+            `--id.type ${candidateNode.nodeType}`,
             "-u", `https://${caNode.host}:${caNode.hostPort}`,
             "-M", caNode.mspDir];
 
@@ -131,7 +131,7 @@ module.exports = class Installation {
     }
 
     createMspFolder(caNode) {
-        if (!(caNode instanceof CertificateAuthority)) {
+        if (!(caNode instanceof CaNode)) {
             throw Error("Not an Ca instance")
         }
 

@@ -6,19 +6,13 @@ const OrdererController = require(`./controllers/OrdererController`);
 
 module.exports = (app, context) => {
     app.post('/initCa',
-        (res, req, next) => {
-        console.log("içerdeyim")
-            CaController.installation = installation;
-            CaController.context = context;
-            next();
-        },
         CaController.buildCaNode,
         CaController.registerAndEnroll,
         CaController.startContainer,
         CaController.enroll,
         CaController.createOrgMsp,
         CaController.orgAdminRegisterAndEnroll,
-        CaController.writeNode);
+        CaController.updateContext);
 
     app.post(`/initPeer`,
         (req, res, next) => {
@@ -30,16 +24,9 @@ module.exports = (app, context) => {
         PeerController.orgRegisterEnroll,
         PeerController.startCouchDB,
         PeerController.startPeer,
-        async (req, res) => {
-            await context.writeNode(req.peerNode);
-            res.send("\nok");
-        });
+        PeerController.updateContext);
 
     app.post(`/initOrderer`,
-        (req, res, next) => {
-            OrdererController.installation = installation;
-            next()
-        },
         OrdererController.buildOrdererNode,
         OrdererController.registerAndEnrollAdmin,
         OrdererController.tlsRegisterEnroll,

@@ -3,13 +3,15 @@ const childProcess = require("child_process");
 
 module.exports = class CaNode extends BaseNode {
 
-    constructor(userName, password, port, orgName, isTls, csrHosts) {
+    constructor(userName, password, port, orgName, isTls, csrHosts, adminName, adminSecret) {
         super(userName, password, orgName, csrHosts, port, 1);
         this._password = password;
         this._mspDir = `${isTls ? `tls-ca` : `org-ca`}/${userName}/msp`;
         this._isTls = isTls;
         this._host = `0.0.0.0`;
-        this._url = `https://` + this._userName +
+        this._adminName = adminName;
+        this._adminSecret = adminSecret;
+        this._url = `https://` + userName +
             `:` + this._password +
             `@` + this._host +
             `:` + this._port;
@@ -62,7 +64,7 @@ module.exports = class CaNode extends BaseNode {
             Name: `${this._isTls ? "tls-ca" : "org-ca"}.${this.orgName}.com`,
             Image: this.IMAGES.FABRIC_CA,
             Env: this.createEnvForDockerConf(),
-            Cmd: [`sh`,`-c`,`fabric-ca-server start -d -b ${this._userName}:${this._password}`],
+            Cmd: [`sh`,`-c`,`fabric-ca-server start -d -b ${this._name}:${this._password}`],
             ExposedPorts: {
                 [port]: {}
             },
@@ -121,13 +123,13 @@ module.exports = class CaNode extends BaseNode {
         return commandParams.join(" ");
     }
 
-    set adminName(name) {
-        this._adminName = name;
-    }
-
-    set adminSecret(secret) {
-        this._adminSecret = secret;
-    }
+    // set adminName(name) {
+    //     this._adminName = name;
+    // }
+    //
+    // set adminSecret(secret) {
+    //     this._adminSecret = secret;
+    // }
 
     get adminName() {
         return this._adminName;

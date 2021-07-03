@@ -1,10 +1,6 @@
 const { OrdererNode } = require("../../Common/index")
-let installation;
 
 module.exports = {
-    set installation(installationRef) {
-        installation = installationRef;
-    },
     async buildOrdererNode(req, res, next) {
         try {
             req.ordererNode = new OrdererNode(req.body.userName, req.body.password,
@@ -12,7 +8,7 @@ module.exports = {
                 req.body.adminName, req.body.adminPw);
             next();
         } catch (e) {
-            installation.printLog(e);
+            req.installation.printLog(e);
             res.send("Faulty request body");
         }
     },
@@ -21,41 +17,45 @@ module.exports = {
             let ordererNode = req.ordererNode;
             process.env.FABRIC_CA_CLIENT_HOME = `${ordererNode.BASE_PATH}/fabric-ca/client`;
             process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${ordererNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
-            installation.runBasicCmd(ordererNode.generateAdminRegisterCommand(installation.CA_NODES.tlsCaNode));
-            installation.runBasicCmd(ordererNode.generateAdminEnrollCommand(installation.CA_NODES.tlsCaNode));
+            req.installation.runBasicCmd(ordererNode.generateAdminRegisterCommand(req.context.CA_NODES.tlsCaNode));
+            req.installation.runBasicCmd(ordererNode.generateAdminEnrollCommand(req.context.CA_NODES.tlsCaNode));
             next();
         } catch (e) {
-            installation.printLog(e);
+            req.installation.printLog(e);
             res.send("Faulty request body");
         }
     },
     async tlsRegisterEnroll(req, res, next) {
         try {
-            installation.registerAndEnroll(req.ordererNode,
-                installation.CA_NODES.tlsCaNode);
+            req.installation.registerAndEnroll(req.ordererNode,
+                req.context.CA_NODES.tlsCaNode);
             next();
         } catch (e) {
-            installation.printLog(e);
+            req.installation.printLog(e);
             res.send(`TlsCa register&enroll error: ${e.message}`);
         }
     },
     async orgRegisterEnroll(req, res, next) {
         try {
-            installation.registerAndEnroll(req.ordererNode,
-                installation.CA_NODES.orgCaNode);
+            req.installation.registerAndEnroll(req.ordererNode,
+                req.context.CA_NODES.orgCaNode);
             next();
         } catch (e) {
-            installation.printLog(e);
+            req.installation.printLog(e);
             res.send(`OrgCa register&enroll error: ${e.message}`);
         }
     },
     async startOrderer(req, res, next) {
         try {
-            await installation.runContainerViaEngineApi(req.ordererNode.generateDockerConfiguration());
+            await req.installation.runContainerViaEngineApi(req.ordererNode.generateDockerConfiguration());
             next();
         } catch (e) {
-            installation.printLog(e);
+            req.installation.printLog(e);
             res.send(`Error starting container: ${e.message}`);
         }
+    },
+    async updateContext(req, res) {
+        await req.context.updateContext(req.ordererNode);
+        res.send("\nk from postgres");
     }
 }

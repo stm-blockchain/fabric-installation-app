@@ -10,7 +10,7 @@ module.exports = class BaseNode {
         this._port = port;
         this._type = type;
         this.network = `ttz_docker_network`;
-        this.BASE_PATH = `${process.env.HOME}/ttz/${this.orgName}`
+        this.BASE_PATH = `${process.env.HOME}/ttz/${this._orgName}`
     }
 
     IMAGES = {

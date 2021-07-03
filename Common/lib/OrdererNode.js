@@ -178,11 +178,15 @@ module.exports = class OrdererNode extends BaseNode {
     }
 
     get containerName() {
-        return `${this._userName}.${this._orgName}.com`;
+        return `${this._name}.${this._orgName}.com`;
     }
 
     get hostPort() {
         return `${this._port}-${this._port + 1}`;
+    }
+
+    get port() {
+        return this._port;
     }
 
     get userName() {
@@ -190,7 +194,11 @@ module.exports = class OrdererNode extends BaseNode {
     }
 
     get type() {
-        return `orderer`;
+        return this._type;
+    }
+
+    get nodeType() {
+        return `orderer`
     }
 
     get password() {
@@ -198,14 +206,19 @@ module.exports = class OrdererNode extends BaseNode {
     }
 
     get csrHosts() {
-        return `\"${this._csrHosts}\"`;
+        return `\'${this._csrHosts}\'`;
     }
 
     get adminName() {
         return this._adminName;
     }
-     get adminPw() {
+
+    get adminPw() {
         return this._adminPw;
-     }
+    }
+
+    get orgName() {
+        return this._orgName;
+    }
 
 }

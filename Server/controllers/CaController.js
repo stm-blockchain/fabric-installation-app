@@ -1,27 +1,26 @@
 const { CaNode } = require('../../Common/index');
-let installation;
-let context;
+// let installation;
+// let context;
 
 module.exports = {
-    set installation (installationRef) {
-      installation = installationRef;
-    },
-    set context(contextRef) {
-        context = contextRef;
-    },
+    // set installation (installationRef) {
+    //   installation = installationRef;
+    // },
+    // set context(contextRef) {
+    //     context = contextRef;
+    // },
     async buildCaNode(req, res, next) {
         try {
             if (!req.body) res.send("The request body is empty")
-            let caNode = new CaNode(req.body.userName, req.body.password,
-                req.body.port, req.body.orgName, req.body.isTls, req.body.csrHosts);
-            if (caNode.isTls) {
-                installation.CA_NODES.tlsCaNode = caNode;
-            } else {
-                caNode.adminName = req.body.adminName;
-                caNode.adminSecret = req.body.adminSecret;
-                installation.CA_NODES.orgCaNode = caNode;
-            }
-            req.caNode = caNode;
+            // if (caNode.isTls) {
+            //     req.context.CA_NODES.tlsCaNode = caNode;
+            // } else {
+            //     caNode.adminName = req.body.adminName;
+            //     caNode.adminSecret = req.body.adminSecret;
+            //     req.context.CA_NODES.orgCaNode = caNode;
+            // }
+            req.caNode = new CaNode(req.body.userName, req.body.password, req.body.port,
+                req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName, req.body.adminSecret);
             next();
         } catch (e) {
             res.send("Error building CA node " + e.message)
@@ -29,10 +28,11 @@ module.exports = {
     },
     async registerAndEnroll(req, res, next) {
         if (req.caNode instanceof CaNode && req.caNode.isTls) {
+            await req.context.updateContext(req.caNode);
             next();
         } else {
             try {
-                installation.registerAndEnroll(req.caNode, installation.CA_NODES.tlsCaNode);
+                req.installation.registerAndEnroll(req.caNode, req.context.CA_NODES.tlsCaNode);
                 next();
             } catch (e) {
                 res.send("Error during register & enroll: " + e.message);
@@ -42,8 +42,8 @@ module.exports = {
     async startContainer(req, res, next) {
         try {
             let caNode = req.caNode;
-            installation.caInitFolderPrep(caNode);
-            await installation.runContainerViaEngineApi(caNode.generateDockerConfiguration());
+            req.installation.caInitFolderPrep(caNode);
+            await req.installation.runContainerViaEngineApi(caNode.generateDockerConfiguration());
             console.log("[TIME] => Waiting for the ca server to start");
             await new Promise(r => setTimeout(r, 2000));
             console.log("[TIME] => Ca server started");
@@ -55,7 +55,7 @@ module.exports = {
     },
     async enroll(req, res, next) {
         try {
-            installation.caEnroll(req.caNode);
+            req.installation.caEnroll(req.caNode);
             next();
         } catch (e) {
             res.send(e.stack);
@@ -65,20 +65,22 @@ module.exports = {
         if (req.caNode.isTls) {
             res.send("ok\n");
         } else {
-            installation.createMspFolder(req.caNode);
+            req.installation.createMspFolder(req.caNode);
             next();
         }
     },
     async orgAdminRegisterAndEnroll(req, res, next) {
         process.env.FABRIC_CA_CLIENT_HOME =`${req.caNode.BASE_PATH}/fabric-ca/client`;
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${req.caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
-        installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
-        installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
-        installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
+        req.installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
+        req.installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
+        req.installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
         next();
     },
-    async writeNode(req, res) {
-        await context.writeNode(req.caNode);
+    async updateContext(req, res) {
+        req.caNode.adminName = req.body.adminName;
+        req.caNode.adminSecret = req.body.adminSecret;
+        await req.context.updateContext(req.caNode);
         res.send("\nk from postgres");
     }
 }

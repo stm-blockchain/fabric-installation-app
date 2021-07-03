@@ -34,4 +34,8 @@ module.exports = class DockerApi {
         const params = new url.URLSearchParams(queryParams);
         return axios.delete(`/containers/${name}?${params}`);
     }
+
+    inspectContainer(name) {
+        return axios.get(`/containers/${name}/json`);
+    }
 }
