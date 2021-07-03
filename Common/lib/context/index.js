@@ -112,7 +112,7 @@ function prepareQueries(node) {
     let node_id = uuidv4();
     let type_id = uuidv4();
     let baseQuery = `INSERT INTO base_nodes(node_id, name, secret, org_name, csr_hosts, port, type) ` +
-        `VALUES (${`\'${node_id}\'`}, '${node.userName}', '${node.secret}', '${node.orgName}', ${node.csrHosts}, ${node.port}, ${node.type});`
+        `VALUES (${`\'${node_id}\'`}, '${node.name}', '${node.secret}', '${node.orgName}', ${node.csrHosts}, ${node.port}, ${node.type});`
     let nodeQuery = ``;
     switch (node.constructor) {
         case CaNode:
@@ -138,13 +138,6 @@ async function writeNode(queries) {
         client.release();
     }
 }
-
-/*
-* - Check if container exists
-* - if exist check its status
-* - if it is running return
-* - if not remove and recreate the container
-* */
 
 async function checkContainerExists() {
     try {
@@ -242,10 +235,6 @@ module.exports = {
 
 if (require.main === module) {
     console.log('called directly');
-    (async () => {
-        let nodes = await fetcNodes();
-        console.log(nodes);
-    })().catch(e => console.log(e.stack)).finally(async () => await db.endPool())
 } else {
     console.log('required as a module');
 }

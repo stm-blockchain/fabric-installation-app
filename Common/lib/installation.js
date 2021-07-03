@@ -19,7 +19,6 @@ module.exports = class Installation {
         this.dockerService = new DockerApi();
         this.dockerNetworkName = "ttz_docker_network"
     }
-    CA_NODES = {tlsCaNode: {}, orgCaNode: {yooo:`ld;kf;lasfa`}};
 
     generateEnrollCommand(candidateNode, caNode) {
         if (caNode && !(caNode instanceof CaNode)) {
@@ -27,8 +26,8 @@ module.exports = class Installation {
             return;
         }
         let command = [Commands.FABRIC_CA_CLIENT, Commands.ENROLL,
-            "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.userName}:${candidateNode.password}@${caNode.host}:${caNode.hostPort}`}`,
-            "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.userName}/msp`}`,
+            "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.name}:${candidateNode.secret}@${caNode.host}:${caNode.port}`}`,
+            "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.name}/msp`}`,
             "--csr.hosts", candidateNode.csrHosts];
 
         if ((caNode && caNode.isTls)
@@ -47,10 +46,10 @@ module.exports = class Installation {
 
         let command = [Commands.FABRIC_CA_CLIENT, Commands.REGISTER,
             `-d`,
-            `--id.name ${candidateNode.userName}`,
-            `--id.secret ${candidateNode.password}`,
+            `--id.name ${candidateNode.name}`,
+            `--id.secret ${candidateNode.secret}`,
             `--id.type ${candidateNode.nodeType}`,
-            "-u", `https://${caNode.host}:${caNode.hostPort}`,
+            "-u", `https://${caNode.host}:${caNode.port}`,
             "-M", caNode.mspDir];
 
         return command.join(` `);

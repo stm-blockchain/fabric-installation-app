@@ -1,4 +1,4 @@
-const { OrdererNode } = require("../../Common/index")
+const { OrdererNode } = require("../../Common/index");
 
 module.exports = {
     async buildOrdererNode(req, res, next) {

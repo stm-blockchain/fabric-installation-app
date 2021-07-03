@@ -1,24 +1,9 @@
 const { CaNode } = require('../../Common/index');
-// let installation;
-// let context;
 
 module.exports = {
-    // set installation (installationRef) {
-    //   installation = installationRef;
-    // },
-    // set context(contextRef) {
-    //     context = contextRef;
-    // },
     async buildCaNode(req, res, next) {
         try {
             if (!req.body) res.send("The request body is empty")
-            // if (caNode.isTls) {
-            //     req.context.CA_NODES.tlsCaNode = caNode;
-            // } else {
-            //     caNode.adminName = req.body.adminName;
-            //     caNode.adminSecret = req.body.adminSecret;
-            //     req.context.CA_NODES.orgCaNode = caNode;
-            // }
             req.caNode = new CaNode(req.body.userName, req.body.password, req.body.port,
                 req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName, req.body.adminSecret);
             next();

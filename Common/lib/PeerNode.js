@@ -6,7 +6,6 @@ module.exports = class PeerNode extends BaseNode {
     constructor(peerName, password, orgName, port, csrHosts) {
         super(peerName, password, orgName, csrHosts, port, 2);
         this._port = port;
-        this._password = password;
         this._csrHosts = csrHosts;
         this.folderPrep();
         this.ENV_FILE = [
@@ -98,39 +97,11 @@ module.exports = class PeerNode extends BaseNode {
     }
 
     get containerName() {
-        return `${this._name}.${this._orgName}.com`
-    }
-
-    get hostPort() {
-        return `${this._port}-${this._port + 1}`
-    }
-
-    get userName() {
-        return this._name;
-    }
-
-    get type() {
-        return this._type;
+        return `${this.name}.${this.orgName}.com`
     }
 
     get nodeType() {
         return `peer`;
-    }
-
-    get password() {
-        return this._password;
-    }
-
-    get csrHosts() {
-        return `\'${this._csrHosts}\'`;
-    }
-
-    get orgName() {
-        return this._orgName;
-    }
-
-    get port() {
-        return this._port;
     }
 
     generateDockerConfiguration() {
@@ -144,7 +115,7 @@ module.exports = class PeerNode extends BaseNode {
             },
             HostConfig: {
                 Binds: [`/var/run:/host/var/run`,
-                    `${this.BASE_PATH}/peers/${this._name}:/tmp/hyperledger/${this._orgName}/${this._name}`],
+                    `${this.BASE_PATH}/peers/${this.name}:/tmp/hyperledger/${this.orgName}/${this.name}`],
                 PortBindings: {
                     [port]: [{HostPort: `${port}`}]
                 }
@@ -154,35 +125,35 @@ module.exports = class PeerNode extends BaseNode {
 
     generateCouchDBConfig() {
         return {
-            Name: `${this.userName}.${this._orgName}.com.couchdb`,
+            Name: `${this.name}.${this.orgName}.com.couchdb`,
             Image: this.IMAGES.FABRIC_COUCHDB,
             Env: ["COUCHDB_USER=dbadmin", "COUCHDB_PASSWORD=dbadminpw"],
             HostConfig: {
-                Binds: [`${this.BASE_PATH}/peers/${this._name}/couchdb:/opt/couchdb/data`],
+                Binds: [`${this.BASE_PATH}/peers/${this.name}/couchdb:/opt/couchdb/data`],
             }
         };
     }
 
     folderPrep() {
-        let paths = [`${this.BASE_PATH}/peers/${this.userName}/msp`,
-            `${this.BASE_PATH}/peers/${this.userName}/tls`]
+        let paths = [`${this.BASE_PATH}/peers/${this.name}/msp`,
+            `${this.BASE_PATH}/peers/${this.name}/tls`]
         fileManager.mkdir(paths);
         fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
-            `${this.BASE_PATH}/peers/${this.userName}/msp/config.yaml`);
+            `${this.BASE_PATH}/peers/${this.name}/msp/config.yaml`);
     }
 
     arrangeFolderStructure(caNode) {
-        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp/keystore`;
+        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
         childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
 
-        let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp`;
+        let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp`;
 
         if (caNode.isTls) {
-            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/peers/${this.userName}/tls/${this._orgName}-${this.userName}-tls-cert.pem`)
-            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/peers/${this.userName}/tls/${this._orgName}-${this.userName}-tls-key.pem`)
-            childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/peers/${this.userName}/tls/tls-ca-cert.pem`)
+            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-cert.pem`)
+            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-key.pem`)
+            childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/tls-ca-cert.pem`)
         } else {
-            childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/peers/${this.userName}/msp/`)
+            childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/peers/${this.name}/msp/`)
         }
     }
 }

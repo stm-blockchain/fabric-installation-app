@@ -1,4 +1,4 @@
-const { PeerNode } = require("../../Common/index")
+const { PeerNode } = require("../../Common/index");
 
 module.exports = {
     async buildPeerNode(req, res, next) {

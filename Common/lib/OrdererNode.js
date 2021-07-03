@@ -7,7 +7,6 @@ module.exports = class OrdererNode extends BaseNode {
     constructor(userName, password, orgName, port, csrHosts,
                 adminName, adminPw) {
         super(userName, password, orgName, csrHosts, port, 3);
-        this._port = port;
         this._password = password;
         this._csrHosts = csrHosts;
         this._adminName = adminName;
@@ -98,38 +97,38 @@ module.exports = class OrdererNode extends BaseNode {
     }
 
     folderPrep() {
-        let paths = [`${this.BASE_PATH}/orderers/${this.userName}/msp`,
-            `${this.BASE_PATH}/orderers/${this.userName}/tls`,
-            `${this.BASE_PATH}/orderers/${this.userName}/ledgers`,
-            `${this.BASE_PATH}/orderers/${this.userName}/logs`,
-            `${this.BASE_PATH}/orderers/${this.userName}/adminclient`]
+        let paths = [`${this.BASE_PATH}/orderers/${this.name}/msp`,
+            `${this.BASE_PATH}/orderers/${this.name}/tls`,
+            `${this.BASE_PATH}/orderers/${this.name}/ledgers`,
+            `${this.BASE_PATH}/orderers/${this.name}/logs`,
+            `${this.BASE_PATH}/orderers/${this.name}/adminclient`]
         fileManager.mkdir(paths);
         fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
-            `${this.BASE_PATH}/orderers/${this.userName}/msp/config.yaml`);
+            `${this.BASE_PATH}/orderers/${this.name}/msp/config.yaml`);
         fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/orderer.yaml`,
             `${this.BASE_PATH}/orderers/orderer.yaml`);
     }
 
     arrangeFolderStructure(caNode) {
-        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp/keystore`;
+        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
         childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
 
-        let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.userName}/msp`;
+        let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp`;
 
         if (caNode.isTls) {
-            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.userName}/tls/cert.pem`)
-            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/orderers/${this.userName}/tls/key.pem`)
-            childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/orderers/${this.userName}/tls/tls-ca-cert.pem`)
-            childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/keystore/*_sk ${this.BASE_PATH}/orderers/${this.userName}/adminclient/client-tls-key.pem`)
-            childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.userName}/adminclient/client-tls-cert.pem`)
+            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.name}/tls/cert.pem`)
+            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/orderers/${this.name}/tls/key.pem`)
+            childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/orderers/${this.name}/tls/tls-ca-cert.pem`)
+            childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/keystore/*_sk ${this.BASE_PATH}/orderers/${this.name}/adminclient/client-tls-key.pem`)
+            childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.name}/adminclient/client-tls-cert.pem`)
         } else {
-            childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/orderers/${this.userName}/msp/`)
+            childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/orderers/${this.name}/msp/`)
         }
     }
 
     generateDockerConfiguration() {
-        const port = `${this._port}/tcp`;
-        const adminPort = `${this._port + 1}/tcp`;
+        const port = `${this.port}/tcp`;
+        const adminPort = `${this.port + 1}/tcp`;
         return {
             Name: this.containerName,
             Image: this.IMAGES.FABRIC_ORDERER,
@@ -139,7 +138,7 @@ module.exports = class OrdererNode extends BaseNode {
                 [adminPort]: {}
             },
             HostConfig: {
-                Binds: [`${this.BASE_PATH}/orderers:/tmp/hyperledger/${this._orgName}/orderers`],
+                Binds: [`${this.BASE_PATH}/orderers:/tmp/hyperledger/${this.orgName}/orderers`],
                 PortBindings: {
                     [port]: [{HostPort: `${port}`}],
                     [adminPort]: [{HostPort: `${adminPort}`}]
@@ -157,7 +156,7 @@ module.exports = class OrdererNode extends BaseNode {
         `--id.name ${this._adminName}`,
         `--id.secret ${this._adminPw}`,
         `--id.type client`,
-        `-u https://${caNode.host}:${caNode.hostPort}`,
+        `-u https://${caNode.host}:${caNode.port}`,
         `-M ${caNode.mspDir}`];
 
         return commandList.join(` `);
@@ -169,7 +168,7 @@ module.exports = class OrdererNode extends BaseNode {
         }
 
         let commandList = [`fabric-ca-client enroll`,
-        `-u https://${this._adminName}:${this._adminPw}@${caNode.host}:${caNode.hostPort}`,
+        `-u https://${this._adminName}:${this._adminPw}@${caNode.host}:${caNode.port}`,
         `-M tls-ca/${this._adminName}/msp`,
         `--csr.hosts ${this.csrHosts}`,
         `--enrollment.profile tls`];
@@ -178,23 +177,7 @@ module.exports = class OrdererNode extends BaseNode {
     }
 
     get containerName() {
-        return `${this._name}.${this._orgName}.com`;
-    }
-
-    get hostPort() {
-        return `${this._port}-${this._port + 1}`;
-    }
-
-    get port() {
-        return this._port;
-    }
-
-    get userName() {
-        return this._name;
-    }
-
-    get type() {
-        return this._type;
+        return `${this.name}.${this.orgName}.com`;
     }
 
     get nodeType() {
@@ -205,20 +188,12 @@ module.exports = class OrdererNode extends BaseNode {
         return this._password;
     }
 
-    get csrHosts() {
-        return `\'${this._csrHosts}\'`;
-    }
-
     get adminName() {
         return this._adminName;
     }
 
     get adminPw() {
         return this._adminPw;
-    }
-
-    get orgName() {
-        return this._orgName;
     }
 
 }
