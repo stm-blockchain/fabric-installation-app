@@ -32,10 +32,7 @@ module.exports = (app, context) => {
         OrdererController.tlsRegisterEnroll,
         OrdererController.orgRegisterEnroll,
         OrdererController.startOrderer,
-        async (req, res) => {
-            await context.writeNode(req.ordererNode);
-            res.send("\nok");
-        });
+        OrdererController.updateContext);
 
     app.post(`/joinChannel`,
         PeerController.getPeer,
