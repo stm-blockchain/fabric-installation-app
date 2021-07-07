@@ -1,5 +1,5 @@
 const childProcess = require("child_process");
-const CertificateAuthority = require(`./CaNode`);
+const CaNode = require(`./CaNode`);
 const BaseNode = require(`./BaseNode`);
 const PeerNode = require(`./PeerNode`);
 const fileManager = require("./files");
@@ -19,20 +19,19 @@ module.exports = class Installation {
         this.dockerService = new DockerApi();
         this.dockerNetworkName = "ttz_docker_network"
     }
-    CA_NODES = {tlsCaNode: {}, orgCaNode: {yooo:`ld;kf;lasfa`}};
 
     generateEnrollCommand(candidateNode, caNode) {
-        if (caNode && !(caNode instanceof CertificateAuthority)) {
+        if (caNode && !(caNode instanceof CaNode)) {
             console.log(`Not an instance`);
             return;
         }
         let command = [Commands.FABRIC_CA_CLIENT, Commands.ENROLL,
-            "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.userName}:${candidateNode.password}@${caNode.host}:${caNode.hostPort}`}`,
-            "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.userName}/msp`}`,
+            "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.name}:${candidateNode.secret}@${caNode.host}:${caNode.port}`}`,
+            "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.name}/msp`}`,
             "--csr.hosts", candidateNode.csrHosts];
 
         if ((caNode && caNode.isTls)
-            || (candidateNode instanceof CertificateAuthority
+            || (candidateNode instanceof CaNode
                 && candidateNode.isTls))
             command = command.concat(["--enrollment.profile", `tls`]);
 
@@ -40,17 +39,17 @@ module.exports = class Installation {
     }
 
     generateRegisterCommand(candidateNode, caNode) {
-        if (!(caNode instanceof CertificateAuthority)) {
+        if (!(caNode instanceof CaNode)) {
             console.log(`Not an instance`);
             return;
         }
 
         let command = [Commands.FABRIC_CA_CLIENT, Commands.REGISTER,
             `-d`,
-            `--id.name ${candidateNode.userName}`,
-            `--id.secret ${candidateNode.password}`,
-            `--id.type ${candidateNode.type}`,
-            "-u", `https://${caNode.host}:${caNode.hostPort}`,
+            `--id.name ${candidateNode.name}`,
+            `--id.secret ${candidateNode.secret}`,
+            `--id.type ${candidateNode.nodeType}`,
+            "-u", `https://${caNode.host}:${caNode.port}`,
             "-M", caNode.mspDir];
 
         return command.join(` `);
@@ -131,7 +130,7 @@ module.exports = class Installation {
     }
 
     createMspFolder(caNode) {
-        if (!(caNode instanceof CertificateAuthority)) {
+        if (!(caNode instanceof CaNode)) {
             throw Error("Not an Ca instance")
         }
 

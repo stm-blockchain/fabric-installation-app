@@ -4,19 +4,15 @@ const CaController = require('./controllers/CaController')
 const PeerController = require(`./controllers/PeerController`)
 const OrdererController = require(`./controllers/OrdererController`);
 
-module.exports = (app) => {
+module.exports = (app, context) => {
     app.post('/initCa',
-        (res, req, next) => {
-        console.log("içerdeyim")
-            CaController.installation = installation
-            next()
-        },
         CaController.buildCaNode,
         CaController.registerAndEnroll,
         CaController.startContainer,
         CaController.enroll,
         CaController.createOrgMsp,
-        CaController.orgAdminRegisterAndEnroll);
+        CaController.orgAdminRegisterAndEnroll,
+        CaController.updateContext);
 
     app.post(`/initPeer`,
         (req, res, next) => {
@@ -27,17 +23,18 @@ module.exports = (app) => {
         PeerController.tlsRegisterEnroll,
         PeerController.orgRegisterEnroll,
         PeerController.startCouchDB,
-        PeerController.startPeer);
+        PeerController.startPeer,
+        PeerController.updateContext);
 
     app.post(`/initOrderer`,
-        (req, res, next) => {
-            OrdererController.installation = installation;
-            next()
-        },
         OrdererController.buildOrdererNode,
         OrdererController.registerAndEnrollAdmin,
         OrdererController.tlsRegisterEnroll,
         OrdererController.orgRegisterEnroll,
-        OrdererController.startOrderer);
+        OrdererController.startOrderer,
+        async (req, res) => {
+            await context.writeNode(req.ordererNode);
+            res.send("\nok");
+        });
 
 }

@@ -28,4 +28,14 @@ module.exports = class DockerApi {
     connectContainerToNetwork(networkId, configParams) {
         return axios.post(`/networks/${networkId}/connect`, configParams);
     }
+
+    removeContainerFromNetwork(name) {
+        let queryParams = { force: "true" }
+        const params = new url.URLSearchParams(queryParams);
+        return axios.delete(`/containers/${name}?${params}`);
+    }
+
+    inspectContainer(name) {
+        return axios.get(`/containers/${name}/json`);
+    }
 }

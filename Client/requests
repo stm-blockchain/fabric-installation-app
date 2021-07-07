@@ -1,0 +1,22 @@
+// tls ca init
+curl --header "Content-Type: application/json" --request POST \
+--data '{"userName":"tls-ca-admin","password":"tls-ca-adminpw", "port":"7052", "isTls": true, "orgName": "Org1", "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82", "adminName": "org-admin", "adminSecret": "org-adminpw"}' \
+http://localhost:8080/initCa
+
+// org ca init
+curl --header "Content-Type: application/json" --request POST \
+--data '{"userName":"org-ca-admin","password":"org-ca-adminpw", "port":"7053", "isTls": false, "orgName": "Org1","csrHosts":"0.0.0.0,*.Org1.com,172.20.20.82", "adminName": "org-admin", "adminSecret": "org-adminpw"}' \
+http://localhost:8080/initCa
+
+// orderer init
+curl --header "Content-Type: application/json" --request POST \
+--data '{"userName":"orderer1","password":"orderer1pw", "port":7055, "csrHosts": "0.0.0.0,*.Org1.com", "orgName": "Org1", "adminName": "osn-admin1", "adminPw":"osn-admin1pw"}' \
+http://localhost:8080/initOrderer
+
+// peer init
+curl --header "Content-Type: application/json" --request POST \
+--data '{"peerName": "peer1", "password":"peer1", "orgName":"Org1", "port": 7065, "csrHosts": "0.0.0.0,*Org1.com"}' \
+http://localhost:8080/initPeer
+
+// container test
+curl --request POST http://localhost:8080/containerTest
