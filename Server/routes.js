@@ -37,4 +37,9 @@ module.exports = (app, context) => {
             res.send("\nok");
         });
 
+    app.post(`/joinChannel`,
+        PeerController.getPeer,
+        PeerController.setUpCliEnv,
+        PeerController.fetchGenesisBlock,
+        PeerController.joinChannel)
 }

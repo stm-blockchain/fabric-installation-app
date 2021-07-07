@@ -52,5 +52,43 @@ module.exports = {
     async updateContext(req, res) {
         await req.context.updateContext(req.peerNode);
         res.send("\nk from postgres");
+    },
+    async getPeer(req, res, next){
+        const peer = req.context.getPeer(req.body.peerName);
+
+        if (!peer) {
+            res.status(400).send(`No such peer`);
+        }
+
+        req.peerNode = peer;
+        next();
+    },
+    async setUpCliEnv(req, res, next) {
+        try {
+            req.installation.createCliEnv(req.peerNode);
+            next();
+        } catch (e) {
+            res.status(500).send(`Error while creating CLI env: \n${e.message}\n${e.stack}`);
+        }
+    },
+    async fetchGenesisBlock(req, res, next) {
+        try {
+            const blockPath = `${req.peerNode.BASE_PATH}/peers/${req.peerNode.name}/${req.body.channelName}.genesis.block`
+            const command = req.installation.generateFetchCommand(req.peerNode, req.body.ordererAddress, req.body.channelName, blockPath);
+            req.installation.runBasicCmd(command);
+            req.blockPath = blockPath;
+            next();
+        } catch (e) {
+            res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
+        }
+    },
+    async joinChannel(req, res) {
+        try {
+            const command = req.installation.generateJoinCommand(req.blockPath);
+            req.installation.runBasicCmd(command);
+            res.send(`ok\n`);
+        } catch (e) {
+            res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
+        }
     }
 }
