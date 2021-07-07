@@ -6,10 +6,16 @@ const fileManager = require("./files");
 const DockerApi = require(`./dockerApi`);
 
 const Commands = {
-    DOCKER_COMPOSE: "docker-compose",
-    FABRIC_CA_CLIENT: "fabric-ca-client",
-    ENROLL: "enroll",
-    REGISTER: "register"
+    FABRIC_CA: {
+        FABRIC_CA_CLIENT: "fabric-ca-client",
+        ENROLL: "enroll",
+        REGISTER: "register"
+    },
+    PEER: {
+        FETCH: "peer channel fetch",
+        JOIN: "peer channel join",
+        FETCH_OLDEST: "oldest"
+    }
 }
 
 let dockerNetworkExists = false;
@@ -25,7 +31,7 @@ module.exports = class Installation {
             console.log(`Not an instance`);
             return;
         }
-        let command = [Commands.FABRIC_CA_CLIENT, Commands.ENROLL,
+        let command = [Commands.FABRIC_CA.FABRIC_CA_CLIENT, Commands.FABRIC_CA.ENROLL,
             "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.name}:${candidateNode.secret}@${caNode.host}:${caNode.port}`}`,
             "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.name}/msp`}`,
             "--csr.hosts", candidateNode.csrHosts];
@@ -44,7 +50,7 @@ module.exports = class Installation {
             return;
         }
 
-        let command = [Commands.FABRIC_CA_CLIENT, Commands.REGISTER,
+        let command = [Commands.FABRIC_CA.FABRIC_CA_CLIENT, Commands.FABRIC_CA.REGISTER,
             `-d`,
             `--id.name ${candidateNode.name}`,
             `--id.secret ${candidateNode.secret}`,
@@ -53,6 +59,38 @@ module.exports = class Installation {
             "-M", caNode.mspDir];
 
         return command.join(` `);
+    }
+
+    // peer channel fetch oldest -o $ORDERER_ADDRESS --cafile $ORDERER_TLS_CA --tls -c testchannel $PWD/Org1/peer1/testchannel.genesis.block
+    generateFetchCommand(peerNode, ordererAddress, channelName, blockPath) {
+        let command = [Commands.PEER.FETCH, Commands.PEER.FETCH_OLDEST,
+            `-o ${ordererAddress}`,
+            `--cafile ${process.env.ORDERER_TLS_CA}`,
+            `--tls`,
+            `-c ${channelName}`,
+            `${blockPath}`
+
+        ];
+
+        return command.join(" ");
+    }
+
+    generateJoinCommand(blockPath) {
+        let command = [Commands.PEER.JOIN, `-b ${blockPath}`];
+        return command.join(" ");
+    }
+
+    createCliEnv(peerNode) {
+        if (!peerNode instanceof PeerNode) {
+            throw Error("The argument should be an instance of PeerNode");
+        }
+
+        process.env.CORE_PEER_LOCALMSPID = peerNode.orgName;
+        process.env.CORE_PEER_ADDRESS = `${peerNode.host}:${peerNode.port}`;
+        process.env.ORDERER_TLS_CA = `${process.env.HOME}/ttz/orderer-tls-ca-cert.pem`;
+        process.env.CORE_PEER_TLS_ROOTCERT_FILE = `${peerNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`;
+        process.env.CORE_PEER_MSPCONFIGPATH = `${peerNode.BASE_PATH}/fabric-ca/client/org-ca/org-admin/msp/`;
+        process.env.CORE_PEER_TLS_ENABLED = `true`;
     }
 
     // docker run --name --network --port --volume --env-file IMAGE COMMAND

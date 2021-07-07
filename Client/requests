@@ -18,5 +18,10 @@ curl --header "Content-Type: application/json" --request POST \
 --data '{"peerName": "peer1", "password":"peer1", "orgName":"Org1", "port": 7065, "csrHosts": "0.0.0.0,*Org1.com"}' \
 http://localhost:8080/initPeer
 
+// fetch and join channel
+curl --header "Content-Type: application/json" --request POST \
+--data '{"peerName": "peer1", "ordererAddress": "0.0.0.0:7050", "channelName": "testchannel"}' \
+http://localhost:8080/joinChannel
+
 // container test
 curl --request POST http://localhost:8080/containerTest

@@ -146,10 +146,5 @@ module.exports = class CaNode extends BaseNode {
     get nodeType() {
         return this._nodeType;
     }
-    
-    get host() {
-        return this._host;
-    }
-    
 }
 

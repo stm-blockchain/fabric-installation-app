@@ -206,6 +206,11 @@ async function updateContextDb(node) {
     }
 }
 
+function getPeerByName(peerName) {
+    const result = PEER_NODES.filter(peer => peer.name === peerName);
+    return result.length > 0 ? result[0] : null;
+}
+
 module.exports = {
     CA_NODES: CA_NODES,
     PEER_NODES: PEER_NODES,
@@ -215,7 +220,7 @@ module.exports = {
         try {
             folderPrep();
             await initDbContainer();
-            await new Promise(r => setTimeout(r, 2000));
+            await new Promise(r => setTimeout(r, 4000));
             await createTables();
             let nodes = await fetcNodes();
             loadNodeObjects(nodes);
@@ -230,6 +235,9 @@ module.exports = {
     updateContext: async (node) => {
         updateContextObject(node);
         await updateContextDb(node);
+    },
+    getPeer: (peerName) => {
+        return getPeerByName(peerName);
     }
 }
 
