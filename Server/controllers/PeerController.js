@@ -90,5 +90,13 @@ module.exports = {
         } catch (e) {
             res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
         }
+    },
+    async prepareForCommit(req, res, next) {
+        try {
+            await req.installation.prepareForCommit(req.body.ccName);
+            res.send("ok\n");
+        } catch (e) {
+            res.status(500).send(`${e.message}: \n${e.stack}`);
+        }
     }
 }

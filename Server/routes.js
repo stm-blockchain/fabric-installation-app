@@ -1,5 +1,4 @@
 const { Installation } = require('../Common/index');
-const installation = new Installation();
 const CaController = require('./controllers/CaController')
 const PeerController = require(`./controllers/PeerController`)
 const OrdererController = require(`./controllers/OrdererController`);
@@ -15,10 +14,6 @@ module.exports = (app, context) => {
         CaController.updateContext);
 
     app.post(`/initPeer`,
-        (req, res, next) => {
-            PeerController.installation = installation;
-            next();
-        },
         PeerController.buildPeerNode,
         PeerController.tlsRegisterEnroll,
         PeerController.orgRegisterEnroll,
@@ -39,4 +34,9 @@ module.exports = (app, context) => {
         PeerController.setUpCliEnv,
         PeerController.fetchGenesisBlock,
         PeerController.joinChannel)
+
+    app.post(`/prepareCommit`,
+        PeerController.getPeer,
+        PeerController.setUpCliEnv,
+        PeerController.prepareForCommit)
 }

@@ -41,7 +41,8 @@ let dockerNetworkExists = false;
 function folderPrep() {
     let folderExists = fs.existsSync(`${process.env.HOME}/ttz/data`);
     folderExists ? console.log("Data folder already exists")
-        : fileManager.mkdir([`${process.env.HOME}/ttz/data`]);
+        : fileManager.mkdir([`${process.env.HOME}/ttz/data`,
+            `${process.env.HOME}/ttz/chaincodes`]);
 }
 
 async function runPostgres() {

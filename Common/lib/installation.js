@@ -1,4 +1,6 @@
 const childProcess = require("child_process");
+const util = require("util");
+const exec = util.promisify(childProcess.exec);
 const CaNode = require(`./CaNode`);
 const BaseNode = require(`./BaseNode`);
 const PeerNode = require(`./PeerNode`);
@@ -6,6 +8,9 @@ const fileManager = require("./files");
 const DockerApi = require(`./dockerApi`);
 
 const Commands = {
+    OS: {
+      TO_STDOUT: "2>&1"
+    },
     FABRIC_CA: {
         FABRIC_CA_CLIENT: "fabric-ca-client",
         ENROLL: "enroll",
@@ -14,7 +19,10 @@ const Commands = {
     PEER: {
         FETCH: "peer channel fetch",
         JOIN: "peer channel join",
-        FETCH_OLDEST: "oldest"
+        FETCH_OLDEST: "oldest",
+        INSTALL: "peer lifecycle chaincode install",
+        QUERY_INSTALLED: "peer lifecycle chaincode queryinstalled -O json",
+        APPROVE: "peer lifecycle chaincode approveformyorg"
     }
 }
 
@@ -78,6 +86,53 @@ module.exports = class Installation {
     generateJoinCommand(blockPath) {
         let command = [Commands.PEER.JOIN, `-b ${blockPath}`];
         return command.join(" ");
+    }
+
+    generateInstallCommand(packageName) {
+        const command = [Commands.PEER.INSTALL,
+        `${process.env.HOME}/ttz/chaincodes/${packageName}`];
+        return command.join(" ");
+    }
+
+    generateApproveCommand(approveParams) {
+        const command = [Commands.PEER.APPROVE,
+            `-o ${approveParams.ordererAddress}`,
+            `--channelID ${approveParams.channelId}`,
+            `--name ${approveParams.ccName}`,
+            `--version ${approveParams.version}`,
+            `--sequence ${approveParams.sequence}`,
+            `--tls`,
+            `--cafile ${approveParams.ordererTlsCaPath}`,
+            `--output json`]
+
+        return command.join(" ");
+    }
+
+    async prepareForCommit(packageName) {
+        // label should be unique
+        const label = this.extractLabel(packageName);
+        const result = await this.getInstalledList(packageName);
+        const filteredResult = result.fiter(element => element.label === label);
+        if (filteredResult.length > 0) {
+            process.env.CC_PACKAGE_ID = filteredResult[0].package_id;
+            // move to approve
+        } else {
+            // install the chaincode then approve
+        }
+    }
+
+    extractLabel(packageName) {
+        const packageSplit = packageName.split("@");
+        const version = packageSplit[1].replace(`.tar.gz`, ``);
+        return `${packageSplit[0]}_${version}`;
+    }
+
+    async getInstalledList(packageName) {
+        const { stdout, stderr } = await exec(`${Commands.PEER.QUERY_INSTALLED} ${Commands.OS.TO_STDOUT}`);
+        console.log(`stdout: ${stdout}`);
+        const result = JSON.parse(stdout);
+        console.log(result);
+        return result;
     }
 
     createCliEnv(peerNode) {
