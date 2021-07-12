@@ -18,9 +18,17 @@ curl --header "Content-Type: application/json" --request POST \
 --data '{"peerName": "peer2", "password":"peer1", "orgName":"Org3", "port": 7062, "csrHosts": "0.0.0.0,*Org3.com"}' \
 http://localhost:8080/initPeer
 
+curl --header "Content-Type: application/json" --request POST \
+--data '{"peerName": "peer45", "password":"peer1", "orgName":"Org3", "port": 7080, "csrHosts": "0.0.0.0,*.Org3.com"}' \
+http://localhost:8080/initPeer
+
+curl --header "Content-Type: application/json" --request POST \
+--data '{"peerName": "peer5", "password":"peer1", "orgName":"Org2", "port": 7057, "csrHosts": "0.0.0.0,*Org3.com,172.20.20.42"}' \
+http://172.20.20.42:8080/initPeer
+
 // fetch and join channel
 curl --header "Content-Type: application/json" --request POST \
---data '{"peerName": "peer2", "ordererAddress": "0.0.0.0:7050", "channelName": "testchannel"}' \
+--data '{"peerConfig": {"peerName": "peer1", "orgName": "Org2"}, "ordererConfig": {"ordererAddress": "0.0.0.0:7050", "ordererOrgName": "Org1"}, "channelName": "testchannel"}' \
 http://localhost:8080/joinChannel
 
 // container test
@@ -28,7 +36,7 @@ curl --request POST http://localhost:8080/containerTest
 
 // prepareForCommit
 curl --header "Content-Type: application/json" --request POST \
---data '{"peerName": "peer1","ccName": "javascript@0.0.1.tar.gz"}' \
+--data '{"peerConfig": {"peerName": "peer1", "orgName": "Org2"},"chaincodeConfig": {"ordererAddress": "0.0.0.0:7050", "ordererOrgName": "Org1", "channelId": "testchannel", "ccName": "javascript", "version": "0.0.1", "seq": "1", "packageName": "javascript@0.0.1.tar.gz"}}' \
 http://localhost:8080/prepareCommit
 
 curl --header "Content-Type: application/json" --request POST \

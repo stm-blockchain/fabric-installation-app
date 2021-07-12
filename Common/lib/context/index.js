@@ -42,7 +42,8 @@ function folderPrep() {
     let folderExists = fs.existsSync(`${process.env.HOME}/ttz/data`);
     folderExists ? console.log("Data folder already exists")
         : fileManager.mkdir([`${process.env.HOME}/ttz/data`,
-            `${process.env.HOME}/ttz/chaincodes`]);
+            `${process.env.HOME}/ttz/chaincodes`,
+            `${process.env.HOME}/ttz/orderers`]);
 }
 
 async function runPostgres() {
@@ -207,8 +208,8 @@ async function updateContextDb(node) {
     }
 }
 
-function getPeerByName(peerName) {
-    const result = PEER_NODES.filter(peer => peer.name === peerName);
+function getPeerByName(peerConfig) {
+    const result = PEER_NODES.filter(peer => peer.name === peerConfig.peerName && peer.orgName === peerConfig.orgName);
     return result.length > 0 ? result[0] : null;
 }
 
@@ -237,8 +238,8 @@ module.exports = {
         updateContextObject(node);
         await updateContextDb(node);
     },
-    getPeer: (peerName) => {
-        return getPeerByName(peerName);
+    getPeer: (peerConfig) => {
+        return getPeerByName(peerConfig);
     }
 }
 

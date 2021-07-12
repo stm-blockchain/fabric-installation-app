@@ -54,7 +54,7 @@ module.exports = {
         res.send("\nk from postgres");
     },
     async getPeer(req, res, next){
-        const peer = req.context.getPeer(req.body.peerName);
+        const peer = req.context.getPeer(req.body.peerConfig);
 
         if (!peer) {
             res.status(400).send(`No such peer`);
@@ -74,7 +74,7 @@ module.exports = {
     async fetchGenesisBlock(req, res, next) {
         try {
             const blockPath = `${req.peerNode.BASE_PATH}/peers/${req.peerNode.name}/${req.body.channelName}.genesis.block`
-            const command = req.installation.generateFetchCommand(req.peerNode, req.body.ordererAddress, req.body.channelName, blockPath);
+            const command = req.installation.generateFetchCommand(req.peerNode, req.body.ordererConfig, req.body.channelName, blockPath);
             req.installation.runBasicCmd(command);
             req.blockPath = blockPath;
             next();
@@ -91,10 +91,10 @@ module.exports = {
             res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
         }
     },
-    async prepareForCommit(req, res, next) {
+    async prepareForCommit(req, res) {
         try {
-            await req.installation.prepareForCommit(req.body.ccName);
-            res.send("ok\n");
+            const result = await req.installation.prepareForCommit(req.body.chaincodeConfig);
+            res.send(result);
         } catch (e) {
             res.status(500).send(`${e.message}: \n${e.stack}`);
         }

@@ -59,7 +59,7 @@ Organizations:
         Rule: "OR('Org2.peer')"
 
     AnchorPeers:
-      - Host: 0.0.0.0
+      - Host: peer1.Org2.com
         Port: 7058
 
   - &Org3
@@ -107,7 +107,7 @@ Organizations:
         Rule: "OR('Org3.peer')"
 
     AnchorPeers:
-      - Host: 0.0.0.0
+      - Host: peer1.Org3.com
         Port: 7061
 
 
@@ -157,7 +157,7 @@ Organizations:
     # OrdererEndpoints is a list of all orderers this org runs which clients
     # and peers may to connect to to push transactions and receive blocks respectively.
     OrdererEndpoints:
-      - "0.0.0.0:7050"
+      - "orderer1.Org1.com:7050"
 
     # AnchorPeers defines the location of peers which can be used for
     # cross-org gossip communication. Note, this value is only encoded in
@@ -417,7 +417,7 @@ Orderer: &OrdererDefaults
     # a subset of the host:port items enumerated in this list should be
     # replicated under the Orderer.Addresses key above.
     Consenters:
-      - Host: 0.0.0.0
+      - Host: orderer1.Org1.com
         Port: 7050
         ClientTLSCert: /home/test/ttz/Org1/orderers/orderer1/tls/cert.pem
         ServerTLSCert: /home/test/ttz/Org1/orderers/orderer1/tls/cert.pem

@@ -22,7 +22,8 @@ const Commands = {
         FETCH_OLDEST: "oldest",
         INSTALL: "peer lifecycle chaincode install",
         QUERY_INSTALLED: "peer lifecycle chaincode queryinstalled -O json",
-        APPROVE: "peer lifecycle chaincode approveformyorg"
+        APPROVE: "peer lifecycle chaincode approveformyorg",
+        CHECK_COMMIT_READINESS: "peer lifecycle chaincode checkcommitreadiness"
     }
 }
 
@@ -70,10 +71,10 @@ module.exports = class Installation {
     }
 
     // peer channel fetch oldest -o $ORDERER_ADDRESS --cafile $ORDERER_TLS_CA --tls -c testchannel $PWD/Org1/peer1/testchannel.genesis.block
-    generateFetchCommand(peerNode, ordererAddress, channelName, blockPath) {
+    generateFetchCommand(peerNode, ordererConfig, channelName, blockPath) {
         let command = [Commands.PEER.FETCH, Commands.PEER.FETCH_OLDEST,
-            `-o ${ordererAddress}`,
-            `--cafile ${process.env.ORDERER_TLS_CA}`,
+            `-o ${ordererConfig.ordererAddress}`,
+            `--cafile ${process.env.HOME}/ttz/orderers/${ordererConfig.ordererOrgName}-tls-ca-cert.pem`,
             `--tls`,
             `-c ${channelName}`,
             `${blockPath}`
@@ -94,31 +95,52 @@ module.exports = class Installation {
         return command.join(" ");
     }
 
-    generateApproveCommand(approveParams) {
+    generateApproveCommand(chancodeConfig) {
         const command = [Commands.PEER.APPROVE,
-            `-o ${approveParams.ordererAddress}`,
-            `--channelID ${approveParams.channelId}`,
-            `--name ${approveParams.ccName}`,
-            `--version ${approveParams.version}`,
-            `--sequence ${approveParams.sequence}`,
+            `-o ${chancodeConfig.ordererAddress}`,
+            `--channelID ${chancodeConfig.channelId}`,
+            `--name ${chancodeConfig.ccName}`,
+            `--version ${chancodeConfig.version}`,
+            `--sequence ${chancodeConfig.seq}`,
             `--tls`,
-            `--cafile ${approveParams.ordererTlsCaPath}`,
-            `--output json`]
+            `--cafile ${process.env.HOME}/ttz/orderers/${chancodeConfig.ordererOrgName}-tls-ca-cert.pem`]
 
         return command.join(" ");
     }
 
-    async prepareForCommit(packageName) {
-        // label should be unique
-        const label = this.extractLabel(packageName);
-        const result = await this.getInstalledList(packageName);
-        const filteredResult = result.fiter(element => element.label === label);
-        if (filteredResult.length > 0) {
-            process.env.CC_PACKAGE_ID = filteredResult[0].package_id;
-            // move to approve
-        } else {
-            // install the chaincode then approve
+    generateCommitReadinessCommand() {
+        const command = [Commands.PEER.CHECK_COMMIT_READINESS,
+            `--channelID ${chancodeConfig.channelId}`,
+            `--name ${chancodeConfig.ccName}`,
+            `--version ${chancodeConfig.version}`,
+            `--sequence ${chancodeConfig.seq}`,
+            `--tls`,
+            `--cafile ${process.env.HOME}/ttz/orderers/${chancodeConfig.ordererOrgName}-tls-ca-cert.pem`,
+            `--output json`];
+
+        return command.join(" ");
+    }
+
+    async prepareForCommit(chaincodeConfig) {
+        let packageId = await this.getPackageId(chaincodeConfig.packageName);
+        if (!packageId) {
+            // install here
+            packageId = await this.install(chaincodeConfig.packageName);
         }
+        process.env.CC_PACKAGE_ID = packageId;
+        return await this.approve(chaincodeConfig);
+    }
+
+    async install(packageName) {
+        await exec(this.generateInstallCommand(packageName));
+        return await this.getPackageId(packageName);
+    }
+
+    async approve(approveParams) {
+        await exec(this.generateApproveCommand(approveParams));
+        let { stdout, stderr } = await exec(this.generateCommitReadinessCommand(approveParams));
+        const result = JSON.parse(stdout);
+        return result.approvals;
     }
 
     extractLabel(packageName) {
@@ -127,12 +149,21 @@ module.exports = class Installation {
         return `${packageSplit[0]}_${version}`;
     }
 
-    async getInstalledList(packageName) {
+    async getInstalledList() {
         const { stdout, stderr } = await exec(`${Commands.PEER.QUERY_INSTALLED} ${Commands.OS.TO_STDOUT}`);
         console.log(`stdout: ${stdout}`);
         const result = JSON.parse(stdout);
         console.log(result);
         return result;
+    }
+
+    async getPackageId(packageName) {
+        const label = this.extractLabel(packageName);
+        const result = await this.getInstalledList(packageName);
+        if (!result.hasOwnProperty("installed_chaincodes")) return null;
+        const filteredResult = result.installed_chaincodes.filter(element => element.label === label);
+        // we expect label to be unique thus the filtered array will have one element or none
+        return !filteredResult.length ? null : filteredResult[0];
     }
 
     createCliEnv(peerNode) {
@@ -142,7 +173,6 @@ module.exports = class Installation {
 
         process.env.CORE_PEER_LOCALMSPID = peerNode.orgName;
         process.env.CORE_PEER_ADDRESS = `${peerNode.host}:${peerNode.port}`;
-        process.env.ORDERER_TLS_CA = `${process.env.HOME}/ttz/orderer-tls-ca-cert.pem`;
         process.env.CORE_PEER_TLS_ROOTCERT_FILE = `${peerNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`;
         process.env.CORE_PEER_MSPCONFIGPATH = `${peerNode.BASE_PATH}/fabric-ca/client/org-ca/org-admin/msp/`;
         process.env.CORE_PEER_TLS_ENABLED = `true`;

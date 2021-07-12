@@ -27,7 +27,7 @@ http://localhost:8080/initCa
 
 printf "\nPeer Init"
 curl --header "Content-Type: application/json" --request POST \
---data '{"peerName": "peer1", "password":"peer1", "orgName":"Org2", "port": 7058, "csrHosts": "0.0.0.0,*Org2.com"}' \
+--data '{"peerName": "peer1", "password":"peer1", "orgName":"Org2", "port": 7058, "csrHosts": "0.0.0.0,*.Org2.com"}' \
 http://localhost:8080/initPeer
 
 printf "\nCreate Org3"
@@ -43,10 +43,18 @@ http://localhost:8080/initCa
 
 printf "\nPeer Init"
 curl --header "Content-Type: application/json" --request POST \
---data '{"peerName": "peer1", "password":"peer1", "orgName":"Org3", "port": 7061, "csrHosts": "0.0.0.0,*Org3.com"}' \
+--data '{"peerName": "peer1", "password":"peer1", "orgName":"Org3", "port": 7061, "csrHosts": "0.0.0.0,*.Org3.com"}' \
 http://localhost:8080/initPeer
 
-cp $HOME/ttz/Org1/msp/tlscacerts/tls-ca-cert.pem $HOME/ttz/orderer-tls-ca-cert.pem
+cp $HOME/ttz/Org1/msp/tlscacerts/tls-ca-cert.pem $HOME/ttz/orderers/Org1-tls-ca-cert.pem
 cp $HOME/work/fabric-2.3-example/javascript@0.0.1.tar.gz $HOME/ttz/chaincodes
 
 ./createChannel.sh
+
+curl --header "Content-Type: application/json" --request POST \
+--data '{"peerConfig": {"peerName": "peer1", "orgName": "Org2"}, "ordererConfig": {"ordererAddress": "0.0.0.0:7050", "ordererOrgName": "Org1"}, "channelName": "testchannel"}' \
+http://localhost:8080/joinChannel
+
+curl --header "Content-Type: application/json" --request POST \
+--data '{"peerConfig": {"peerName": "peer1", "orgName": "Org3"}, "ordererConfig": {"ordererAddress": "0.0.0.0:7050", "ordererOrgName": "Org1"}, "channelName": "testchannel"}' \
+http://localhost:8080/joinChannel
