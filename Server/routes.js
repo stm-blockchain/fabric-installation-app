@@ -39,4 +39,9 @@ module.exports = (app, context) => {
         PeerController.getPeer,
         PeerController.setUpCliEnv,
         PeerController.prepareForCommit)
+
+    app.post(`/commitChaincode`,
+        PeerController.getPeer,
+        PeerController.setUpCliEnv,
+        PeerController.commitChaincode)
 }

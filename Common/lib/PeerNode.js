@@ -106,18 +106,21 @@ module.exports = class PeerNode extends BaseNode {
 
     generateDockerConfiguration() {
         const port = `${this._port}/tcp`;
+        const ccPort = `${this._port + 1}/tcp`;
         return {
             Name: this.containerName,
             Image: this.IMAGES.FABRIC_PEER,
             Env: super.createEnvForDockerConf(this.ENV_FILE),
             ExposedPorts: {
-                [port]: {}
+                [port]: {},
+                [ccPort]: {},
             },
             HostConfig: {
                 Binds: [`/var/run:/host/var/run`,
                     `${this.BASE_PATH}/peers/${this.name}:/tmp/hyperledger/${this.orgName}/${this.name}`],
                 PortBindings: {
-                    [port]: [{HostPort: `${port}`}]
+                    [port]: [{HostPort: `${port}`}],
+                    [ccPort]: [{HostPort: `${ccPort}`}]
                 }
             }
         };

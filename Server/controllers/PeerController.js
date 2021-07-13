@@ -94,7 +94,17 @@ module.exports = {
     async prepareForCommit(req, res) {
         try {
             const result = await req.installation.prepareForCommit(req.body.chaincodeConfig);
-            res.send(result);
+            res.send(`Result for ${req.peerNode.orgName}: ${result[req.peerNode.orgName]}`);
+        } catch (e) {
+            res.status(500).send(`${e.message}: \n${e.stack}`);
+        }
+    },
+    async commitChaincode(req, res) {
+        try {
+            const isReadyForCommit = await req.installation.isReadyForCommit(req.body.commitConfig);
+            if (!isReadyForCommit) res.status(400).send("All organizations must approve the chaincode\n");
+            await req.installation.commitChaincode(req.body.commitConfig);
+            res.send("ok\n")
         } catch (e) {
             res.status(500).send(`${e.message}: \n${e.stack}`);
         }

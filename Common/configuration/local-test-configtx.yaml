@@ -108,7 +108,7 @@ Organizations:
 
     AnchorPeers:
       - Host: peer1.Org3.com
-        Port: 7061
+        Port: 7062
 
 
   # SampleOrg defines an MSP using the sampleconfig. It should never be used

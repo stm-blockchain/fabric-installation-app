@@ -39,6 +39,10 @@ curl --header "Content-Type: application/json" --request POST \
 --data '{"peerConfig": {"peerName": "peer1", "orgName": "Org2"},"chaincodeConfig": {"ordererAddress": "0.0.0.0:7050", "ordererOrgName": "Org1", "channelId": "testchannel", "ccName": "javascript", "version": "0.0.1", "seq": "1", "packageName": "javascript@0.0.1.tar.gz"}}' \
 http://localhost:8080/prepareCommit
 
+// commitChaincode
 curl --header "Content-Type: application/json" --request POST \
---data '{"peerName": "peer2", "password":"peer1", "orgName":"Org1", "port": 7066, "csrHosts": "0.0.0.0,*Org1.com"}' \
-http://localhost:8080/initPeer
+--data '{"peerConfig":{"peerName":"peer1","orgName":"Org2"},"commitConfig":{"ordererAddress":"0.0.0.0:7050","ordererOrgName":"Org1","channelId":"testchannel","ccName":"javascript","version":"0.0.1","seq":"1","packageName":"javascript@0.0.1.tar.gz","peers":[{"peerAddress":"0.0.0.0:7058","orgName":"Org2"},{"peerAddress":"0.0.0.0:7062","orgName":"Org3"}]}}' \
+http://localhost:8080/commitChaincode
+
+
+peer lifecycle chaincode commit -o orderer1.Org1.com:7050 --channelID testchannel --name javascript --version 0.0.1 --sequence 3 --tls --cafile /tmp/hyperledger/Org2/peer1/tlsRootCerts/Org1-tls-ca-cert.pem --peerAddresses peer1.Org2.com:7058 --tlsRootCertFiles /tmp/hyperledger/Org2/peer1/tlsRootCerts/Org2-tls-ca-cert.pem  --peerAddresses peer1.Org3.com:7061 --tlsRootCertFiles /tmp/hyperledger/Org2/peer1/tlsRootCerts/Org3-tls-ca-cert.pem

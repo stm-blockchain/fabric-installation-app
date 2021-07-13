@@ -43,7 +43,8 @@ function folderPrep() {
     folderExists ? console.log("Data folder already exists")
         : fileManager.mkdir([`${process.env.HOME}/ttz/data`,
             `${process.env.HOME}/ttz/chaincodes`,
-            `${process.env.HOME}/ttz/orderers`]);
+            `${process.env.HOME}/ttz/orderers`,
+            `${process.env.HOME}/ttz/tlsRootCerts`]);
 }
 
 async function runPostgres() {

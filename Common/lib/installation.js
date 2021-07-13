@@ -23,7 +23,8 @@ const Commands = {
         INSTALL: "peer lifecycle chaincode install",
         QUERY_INSTALLED: "peer lifecycle chaincode queryinstalled -O json",
         APPROVE: "peer lifecycle chaincode approveformyorg",
-        CHECK_COMMIT_READINESS: "peer lifecycle chaincode checkcommitreadiness"
+        CHECK_COMMIT_READINESS: "peer lifecycle chaincode checkcommitreadiness",
+        COMMIT: "peer lifecycle chaincode commit"
     }
 }
 
@@ -95,28 +96,47 @@ module.exports = class Installation {
         return command.join(" ");
     }
 
-    generateApproveCommand(chancodeConfig) {
+    generateApproveCommand(chaincodeConfig) {
         const command = [Commands.PEER.APPROVE,
-            `-o ${chancodeConfig.ordererAddress}`,
-            `--channelID ${chancodeConfig.channelId}`,
-            `--name ${chancodeConfig.ccName}`,
-            `--version ${chancodeConfig.version}`,
-            `--sequence ${chancodeConfig.seq}`,
+            `-o ${chaincodeConfig.ordererAddress}`,
+            `--channelID ${chaincodeConfig.channelId}`,
+            `--name ${chaincodeConfig.ccName}`,
+            `--version ${chaincodeConfig.version}`,
+            `--package-id ${process.env.CC_PACKAGE_ID}`,
+            `--sequence ${chaincodeConfig.seq}`,
             `--tls`,
-            `--cafile ${process.env.HOME}/ttz/orderers/${chancodeConfig.ordererOrgName}-tls-ca-cert.pem`]
+            `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`]
 
         return command.join(" ");
     }
 
-    generateCommitReadinessCommand() {
+    generateCommitReadinessCommand(chaincodeConfig) {
         const command = [Commands.PEER.CHECK_COMMIT_READINESS,
-            `--channelID ${chancodeConfig.channelId}`,
-            `--name ${chancodeConfig.ccName}`,
-            `--version ${chancodeConfig.version}`,
-            `--sequence ${chancodeConfig.seq}`,
+            `--channelID ${chaincodeConfig.channelId}`,
+            `--name ${chaincodeConfig.ccName}`,
+            `--version ${chaincodeConfig.version}`,
+            `--sequence ${chaincodeConfig.seq}`,
             `--tls`,
-            `--cafile ${process.env.HOME}/ttz/orderers/${chancodeConfig.ordererOrgName}-tls-ca-cert.pem`,
+            `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`,
             `--output json`];
+
+        return command.join(" ");
+    }
+
+    generateCommitCommand(commitConfig) {
+        const command = [Commands.PEER.COMMIT,
+            `-o ${commitConfig.ordererAddress}`,
+            `--channelID ${commitConfig.channelId}`,
+            `--name ${commitConfig.ccName}`,
+            `--version ${commitConfig.version}`,
+            `--sequence ${commitConfig.seq}`,
+            `--tls`,
+            `--cafile ${process.env.HOME}/ttz/orderers/${commitConfig.ordererOrgName}-tls-ca-cert.pem`];
+
+        commitConfig.peers.forEach(peer => {
+            let parameter = `--peerAddresses ${peer.peerAddress} --tlsRootCertFiles ${process.env.HOME}/ttz/tlsRootCerts/${peer.orgName}-tls-ca-cert.pem`;
+            command.push(parameter);
+        });
 
         return command.join(" ");
     }
@@ -127,13 +147,13 @@ module.exports = class Installation {
             // install here
             packageId = await this.install(chaincodeConfig.packageName);
         }
-        process.env.CC_PACKAGE_ID = packageId;
-        return await this.approve(chaincodeConfig);
+        process.env.CC_PACKAGE_ID = packageId.package_id;
+        return this.approve(chaincodeConfig);
     }
 
     async install(packageName) {
         await exec(this.generateInstallCommand(packageName));
-        return await this.getPackageId(packageName);
+        return this.getPackageId(packageName);
     }
 
     async approve(approveParams) {
@@ -141,6 +161,18 @@ module.exports = class Installation {
         let { stdout, stderr } = await exec(this.generateCommitReadinessCommand(approveParams));
         const result = JSON.parse(stdout);
         return result.approvals;
+    }
+
+    async isReadyForCommit(readyParams) {
+        let { stdout, stderr } = await exec(this.generateCommitReadinessCommand(readyParams));
+        const result = JSON.parse(stdout);
+        const values = Object.values(result).filter(element => !element);
+        return !(values.length > 0);
+    }
+
+    async commitChaincode(commitConfig) {
+        const { stdout, stderr } = await exec(this.generateCommitCommand(commitConfig));
+        console.log(`[STDOUT COMMIT]: ${stdout}`);
     }
 
     extractLabel(packageName) {
