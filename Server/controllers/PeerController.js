@@ -91,22 +91,22 @@ module.exports = {
             res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
         }
     },
-    async prepareForCommit(req, res) {
+    async prepareForCommit(req, res, next) {
         try {
             const result = await req.installation.prepareForCommit(req.body.chaincodeConfig);
             res.send(`Result for ${req.peerNode.orgName}: ${result[req.peerNode.orgName]}`);
         } catch (e) {
-            res.status(500).send(`${e.message}: \n${e.stack}`);
+            next(e);
         }
     },
-    async commitChaincode(req, res) {
+    async commitChaincode(req, res, next) {
         try {
             const isReadyForCommit = await req.installation.isReadyForCommit(req.body.commitConfig);
             if (!isReadyForCommit) res.status(400).send("All organizations must approve the chaincode\n");
             await req.installation.commitChaincode(req.body.commitConfig);
             res.send("ok\n")
         } catch (e) {
-            res.status(500).send(`${e.message}: \n${e.stack}`);
+            next(e);
         }
     }
 }

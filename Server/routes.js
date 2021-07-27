@@ -2,6 +2,7 @@ const { Installation } = require('../Common/index');
 const CaController = require('./controllers/CaController')
 const PeerController = require(`./controllers/PeerController`)
 const OrdererController = require(`./controllers/OrdererController`);
+const ErrorHandler = require(`./controllers/ErrorHandler`);
 
 module.exports = (app, context) => {
     app.post('/initCa',
@@ -44,4 +45,7 @@ module.exports = (app, context) => {
         PeerController.getPeer,
         PeerController.setUpCliEnv,
         PeerController.commitChaincode)
+
+    // Error handler must always be declared last according to Express.js docs
+    app.use(ErrorHandler.handleErrors)
 }

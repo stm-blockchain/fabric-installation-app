@@ -6,6 +6,7 @@ const BaseNode = require(`./BaseNode`);
 const PeerNode = require(`./PeerNode`);
 const fileManager = require("./files");
 const DockerApi = require(`./dockerApi`);
+const Errors = require('./error');
 
 const Commands = {
     OS: {
@@ -142,37 +143,54 @@ module.exports = class Installation {
     }
 
     async prepareForCommit(chaincodeConfig) {
-        let packageId = await this.getPackageId(chaincodeConfig.packageName);
+        let packageId = await this._getPackageId(chaincodeConfig.packageName);
         if (!packageId) {
             // install here
-            packageId = await this.install(chaincodeConfig.packageName);
+            packageId = await this._install(chaincodeConfig.packageName);
         }
         process.env.CC_PACKAGE_ID = packageId.package_id;
-        return this.approve(chaincodeConfig);
+        return this._approve(chaincodeConfig);
     }
 
-    async install(packageName) {
-        await exec(this.generateInstallCommand(packageName));
-        return this.getPackageId(packageName);
+    async _install(packageName) {
+        try {
+            await exec(this.generateInstallCommand(packageName));
+            return this._getPackageId(packageName);
+        } catch (e) {
+            if (e instanceof Errors.BaseError) throw e;
+            throw new Errors.FabricError(e.message, e.stack);
+        }
     }
 
-    async approve(approveParams) {
-        await exec(this.generateApproveCommand(approveParams));
-        let { stdout, stderr } = await exec(this.generateCommitReadinessCommand(approveParams));
-        const result = JSON.parse(stdout);
-        return result.approvals;
+    async _approve(approveParams) {
+        try {
+            await exec(this.generateApproveCommand(approveParams));
+            let { stdout, stderr } = await exec(this.generateCommitReadinessCommand(approveParams));
+            const result = JSON.parse(stdout);
+            return result.approvals;
+        } catch (e) {
+            throw new Errors.FabricError(e.message, e.stack);
+        }
     }
 
     async isReadyForCommit(readyParams) {
-        let { stdout, stderr } = await exec(this.generateCommitReadinessCommand(readyParams));
-        const result = JSON.parse(stdout);
-        const values = Object.values(result).filter(element => !element);
-        return !(values.length > 0);
+        try {
+            let { stdout, stderr } = await exec(this.generateCommitReadinessCommand(readyParams));
+            const result = JSON.parse(stdout);
+            const values = Object.values(result).filter(element => !element);
+            return !(values.length > 0);
+        } catch (e) {
+            throw new Errors.FabricError(e.message, e.stack);
+        }
     }
 
     async commitChaincode(commitConfig) {
-        const { stdout, stderr } = await exec(this.generateCommitCommand(commitConfig));
-        console.log(`[STDOUT COMMIT]: ${stdout}`);
+        try {
+            const { stdout, stderr } = await exec(this.generateCommitCommand(commitConfig));
+            console.log(`[STDOUT COMMIT]: ${stdout}`);
+        } catch (e) {
+            throw new Errors.FabricError(e.message, e.stack);
+        }
     }
 
     extractLabel(packageName) {
@@ -189,13 +207,17 @@ module.exports = class Installation {
         return result;
     }
 
-    async getPackageId(packageName) {
-        const label = this.extractLabel(packageName);
-        const result = await this.getInstalledList(packageName);
-        if (!result.hasOwnProperty("installed_chaincodes")) return null;
-        const filteredResult = result.installed_chaincodes.filter(element => element.label === label);
-        // we expect label to be unique thus the filtered array will have one element or none
-        return !filteredResult.length ? null : filteredResult[0];
+    async _getPackageId(packageName) {
+        try {
+            const label = this.extractLabel(packageName);
+            const result = await this.getInstalledList(packageName);
+            if (!result.hasOwnProperty("installed_chaincodes")) return null;
+            const filteredResult = result.installed_chaincodes.filter(element => element.label === label);
+            // we expect label to be unique thus the filtered array will have one element or none
+            return !filteredResult.length ? null : filteredResult[0];
+        } catch (e) {
+            throw new Errors.FabricError(e.message, e.stack);
+        }
     }
 
     createCliEnv(peerNode) {
