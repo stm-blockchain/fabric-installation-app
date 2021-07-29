@@ -74,8 +74,7 @@ module.exports = {
     async fetchGenesisBlock(req, res, next) {
         try {
             const blockPath = `${req.peerNode.BASE_PATH}/peers/${req.peerNode.name}/${req.body.channelName}.genesis.block`
-            const command = req.installation.generateFetchCommand(req.peerNode, req.body.ordererConfig, req.body.channelName, blockPath);
-            req.installation.runBasicCmd(command);
+            await req.installation.fetchGenesisBlock(req.peerNode, req.body.ordererConfig, req.body.channelName, blockPath)
             req.blockPath = blockPath;
             next();
         } catch (e) {
@@ -84,8 +83,7 @@ module.exports = {
     },
     async joinChannel(req, res) {
         try {
-            const command = req.installation.generateJoinCommand(req.blockPath);
-            req.installation.runBasicCmd(command);
+            await req.installation.joinChannel(req.blockPath);
             res.send(`ok\n`);
         } catch (e) {
             res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
