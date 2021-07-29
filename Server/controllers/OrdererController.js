@@ -8,8 +8,7 @@ module.exports = {
                 req.body.adminName, req.body.adminPw);
             next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send("Faulty request body");
+            next(e);
         }
     },
     async registerAndEnrollAdmin(req, res, next) {
@@ -21,8 +20,7 @@ module.exports = {
             req.installation.runBasicCmd(ordererNode.generateAdminEnrollCommand(req.context.CA_NODES.tlsCaNode));
             next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send("Faulty request body");
+            next(e);
         }
     },
     async tlsRegisterEnroll(req, res, next) {
@@ -31,8 +29,7 @@ module.exports = {
                 req.context.CA_NODES.tlsCaNode);
             next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send(`TlsCa register&enroll error: ${e.message}`);
+            next(e);
         }
     },
     async orgRegisterEnroll(req, res, next) {
@@ -41,8 +38,7 @@ module.exports = {
                 req.context.CA_NODES.orgCaNode);
             next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send(`OrgCa register&enroll error: ${e.message}`);
+            next(e);
         }
     },
     async startOrderer(req, res, next) {
@@ -50,8 +46,7 @@ module.exports = {
             await req.installation.runContainerViaEngineApi(req.ordererNode.generateDockerConfiguration());
             next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send(`Error starting container: ${e.message}`);
+            next(e);
         }
     },
     async updateContext(req, res) {

@@ -7,8 +7,7 @@ module.exports = {
               req.body.orgName, req.body.port, `${req.body.csrHosts}`);
           next();
       } catch (e) {
-          req.installation.printLog(e);
-          res.send("Faulty request body");
+          next(e);
       }
     },
     async tlsRegisterEnroll(req, res, next) {
@@ -17,8 +16,7 @@ module.exports = {
                 req.context.CA_NODES.tlsCaNode);
             next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send(`TlsCa register&enroll error: ${e.message}`);
+            next(e);
         }
     },
     async orgRegisterEnroll(req, res, next) {
@@ -27,8 +25,7 @@ module.exports = {
                 req.context.CA_NODES.orgCaNode);
             next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send(`OrgCa register&enroll error: ${e.message}`);
+            next(e);
         }
     },
     async startCouchDB(req, res, next) {
@@ -36,8 +33,7 @@ module.exports = {
           await req.installation.runContainerViaEngineApi(req.peerNode.generateCouchDBConfig());
           next();
       } catch (e) {
-          req.installation.printLog(e);
-          res.send(`Error starting couchDb: ${e.message}`);
+          next(e);
       }
     },
     async startPeer(req, res, next) {
@@ -45,8 +41,7 @@ module.exports = {
           await req.installation.runContainerViaEngineApi(req.peerNode.generateDockerConfiguration());
           next();
         } catch (e) {
-            req.installation.printLog(e);
-            res.send(`Error starting container: ${e.message}`);
+            next(e);
         }
     },
     async updateContext(req, res) {
@@ -68,7 +63,7 @@ module.exports = {
             req.installation.createCliEnv(req.peerNode);
             next();
         } catch (e) {
-            res.status(500).send(`Error while creating CLI env: \n${e.message}\n${e.stack}`);
+            next(e);
         }
     },
     async fetchGenesisBlock(req, res, next) {
@@ -78,15 +73,15 @@ module.exports = {
             req.blockPath = blockPath;
             next();
         } catch (e) {
-            res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
+            next(e);
         }
     },
-    async joinChannel(req, res) {
+    async joinChannel(req, res, next) {
         try {
             await req.installation.joinChannel(req.blockPath);
             res.send(`ok\n`);
         } catch (e) {
-            res.status(500).send(`Error while fetching genesis block: \n${e.message}\n${e.stack}`);
+            next(e);
         }
     },
     async prepareForCommit(req, res, next) {

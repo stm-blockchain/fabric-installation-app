@@ -8,7 +8,7 @@ module.exports = {
                 req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName, req.body.adminSecret);
             next();
         } catch (e) {
-            res.send("Error building CA node " + e.message)
+            next(e);
         }
     },
     async registerAndEnroll(req, res, next) {
@@ -20,7 +20,7 @@ module.exports = {
                 req.installation.registerAndEnroll(req.caNode, req.context.CA_NODES.tlsCaNode);
                 next();
             } catch (e) {
-                res.send("Error during register & enroll: " + e.message);
+                next(e);
             }
         }
     },
@@ -34,8 +34,7 @@ module.exports = {
             console.log("[TIME] => Ca server started");
             next();
         } catch (e) {
-            res.send("Error starting container: " + e.message);
-            console.trace(e);
+            next(e);
         }
     },
     async enroll(req, res, next) {
@@ -43,24 +42,32 @@ module.exports = {
             req.installation.caEnroll(req.caNode);
             next();
         } catch (e) {
-            res.send(e.stack);
+            next(e);
         }
     },
     async createOrgMsp(req, res, next) {
         if (req.caNode.isTls) {
             res.send("ok\n");
         } else {
-            req.installation.createMspFolder(req.caNode);
-            next();
+            try {
+                req.installation.createMspFolder(req.caNode);
+                next();
+            } catch (e) {
+                next(e);
+            }
         }
     },
     async orgAdminRegisterAndEnroll(req, res, next) {
-        process.env.FABRIC_CA_CLIENT_HOME =`${req.caNode.BASE_PATH}/fabric-ca/client`;
-        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${req.caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
-        req.installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
-        req.installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
-        req.installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
-        next();
+        try {
+            process.env.FABRIC_CA_CLIENT_HOME =`${req.caNode.BASE_PATH}/fabric-ca/client`;
+            process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${req.caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
+            req.installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
+            req.installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
+            req.installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
+            next();
+        } catch (e) {
+            next(e);
+        }
     },
     async updateContext(req, res) {
         req.caNode.adminName = req.body.adminName;
