@@ -3,58 +3,56 @@ const util = require("util");
 const exec = util.promisify(childProcess.exec);
 const CaNode = require(`../CaNode`);
 const PeerNode = require(`../PeerNode`);
+const Errors = require(`../error`);
 const fileManager = require("../files");
 const FabricCommandGenerator = require(`./FabricCommandGenerator`);
-
-const Commands = {
-    OS: {
-        TO_STDOUT: "2>&1"
-    },
-    FABRIC_CA: {
-        FABRIC_CA_CLIENT: "fabric-ca-client",
-        ENROLL: "enroll",
-        REGISTER: "register"
-    },
-    PEER: {
-        FETCH: "peer channel fetch",
-        JOIN: "peer channel join",
-        FETCH_OLDEST: "oldest",
-        INSTALL: "peer lifecycle chaincode install",
-        QUERY_INSTALLED: "peer lifecycle chaincode queryinstalled -O json",
-        APPROVE: "peer lifecycle chaincode approveformyorg",
-        CHECK_COMMIT_READINESS: "peer lifecycle chaincode checkcommitreadiness",
-        COMMIT: "peer lifecycle chaincode commit"
-    }
-}
 
 let dockerNetworkExists = false
 
 async function _getPackageId(packageName) {
-    const label = _extractLabel(packageName);
-    const result = await _getInstalledList(packageName);
-    if (!result.hasOwnProperty("installed_chaincodes")) return null;
-    const filteredResult = result.installed_chaincodes.filter(element => element.label === label);
-    // we expect label to be unique thus the filtered array will have one element or none
-    return !filteredResult.length ? null : filteredResult[0];
+    try{
+        const label = _extractLabel(packageName);
+        const result = await _getInstalledList(packageName);
+        if (!result.hasOwnProperty("installed_chaincodes")) return null;
+        const filteredResult = result.installed_chaincodes.filter(element => element.label === label);
+        // we expect label to be unique thus the filtered array will have one element or none
+        return !filteredResult.length ? null : filteredResult[0];
+    } catch (e) {
+        if (e instanceof Errors.FabricError) throw e;
+        throw new Errors.FabricError(`PACKAGING ERROR`, e);
+    }
 }
 
 async function _install(packageName) {
-    await exec(FabricCommandGenerator.generateInstallCommand(packageName));
-    return _getPackageId(packageName);
+    try {
+        await exec(FabricCommandGenerator.generateInstallCommand(packageName));
+        return _getPackageId(packageName);
+    } catch (e) {
+        if (e instanceof Errors.FabricError) throw e;
+        throw new Errors.FabricError(`INSTALLATION ERROR`, e);
+    }
 }
 
 async function _approve(approveParams) {
-    await exec(FabricCommandGenerator.generateApproveCommand(approveParams));
-    let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(approveParams));
-    const result = JSON.parse(stdout);
-    return result.approvals;
+    try {
+        await exec(FabricCommandGenerator.generateApproveCommand(approveParams));
+        let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(approveParams));
+        const result = JSON.parse(stdout);
+        return result.approvals;
+    } catch (e) {
+        throw new Errors.FabricError(`APPROVAL ERROR`, e)
+    }
 }
 
 async function _isReadyForCommit(readyParams) {
-    let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(readyParams));
-    const result = JSON.parse(stdout);
-    const values = Object.values(result).filter(element => !element);
-    return !(values.length > 0);
+    try {
+        let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(readyParams));
+        const result = JSON.parse(stdout);
+        const values = Object.values(result).filter(element => !element);
+        return !(values.length > 0);
+    } catch (e) {
+        throw new Errors.FabricError(`COMMITREADINESS ERROR`, e);
+    }
 }
 
 function _extractLabel(packageName) {
@@ -64,18 +62,22 @@ function _extractLabel(packageName) {
 }
 
 async function _getInstalledList() {
-    const {stdout, stderr} = await exec(`${Commands.PEER.QUERY_INSTALLED} ${Commands.OS.TO_STDOUT}`);
-    console.log(`stdout: ${stdout}`);
-    const result = JSON.parse(stdout);
-    console.log(result);
-    return result;
+    try {
+        const {stdout, stderr} = await exec(`${FabricCommandGenerator.Commands.PEER.QUERY_INSTALLED} ${FabricCommandGenerator.Commands.OS.TO_STDOUT}`);
+        console.log(`stdout: ${stdout}`);
+        const result = JSON.parse(stdout);
+        console.log(result);
+        return result;
+    } catch (e) {
+        throw new Errors.FabricError(`Queryinstalled Error`, e);
+    }
 }
 
 async function _createNetwork(dockerService) {
     try {
         await dockerService.createNetwork({Name: `ttz_docker_network`});
     } catch (e) {
-        throw e;
+        throw new Errors.DockerError(`NETWORK CREATION ERROR`, e);
     }
 }
 
@@ -89,36 +91,74 @@ async function _handleDockerNetwork(dockerService) {
                 await _createNetwork(dockerService);
                 return;
             }
-            throw e;
+            throw new Errors.DockerError(`CHECK NETWORK ERROR`, e);
         }
     }
 }
 
 function _register(candidateNode, caNode) {
-    let command = FabricCommandGenerator.generateRegisterCommand(candidateNode, caNode);
-    process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
-    process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
-    childProcess.execSync(command);
+    try {
+        let command = FabricCommandGenerator.generateRegisterCommand(candidateNode, caNode);
+        process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
+        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
+        childProcess.execSync(command);
+    } catch (e) {
+        throw new Errors.FabricError(`REGISTER NODE ERROR`, e);
+    }
 }
 
 function _caEnroll(candidateNode, caNode) {
-    let command = caNode ? FabricCommandGenerator.generateEnrollCommand(candidateNode, caNode)
-        : FabricCommandGenerator.generateEnrollCommand(candidateNode);
-    childProcess.execSync(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
-    process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
-    process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
-    console.log(`ENROLL CMD: ${command}`)
-    childProcess.execSync(command)
+    try {
+        let command = caNode ? FabricCommandGenerator.generateEnrollCommand(candidateNode, caNode)
+            : FabricCommandGenerator.generateEnrollCommand(candidateNode);
+        childProcess.execSync(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
+        process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
+        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
+        console.log(`ENROLL CMD: ${command}`)
+        childProcess.execSync(command)
+    } catch (e) {
+        throw new Errors.FabricError(`CA ENROLL ERROR`, e);
+    }
 }
 
 async function _joinChannel(blockPath) {
-    const command = FabricCommandGenerator.generateJoinCommand(blockPath);
-    await exec(command);
+    try {
+        const command = FabricCommandGenerator.generateJoinCommand(blockPath);
+        await exec(command);
+    } catch (e) {
+        throw new Errors.FabricError(`JOIN CHANNEL ERROR`, e);
+    }
 }
 
 async function _fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPath) {
-    const command = FabricCommandGenerator.generateFetchCommand(peerNode, ordererConfig, channelName, blockPath);
-    await exec(command);
+    try {
+        const command = FabricCommandGenerator.generateFetchCommand(peerNode, ordererConfig, channelName, blockPath);
+        await exec(command);
+    } catch (e) {
+        throw new Errors.FabricError(`FETCH GENESIS ERROR`, e);
+    }
+}
+
+async function _commitChaincode(commitConfig) {
+    try {
+        const {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitCommand(commitConfig));
+        console.log(`[STDOUT COMMIT]: ${stdout}`);
+    } catch (e) {
+        throw new Errors.FabricError(`COMMIT CC ERROR`, e);
+    }
+}
+
+async function _runContainerViaEngineApi(config) {
+    try {
+        await _handleDockerNetwork(this.dockerService);
+
+        let createResponse = await this.dockerService.createContainer(config);
+        await this.dockerService.connectContainerToNetwork(`ttz_docker_network`, {Container: createResponse.data.Id});
+        await this.dockerService.startContainer({Id: createResponse.data.Id});
+    } catch (e) {
+        if (e instanceof Errors.DockerError) throw e;
+        throw new Errors.DockerError(`RUN CONTAINER ERROR`, e);
+    }
 }
 
 module.exports = class Installation {
@@ -138,8 +178,7 @@ module.exports = class Installation {
     }
 
     async commitChaincode(commitConfig) {
-        const {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitCommand(commitConfig));
-        console.log(`[STDOUT COMMIT]: ${stdout}`);
+        await _commitChaincode(commitConfig);
     }
 
     async isReadyForCommit(commitConfig) {
@@ -148,7 +187,7 @@ module.exports = class Installation {
 
     createCliEnv(peerNode) {
         if (!peerNode instanceof PeerNode) {
-            throw Error("The argument should be an instance of PeerNode");
+            throw new Errors.NodeTypeError(`CLI ENV ERROR: Given object is not an instance of PeerNode`, e);
         }
 
         process.env.CORE_PEER_LOCALMSPID = peerNode.orgName;
@@ -159,11 +198,7 @@ module.exports = class Installation {
     }
 
     async runContainerViaEngineApi(config) {
-        await _handleDockerNetwork(this.dockerService);
-
-        let createResponse = await this.dockerService.createContainer(config);
-        await this.dockerService.connectContainerToNetwork(`ttz_docker_network`, {Container: createResponse.data.Id});
-        await this.dockerService.startContainer({Id: createResponse.data.Id});
+        await _runContainerViaEngineApi(config);
     }
 
     async joinChannel(blockPath) {
@@ -216,31 +251,4 @@ module.exports = class Installation {
         childProcess.execSync(`cp ${caNode.BASE_PATH}/fabric-ca/client/org-ca/org-ca-admin/msp/cacerts/* ${caNode.BASE_PATH}/msp/cacerts/`)
         fileManager.copyFile(`${caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`, `${caNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`);
     }
-    // prepareForCommit: async (chaincodeConfig) => {
-    //     let packageId = await getPackageId(chaincodeConfig.packageName);
-    //     if (!packageId) {
-    //         // install here
-    //         packageId = await install(chaincodeConfig.packageName);
-    //     }
-    //     process.env.CC_PACKAGE_ID = packageId.package_id;
-    //     return approve(chaincodeConfig);
-    // },
-    // commitChaincode: async (commitConfig) => {
-    //     const { stdout, stderr } = await exec(FabricCommandGenerator.generateCommitCommand(commitConfig));
-    //     console.log(`[STDOUT COMMIT]: ${stdout}`);
-    // },
-    // isReadyForCommit: async () => {
-    //     return isReadyForCommit();
-    // },
-    // createCliEnv: (peerNode) => {
-    //     if (!peerNode instanceof PeerNode) {
-    //         throw Error("The argument should be an instance of PeerNode");
-    //     }
-    //
-    //     process.env.CORE_PEER_LOCALMSPID = peerNode.orgName;
-    //     process.env.CORE_PEER_ADDRESS = `${peerNode.host}:${peerNode.port}`;
-    //     process.env.CORE_PEER_TLS_ROOTCERT_FILE = `${peerNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`;
-    //     process.env.CORE_PEER_MSPCONFIGPATH = `${peerNode.BASE_PATH}/fabric-ca/client/org-ca/org-admin/msp/`;
-    //     process.env.CORE_PEER_TLS_ENABLED = `true`;
-    // }
 }

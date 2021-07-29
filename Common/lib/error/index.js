@@ -1,22 +1,28 @@
 class BaseError extends Error {
-    constructor(message, stack) {
+    constructor(message, cause) {
         super(message);
-        this.stack = stack;
+        this.cause = cause;
     }
 }
 
 class FabricError extends BaseError {
-    constructor(message, stack) {
-        super(message, stack);
+    constructor(message, cause) {
+        super(message, cause);
         this.name = "Fabric Error";
     }
-
 }
 
 class DockerError extends BaseError {
-    constructor(message) {
-        super(message);
+    constructor(message, cause) {
+        super(message, cause);
         this.name = "Docker Error";
+    }
+}
+
+class NodeTypeError extends BaseError{
+    constructor(message, cause) {
+        super(message, cause);
+        this.name = `Node Type Error`;
     }
 }
 
@@ -24,4 +30,5 @@ module.exports = {
     BaseError: BaseError,
     FabricError: FabricError,
     DockerError: DockerError,
+    NodeTypeError: NodeTypeError
 }

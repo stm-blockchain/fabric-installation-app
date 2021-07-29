@@ -23,6 +23,7 @@ const Commands = {
 }
 
 module.exports = {
+    Commands: Commands,
     generateEnrollCommand(candidateNode, caNode) {
         if (caNode && !(caNode instanceof CaNode)) {
             console.log(`Not an instance`);
