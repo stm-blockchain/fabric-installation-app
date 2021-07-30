@@ -1,7 +1,8 @@
-const BaseNode = require(`./BaseNode`)
-const CaNode = require(`./CaNode`)
-const fileManager = require(`./files`)
-const childProcess = require(`child_process`)
+const BaseNode = require(`./BaseNode`);
+const CaNode = require(`./CaNode`);
+const fileManager = require(`./files`);
+const childProcess = require(`child_process`);
+const Errors = require(`./error`);
 
 module.exports = class OrdererNode extends BaseNode {
     constructor(userName, password, orgName, port, csrHosts,
@@ -97,32 +98,40 @@ module.exports = class OrdererNode extends BaseNode {
     }
 
     folderPrep() {
-        let paths = [`${this.BASE_PATH}/orderers/${this.name}/msp`,
-            `${this.BASE_PATH}/orderers/${this.name}/tls`,
-            `${this.BASE_PATH}/orderers/${this.name}/ledgers`,
-            `${this.BASE_PATH}/orderers/${this.name}/logs`,
-            `${this.BASE_PATH}/orderers/${this.name}/adminclient`]
-        fileManager.mkdir(paths);
-        fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
-            `${this.BASE_PATH}/orderers/${this.name}/msp/config.yaml`);
-        fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/orderer.yaml`,
-            `${this.BASE_PATH}/orderers/orderer.yaml`);
+        try {
+            let paths = [`${this.BASE_PATH}/orderers/${this.name}/msp`,
+                `${this.BASE_PATH}/orderers/${this.name}/tls`,
+                `${this.BASE_PATH}/orderers/${this.name}/ledgers`,
+                `${this.BASE_PATH}/orderers/${this.name}/logs`,
+                `${this.BASE_PATH}/orderers/${this.name}/adminclient`]
+            fileManager.mkdir(paths);
+            fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
+                `${this.BASE_PATH}/orderers/${this.name}/msp/config.yaml`);
+            fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/orderer.yaml`,
+                `${this.BASE_PATH}/orderers/orderer.yaml`);
+        } catch (e) {
+            throw new Errors.FolderStructureError(`ORDERER FOLDER PREP ERROR`, e);
+        }
     }
 
     arrangeFolderStructure(caNode) {
-        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
-        childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
+        try {
+            let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
+            childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
 
-        let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp`;
+            let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp`;
 
-        if (caNode.isTls) {
-            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.name}/tls/cert.pem`)
-            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/orderers/${this.name}/tls/key.pem`)
-            childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/orderers/${this.name}/tls/tls-ca-cert.pem`)
-            childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/keystore/*_sk ${this.BASE_PATH}/orderers/${this.name}/adminclient/client-tls-key.pem`)
-            childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.name}/adminclient/client-tls-cert.pem`)
-        } else {
-            childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/orderers/${this.name}/msp/`)
+            if (caNode.isTls) {
+                childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.name}/tls/cert.pem`)
+                childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/orderers/${this.name}/tls/key.pem`)
+                childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/orderers/${this.name}/tls/tls-ca-cert.pem`)
+                childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/keystore/*_sk ${this.BASE_PATH}/orderers/${this.name}/adminclient/client-tls-key.pem`)
+                childProcess.exec(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca/${this._adminName}/msp/signcerts/cert.pem ${this.BASE_PATH}/orderers/${this.name}/adminclient/client-tls-cert.pem`)
+            } else {
+                childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/orderers/${this.name}/msp/`)
+            }
+        } catch (e) {
+            throw new Errors.FolderStructureError(`ORDERER ARRANGE STRUCTURE ERROR`, e);
         }
     }
 

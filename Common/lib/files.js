@@ -1,4 +1,5 @@
 const fs = require("fs")
+const Errors = require(`./error`);
 
 const BASE = process.env.HOME;
 
@@ -15,7 +16,11 @@ class ManageFile {
     }
 
     copyFile(src, dest) {
-        fs.copyFileSync(src, dest)
+        try {
+            fs.copyFileSync(src, dest)
+        } catch (e) {
+            throw new Errors.FolderStructureError(`COPY ERROR`, e);
+        }
     }
 
     renameFile(oldName, newName) {
@@ -23,24 +28,32 @@ class ManageFile {
     }
 
     mkdir(pathList) {
-        console.log(pathList)
-        pathList.forEach(path => {
-            console.log(path)
-            if (!fs.existsSync(path)) {
-                console.log("içerdeyim")
-                fs.mkdirSync(path, {recursive: true})
-            }
-        })
+        try {
+            console.log(pathList)
+            pathList.forEach(path => {
+                console.log(path)
+                if (!fs.existsSync(path)) {
+                    console.log("içerdeyim")
+                    fs.mkdirSync(path, {recursive: true})
+                }
+            })
+        } catch (e) {
+            throw new Errors.FolderStructureError(`MMKDIR ERROR`, e);
+        }
     }
 
     createEnvFile(envList, path) {
-        // if (!fs.existsSync(`${process.env.HOME}/ttz/envFiles`)) fs.mkdirSync(`${process.env.HOME}/ttz/envFiles`, {recursive:true})
-        let fileContent = ``;
-        envList.forEach(element => {
-            fileContent += `${element.name}=${(typeof element.value === `function`) ? element.value() : element.value}\n`
-        })
-        fs.writeFileSync(path, fileContent);
-        console.log(`Env file creation successful`);
+        try {
+            // if (!fs.existsSync(`${process.env.HOME}/ttz/envFiles`)) fs.mkdirSync(`${process.env.HOME}/ttz/envFiles`, {recursive:true})
+            let fileContent = ``;
+            envList.forEach(element => {
+                fileContent += `${element.name}=${(typeof element.value === `function`) ? element.value() : element.value}\n`
+            })
+            fs.writeFileSync(path, fileContent);
+            console.log(`Env file creation successful`);
+        } catch (e) {
+            throw new Errors.FolderStructureError(`ENV FILE ERROR`, e);
+        }
     }
 }
 

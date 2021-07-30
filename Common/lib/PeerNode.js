@@ -1,6 +1,7 @@
-const BaseNode = require(`./BaseNode`)
-const fileManager = require(`./files`)
-const childProcess = require(`child_process`)
+const BaseNode = require(`./BaseNode`);
+const fileManager = require(`./files`);
+const childProcess = require(`child_process`);
+const Errors = require(`./error`);
 
 module.exports = class PeerNode extends BaseNode {
     constructor(peerName, password, orgName, port, csrHosts) {
@@ -138,25 +139,33 @@ module.exports = class PeerNode extends BaseNode {
     }
 
     folderPrep() {
-        let paths = [`${this.BASE_PATH}/peers/${this.name}/msp`,
-            `${this.BASE_PATH}/peers/${this.name}/tls`]
-        fileManager.mkdir(paths);
-        fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
-            `${this.BASE_PATH}/peers/${this.name}/msp/config.yaml`);
+        try {
+            let paths = [`${this.BASE_PATH}/peers/${this.name}/msp`,
+                `${this.BASE_PATH}/peers/${this.name}/tls`]
+            fileManager.mkdir(paths);
+            fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
+                `${this.BASE_PATH}/peers/${this.name}/msp/config.yaml`);
+        } catch (e) {
+            throw new Errors.FolderStructureError(`PEER FODLER PREP EERROR`, e);
+        }
     }
 
     arrangeFolderStructure(caNode) {
-        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
-        childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
+        try {
+            let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
+            childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
 
-        let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp`;
+            let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp`;
 
-        if (caNode.isTls) {
-            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-cert.pem`)
-            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-key.pem`)
-            childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/tls-ca-cert.pem`)
-        } else {
-            childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/peers/${this.name}/msp/`)
+            if (caNode.isTls) {
+                childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-cert.pem`)
+                childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-key.pem`)
+                childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/tls-ca-cert.pem`)
+            } else {
+                childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/peers/${this.name}/msp/`)
+            }
+        } catch (e) {
+            throw new Errors.FolderStructureError(`PEER ARRANGE STRUCTURE ERROR`, e);
         }
     }
 }

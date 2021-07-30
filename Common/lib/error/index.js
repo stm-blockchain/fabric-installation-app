@@ -40,11 +40,19 @@ class FolderStructureError extends BaseError {
     }
 }
 
+class CommandGenerationError extends BaseError {
+    constructor(message, cause) {
+        super(message, cause);
+        this.name = `Command Generation Error`;
+    }
+}
+
 module.exports = {
     BaseError: BaseError,
     FabricError: FabricError,
     DockerError: DockerError,
     NodeTypeError: NodeTypeError,
     ContextObjError: ContextObjError,
-    FolderStructureError: FolderStructureError
+    FolderStructureError: FolderStructureError,
+    CommandGenerationError: CommandGenerationError
 }
