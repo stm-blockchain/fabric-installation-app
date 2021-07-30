@@ -87,7 +87,7 @@ async function _handleDockerNetwork(dockerService) {
             await dockerService.checkNetwork(`ttz_docker_network`);
             dockerNetworkExists = true;
         } catch (e) {
-            if (e.response.status === 404) {
+            if (e.hasOwnProperty(`response`) && e.response.status === 404) {
                 await _createNetwork(dockerService);
                 return;
             }
@@ -148,13 +148,13 @@ async function _commitChaincode(commitConfig) {
     }
 }
 
-async function _runContainerViaEngineApi(config) {
+async function _runContainerViaEngineApi(dockerService, config) {
     try {
-        await _handleDockerNetwork(this.dockerService);
+        await _handleDockerNetwork(dockerService);
 
-        let createResponse = await this.dockerService.createContainer(config);
-        await this.dockerService.connectContainerToNetwork(`ttz_docker_network`, {Container: createResponse.data.Id});
-        await this.dockerService.startContainer({Id: createResponse.data.Id});
+        let createResponse = await dockerService.createContainer(config);
+        await dockerService.connectContainerToNetwork(`ttz_docker_network`, {Container: createResponse.data.Id});
+        await dockerService.startContainer({Id: createResponse.data.Id});
     } catch (e) {
         if (e instanceof Errors.DockerError) throw e;
         throw new Errors.DockerError(`RUN CONTAINER ERROR`, e);
@@ -198,7 +198,7 @@ module.exports = class Installation {
     }
 
     async runContainerViaEngineApi(config) {
-        await _runContainerViaEngineApi(config);
+        await _runContainerViaEngineApi(this.dockerService, config);
     }
 
     async joinChannel(blockPath) {

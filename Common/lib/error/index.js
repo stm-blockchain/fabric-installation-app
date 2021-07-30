@@ -19,10 +19,24 @@ class DockerError extends BaseError {
     }
 }
 
-class NodeTypeError extends BaseError{
+class NodeTypeError extends BaseError {
     constructor(message, cause) {
         super(message, cause);
         this.name = `Node Type Error`;
+    }
+}
+
+class ContextObjError extends BaseError {
+    constructor(message, cause) {
+        super(message, cause);
+        this.name = `Context Object Error`;
+    }
+}
+
+class FolderStructureError extends BaseError {
+    constructor(message, cause) {
+        super(message, cause);
+        this.name = `Folder Structure Error`;
     }
 }
 
@@ -30,5 +44,7 @@ module.exports = {
     BaseError: BaseError,
     FabricError: FabricError,
     DockerError: DockerError,
-    NodeTypeError: NodeTypeError
+    NodeTypeError: NodeTypeError,
+    ContextObjError: ContextObjError,
+    FolderStructureError: FolderStructureError
 }
