@@ -158,31 +158,39 @@ module.exports = class OrdererNode extends BaseNode {
 
     generateAdminRegisterCommand(caNode) {
         if (!(caNode instanceof CaNode)) {
-            throw Error("CaNode is not an instance")
+            throw Errors.NodeTypeError(`ERROR \'caNode\' NOT AN INSTANCE OF CaNode`, new Error());
         }
 
-        let commandList = [`fabric-ca-client register -d`,
-        `--id.name ${this._adminName}`,
-        `--id.secret ${this._adminPw}`,
-        `--id.type client`,
-        `-u https://${caNode.host}:${caNode.port}`,
-        `-M ${caNode.mspDir}`];
+        try {
+            let commandList = [`fabric-ca-client register -d`,
+                `--id.name ${this._adminName}`,
+                `--id.secret ${this._adminPw}`,
+                `--id.type client`,
+                `-u https://${caNode.host}:${caNode.port}`,
+                `-M ${caNode.mspDir}`];
 
-        return commandList.join(` `);
+            return commandList.join(` `);
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ORDERER ADMIN REGISTER CMD ERROR`, e);
+        }
     }
 
     generateAdminEnrollCommand(caNode) {
         if (!(caNode instanceof CaNode)) {
-            throw Error("CaNode is not an instance")
+            throw Errors.NodeTypeError(`ERROR \'caNode\' NOT AN INSTANCE OF CaNode`, new Error());
         }
 
-        let commandList = [`fabric-ca-client enroll`,
-        `-u https://${this._adminName}:${this._adminPw}@${caNode.host}:${caNode.port}`,
-        `-M tls-ca/${this._adminName}/msp`,
-        `--csr.hosts ${this.csrHosts}`,
-        `--enrollment.profile tls`];
+        try {
+            let commandList = [`fabric-ca-client enroll`,
+                `-u https://${this._adminName}:${this._adminPw}@${caNode.host}:${caNode.port}`,
+                `-M tls-ca/${this._adminName}/msp`,
+                `--csr.hosts ${this.csrHosts}`,
+                `--enrollment.profile tls`];
 
-        return commandList.join(` `);
+            return commandList.join(` `);
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ORDERER ADMIN ENROLL CMD ERROR`, e);
+        }
     }
 
     get containerName() {

@@ -1,4 +1,4 @@
-const { CaNode } = require('../../Common/index');
+const { CaNode, Errors } = require('../../Common/index');
 
 module.exports = {
     async buildCaNode(req, res, next) {
@@ -8,6 +8,10 @@ module.exports = {
                 req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName, req.body.adminSecret);
             next();
         } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER BUILD CA NODE`, e);
+                next(wrappedError);
+            }
             next(e);
         }
     },
@@ -20,6 +24,10 @@ module.exports = {
                 req.installation.registerAndEnroll(req.caNode, req.context.CA_NODES.tlsCaNode);
                 next();
             } catch (e) {
+                if (!(e instanceof Errors.BaseError)) {
+                    const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER REGISTER & ENROLL`, e);
+                    next(wrappedError);
+                }
                 next(e);
             }
         }
@@ -34,6 +42,10 @@ module.exports = {
             console.log("[TIME] => Ca server started");
             next();
         } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER START CONTAINER`, e);
+                next(wrappedError);
+            }
             next(e);
         }
     },
@@ -42,6 +54,10 @@ module.exports = {
             req.installation.caEnroll(req.caNode);
             next();
         } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER ENROLL`, e);
+                next(wrappedError);
+            }
             next(e);
         }
     },
@@ -53,6 +69,10 @@ module.exports = {
                 req.installation.createMspFolder(req.caNode);
                 next();
             } catch (e) {
+                if (!(e instanceof Errors.BaseError)) {
+                    const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER CREATE ORG MSP`, e);
+                    next(wrappedError);
+                }
                 next(e);
             }
         }
@@ -66,13 +86,25 @@ module.exports = {
             req.installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
             next();
         } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER ORG ADMIN REGISTER`, e);
+                next(wrappedError);
+            }
             next(e);
         }
     },
-    async updateContext(req, res) {
-        req.caNode.adminName = req.body.adminName;
-        req.caNode.adminSecret = req.body.adminSecret;
-        await req.context.updateContext(req.caNode);
-        res.send("\nk from postgres");
+    async updateContext(req, res, next) {
+        try {
+            req.caNode.adminName = req.body.adminName;
+            req.caNode.adminSecret = req.body.adminSecret;
+            await req.context.updateContext(req.caNode);
+            res.send("\nk from postgres");
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER UPDATE CTX`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
     }
 }

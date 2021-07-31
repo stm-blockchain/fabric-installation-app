@@ -31,7 +31,7 @@ const postgresDockerConfig = {
 
 let dockerNetworkExists = false;
 
-function folderPrep() {
+function _folderPrep() {
     let folderExists = fs.existsSync(`${process.env.HOME}/ttz/data`);
     folderExists ? console.log("Data folder already exists")
         : fileManager.mkdir([`${process.env.HOME}/ttz/data`,
@@ -40,7 +40,7 @@ function folderPrep() {
             `${process.env.HOME}/ttz/tlsRootCerts`]);
 }
 
-async function runPostgres() {
+async function _runPostgres() {
    try {
        const response = await dockerService.createContainer(postgresDockerConfig);
        await dockerService.startContainer({ Id: response.data.Id });
@@ -49,7 +49,7 @@ async function runPostgres() {
    }
 }
 
-async function checkContainerExists() {
+async function _checkContainerExists() {
     try {
         let response = await dockerService.inspectContainer(config.name);
         return response.data.State.Running ? DB_CONTAINER_STATUS.CONTAINER_ALREADY_UP
@@ -62,7 +62,7 @@ async function checkContainerExists() {
     }
 }
 
-async function removeAndRerunContainer() {
+async function _removeAndRerunContainer() {
     try {
         await dockerService.removeContainerFromNetwork(config.name);
         let response = await dockerService.createContainer(postgresDockerConfig);
@@ -72,17 +72,17 @@ async function removeAndRerunContainer() {
     }
 }
 
-async function initDbContainer() {
-    let containerStatus = await checkContainerExists();
+async function _initDbContainer() {
+    let containerStatus = await _checkContainerExists();
     switch (containerStatus) {
         case DB_CONTAINER_STATUS.CONTAINER_ALREADY_UP:
             console.log(`Do nothing`);
             break;
         case DB_CONTAINER_STATUS.CONTAINER_DOWN:
-            await removeAndRerunContainer();
+            await _removeAndRerunContainer();
             break;
         case DB_CONTAINER_STATUS.NO_SUCH_CONTAINER:
-            await runPostgres();
+            await _runPostgres();
             break;
     }
 }
@@ -93,8 +93,8 @@ module.exports = {
     ORDERER_NODES: repository.getOrdererNodes(),
     dockerNetworkExists: dockerNetworkExists,
     init: async () => {
-        folderPrep();
-        await initDbContainer();
+        _folderPrep();
+        await _initDbContainer();
         await new Promise(r => setTimeout(r, 4000)); // Should know when postgres server is up
         await repository.init();
     },

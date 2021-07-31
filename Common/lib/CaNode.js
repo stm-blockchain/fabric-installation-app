@@ -103,7 +103,7 @@ module.exports = class CaNode extends BaseNode {
     }
 
     generateOrgAdminRegisterCommand() {
-        if (this.isTls) throw Error("This method can only be called by a org-ca node");
+        if (this.isTls) throw new Errors.NodeTypeError(`ERROR TLS CA CANNOT REGISTER AN ORG ADMIN`, new Error());
 
         try {
             let commandParams = [`fabric-ca-client register -d`,

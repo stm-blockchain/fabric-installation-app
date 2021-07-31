@@ -47,6 +47,13 @@ class CommandGenerationError extends BaseError {
     }
 }
 
+class GenericError extends BaseError {
+    constructor(message, cause) {
+        super(message, cause);
+        this.name = `Generic Error`;
+    }
+}
+
 module.exports = {
     BaseError: BaseError,
     FabricError: FabricError,
@@ -54,5 +61,6 @@ module.exports = {
     NodeTypeError: NodeTypeError,
     ContextObjError: ContextObjError,
     FolderStructureError: FolderStructureError,
-    CommandGenerationError: CommandGenerationError
+    CommandGenerationError: CommandGenerationError,
+    GenericError: GenericError
 }

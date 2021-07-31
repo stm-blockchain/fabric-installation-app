@@ -1,5 +1,6 @@
 const CaNode = require(`../CaNode`);
 const PeerNode = require(`../PeerNode`);
+const Errors = require(`../error`);
 
 const Commands = {
     OS: {
@@ -26,99 +27,129 @@ module.exports = {
     Commands: Commands,
     generateEnrollCommand(candidateNode, caNode) {
         if (caNode && !(caNode instanceof CaNode)) {
-            console.log(`Not an instance`);
-            return;
+            throw new Errors.CommandGenerationError(`NOT AN INSTANCE OF CaNde`, new Error());
         }
-        let command = [Commands.FABRIC_CA.FABRIC_CA_CLIENT, Commands.FABRIC_CA.ENROLL,
-            "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.name}:${candidateNode.secret}@${caNode.host}:${caNode.port}`}`,
-            "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.name}/msp`}`,
-            "--csr.hosts", candidateNode.csrHosts];
+        try {
+            let command = [Commands.FABRIC_CA.FABRIC_CA_CLIENT, Commands.FABRIC_CA.ENROLL,
+                "-u", `${!caNode ? candidateNode.url : `https://${candidateNode.name}:${candidateNode.secret}@${caNode.host}:${caNode.port}`}`,
+                "-M", `${!caNode ? candidateNode.mspDir : `${caNode.isTls ? `tls-ca` : `org-ca`}/${candidateNode.name}/msp`}`,
+                "--csr.hosts", candidateNode.csrHosts];
 
-        if ((caNode && caNode.isTls)
-            || (candidateNode instanceof CaNode
-                && candidateNode.isTls))
-            command = command.concat(["--enrollment.profile", `tls`]);
+            if ((caNode && caNode.isTls)
+                || (candidateNode instanceof CaNode
+                    && candidateNode.isTls))
+                command = command.concat(["--enrollment.profile", `tls`]);
 
-        return command.join(" ");
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING ENROLL CMD`, e);
+        }
     },
     generateRegisterCommand(candidateNode, caNode) {
         if (!(caNode instanceof CaNode)) {
-            console.log(`Not an instance`);
-            return;
+            throw new Errors.CommandGenerationError(`NOT AN INSTANCE OF CaNde`, new Error());
         }
 
-        let command = [Commands.FABRIC_CA.FABRIC_CA_CLIENT, Commands.FABRIC_CA.REGISTER,
-            `-d`,
-            `--id.name ${candidateNode.name}`,
-            `--id.secret ${candidateNode.secret}`,
-            `--id.type ${candidateNode.nodeType}`,
-            "-u", `https://${caNode.host}:${caNode.port}`,
-            "-M", caNode.mspDir];
+        try {
+            let command = [Commands.FABRIC_CA.FABRIC_CA_CLIENT, Commands.FABRIC_CA.REGISTER,
+                `-d`,
+                `--id.name ${candidateNode.name}`,
+                `--id.secret ${candidateNode.secret}`,
+                `--id.type ${candidateNode.nodeType}`,
+                "-u", `https://${caNode.host}:${caNode.port}`,
+                "-M", caNode.mspDir];
 
-        return command.join(` `);
+            return command.join(` `);
+        }catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING REGISTER CMD`, e);
+        }
     },
     // peer channel fetch oldest -o $ORDERER_ADDRESS --cafile $ORDERER_TLS_CA --tls -c testchannel $PWD/Org1/peer1/testchannel.genesis.block
     generateFetchCommand(peerNode, ordererConfig, channelName, blockPath) {
-        let command = [Commands.PEER.FETCH, Commands.PEER.FETCH_OLDEST,
-            `-o ${ordererConfig.ordererAddress}`,
-            `--cafile ${process.env.HOME}/ttz/orderers/${ordererConfig.ordererOrgName}-tls-ca-cert.pem`,
-            `--tls`,
-            `-c ${channelName}`,
-            `${blockPath}`
+        try {
+            let command = [Commands.PEER.FETCH, Commands.PEER.FETCH_OLDEST,
+                `-o ${ordererConfig.ordererAddress}`,
+                `--cafile ${process.env.HOME}/ttz/orderers/${ordererConfig.ordererOrgName}-tls-ca-cert.pem`,
+                `--tls`,
+                `-c ${channelName}`,
+                `${blockPath}`
 
-        ];
+            ];
 
-        return command.join(" ");
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING FETCH CMD`, e);
+        }
     },
     generateJoinCommand(blockPath) {
-        let command = [Commands.PEER.JOIN, `-b ${blockPath}`];
-        return command.join(" ");
+        try {
+            let command = [Commands.PEER.JOIN, `-b ${blockPath}`];
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING JOIN CMD`, e);
+        }
     },
     generateInstallCommand(packageName) {
-        const command = [Commands.PEER.INSTALL,
-            `${process.env.HOME}/ttz/chaincodes/${packageName}`];
-        return command.join(" ");
+        try {
+            const command = [Commands.PEER.INSTALL,
+                `${process.env.HOME}/ttz/chaincodes/${packageName}`];
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING INSTALL CMD`, e);
+        }
     },
     generateApproveCommand(chaincodeConfig) {
-        const command = [Commands.PEER.APPROVE,
-            `-o ${chaincodeConfig.ordererAddress}`,
-            `--channelID ${chaincodeConfig.channelId}`,
-            `--name ${chaincodeConfig.ccName}`,
-            `--version ${chaincodeConfig.version}`,
-            `--package-id ${process.env.CC_PACKAGE_ID}`,
-            `--sequence ${chaincodeConfig.seq}`,
-            `--tls`,
-            `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`]
+        try {
+            const command = [Commands.PEER.APPROVE,
+                `-o ${chaincodeConfig.ordererAddress}`,
+                `--channelID ${chaincodeConfig.channelId}`,
+                `--name ${chaincodeConfig.ccName}`,
+                `--version ${chaincodeConfig.version}`,
+                `--package-id ${process.env.CC_PACKAGE_ID}`,
+                `--sequence ${chaincodeConfig.seq}`,
+                `--tls`,
+                `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`]
 
-        return command.join(" ");
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING APPROVE CMD`, e);
+        }
     },
     generateCommitReadinessCommand(chaincodeConfig) {
-        const command = [Commands.PEER.CHECK_COMMIT_READINESS,
-            `--channelID ${chaincodeConfig.channelId}`,
-            `--name ${chaincodeConfig.ccName}`,
-            `--version ${chaincodeConfig.version}`,
-            `--sequence ${chaincodeConfig.seq}`,
-            `--tls`,
-            `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`,
-            `--output json`];
+        try {
+            const command = [Commands.PEER.CHECK_COMMIT_READINESS,
+                `--channelID ${chaincodeConfig.channelId}`,
+                `--name ${chaincodeConfig.ccName}`,
+                `--version ${chaincodeConfig.version}`,
+                `--sequence ${chaincodeConfig.seq}`,
+                `--tls`,
+                `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`,
+                `--output json`];
 
-        return command.join(" ");
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING COMMITREADINESS CMD`, e);
+        }
     },
     generateCommitCommand(commitConfig) {
-        const command = [Commands.PEER.COMMIT,
-            `-o ${commitConfig.ordererAddress}`,
-            `--channelID ${commitConfig.channelId}`,
-            `--name ${commitConfig.ccName}`,
-            `--version ${commitConfig.version}`,
-            `--sequence ${commitConfig.seq}`,
-            `--tls`,
-            `--cafile ${process.env.HOME}/ttz/orderers/${commitConfig.ordererOrgName}-tls-ca-cert.pem`];
+        try {
+            const command = [Commands.PEER.COMMIT,
+                `-o ${commitConfig.ordererAddress}`,
+                `--channelID ${commitConfig.channelId}`,
+                `--name ${commitConfig.ccName}`,
+                `--version ${commitConfig.version}`,
+                `--sequence ${commitConfig.seq}`,
+                `--tls`,
+                `--cafile ${process.env.HOME}/ttz/orderers/${commitConfig.ordererOrgName}-tls-ca-cert.pem`];
 
-        commitConfig.peers.forEach(peer => {
-            let parameter = `--peerAddresses ${peer.peerAddress} --tlsRootCertFiles ${process.env.HOME}/ttz/tlsRootCerts/${peer.orgName}-tls-ca-cert.pem`;
-            command.push(parameter);
-        });
+            commitConfig.peers.forEach(peer => {
+                let parameter = `--peerAddresses ${peer.peerAddress} --tlsRootCertFiles ${process.env.HOME}/ttz/tlsRootCerts/${peer.orgName}-tls-ca-cert.pem`;
+                command.push(parameter);
+            });
 
-        return command.join(" ");
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING COMMIT CMD`, e);
+        }
     }
 }
