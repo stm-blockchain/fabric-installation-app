@@ -161,6 +161,26 @@ async function _runContainerViaEngineApi(dockerService, config) {
     }
 }
 
+function _createMspFolder(caNode) {
+    if (!(caNode instanceof CaNode)) {
+        throw new Errors.NodeTypeError(`ERROR \'caNode\' is not an instance of CaNode`, new Error());
+    }
+
+    try {
+        const paths = [
+            `${caNode.BASE_PATH}/msp/cacerts`,
+            `${caNode.BASE_PATH}/msp/tlscacerts`
+        ]
+        fileManager.mkdir(paths);
+        fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`, `${caNode.BASE_PATH}/msp/config.yaml`);
+        childProcess.execSync(`cp ${caNode.BASE_PATH}/fabric-ca/client/org-ca/org-ca-admin/msp/cacerts/* ${caNode.BASE_PATH}/msp/cacerts/`)
+        fileManager.copyFile(`${caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`, `${caNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`);
+    } catch (e) {
+        if (e instanceof Errors.BaseError) throw e;
+        throw new Errors.FolderStructureError(`ERROR CREATE MSP FOLDER`, e);
+    }
+}
+
 module.exports = class Installation {
 
     constructor(dockerService) {
@@ -178,7 +198,7 @@ module.exports = class Installation {
     }
 
     async commitChaincode(commitConfig) {
-        await _commitChaincode(commitConfig);
+        return _commitChaincode(commitConfig);
     }
 
     async isReadyForCommit(commitConfig) {
@@ -198,15 +218,15 @@ module.exports = class Installation {
     }
 
     async runContainerViaEngineApi(config) {
-        await _runContainerViaEngineApi(this.dockerService, config);
+        return  _runContainerViaEngineApi(this.dockerService, config);
     }
 
     async joinChannel(blockPath) {
-        await _joinChannel(blockPath);
+        return  _joinChannel(blockPath);
     }
 
     async fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPath) {
-        await _fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPath);
+        return _fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPath);
     }
 
     registerAndEnroll(candidateNode, caNode) {
@@ -238,17 +258,6 @@ module.exports = class Installation {
     }
 
     createMspFolder(caNode) {
-        if (!(caNode instanceof CaNode)) {
-            throw Error("Not an Ca instance")
-        }
-
-        let paths = [
-            `${caNode.BASE_PATH}/msp/cacerts`,
-            `${caNode.BASE_PATH}/msp/tlscacerts`
-        ]
-        fileManager.mkdir(paths);
-        fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`, `${caNode.BASE_PATH}/msp/config.yaml`);
-        childProcess.execSync(`cp ${caNode.BASE_PATH}/fabric-ca/client/org-ca/org-ca-admin/msp/cacerts/* ${caNode.BASE_PATH}/msp/cacerts/`)
-        fileManager.copyFile(`${caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`, `${caNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`);
+        _createMspFolder(caNode)
     }
 }
