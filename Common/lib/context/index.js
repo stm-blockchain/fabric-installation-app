@@ -30,6 +30,7 @@ const postgresDockerConfig = {
 }
 
 let dockerNetworkExists = false;
+let logger;
 
 function _folderPrep() {
     let folderExists = fs.existsSync(`${process.env.HOME}/ttz/data`);
@@ -87,6 +88,10 @@ async function _initDbContainer() {
     }
 }
 
+function _setLogger(loggerInstance) {
+    logger = loggerInstance;
+}
+
 module.exports = {
     CA_NODES: repository.getCaNodes(),
     PEER_NODES: repository.getPeerNodes(),
@@ -103,6 +108,9 @@ module.exports = {
     },
     getPeer: (peerConfig) => {
         return repository.getPeerByName(peerConfig);
+    },
+    setLogger: (loggerInstace) => {
+        _setLogger(loggerInstace);
     }
 }
 

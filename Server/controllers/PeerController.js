@@ -3,8 +3,10 @@ const { PeerNode, Errors } = require("../../Common/index");
 module.exports = {
     async buildPeerNode(req, res, next) {
       try {
+          req.logger.log({level: 'info', message: 'Building PeerNode'});
           req.peerNode = new PeerNode(req.body.peerName, req.body.password,
               req.body.orgName, req.body.port, `${req.body.csrHosts}`);
+          req.logger.log({level: 'info', message: 'Successfully built PeerNode'});
           next();
       } catch (e) {
           if (!(e instanceof Errors.BaseError)) {
@@ -16,8 +18,10 @@ module.exports = {
     },
     async tlsRegisterEnroll(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: 'PeerNode TLS register & enroll started'});
             req.installation.registerAndEnroll(req.peerNode,
                 req.context.CA_NODES.tlsCaNode);
+            req.logger.log({level: 'info', message: 'PeerNode TLS register & enroll successful'});
             next();
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -29,8 +33,10 @@ module.exports = {
     },
     async orgRegisterEnroll(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: 'Org CA register & enroll started'});
             req.installation.registerAndEnroll(req.peerNode,
                 req.context.CA_NODES.orgCaNode);
+            req.logger.log({level: 'info', message: 'Org CA register & enroll succcessful'});
             next();
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -42,7 +48,9 @@ module.exports = {
     },
     async startCouchDB(req, res, next) {
       try {
+          req.logger.log({level: 'info', message: 'Starting CouchDB container'});
           await req.installation.runContainerViaEngineApi(req.peerNode.generateCouchDBConfig());
+          req.logger.log({level: 'info', message: 'CouchDB container successfully started'});
           next();
       } catch (e) {
           if (!(e instanceof Errors.BaseError)) {
@@ -54,7 +62,9 @@ module.exports = {
     },
     async startPeer(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: 'Starting peer container'});
             await req.installation.runContainerViaEngineApi(req.peerNode.generateDockerConfiguration());
+            req.logger.log({level: 'info', message: 'Peer container successfully started'});
             next();
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -66,7 +76,9 @@ module.exports = {
     },
     async updateContext(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: 'PeerNode update context started'});
             await req.context.updateContext(req.peerNode);
+            req.logger.log({level: 'info', message: 'PeerNode update context successful'});
             res.send("\nk from postgres");
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -78,13 +90,16 @@ module.exports = {
     },
     async getPeer(req, res, next){
         try {
+            req.logger.log({level: 'info', message: 'Getting peer'});
             const peer = req.context.getPeer(req.body.peerConfig);
 
             if (!peer) {
+                req.logger.log({level: 'info', message: 'No such peer'});
                 res.status(400).send(`No such peer`);
             }
 
             req.peerNode = peer;
+            req.logger.log({level: 'info', message: 'Getting peer successful'});
             next();
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -96,7 +111,9 @@ module.exports = {
     },
     async setUpCliEnv(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: 'Setting up CLI env'});
             req.installation.createCliEnv(req.peerNode);
+            req.logger.log({level: 'info', message: 'CLI env set successfully'});
             next();
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -108,9 +125,11 @@ module.exports = {
     },
     async fetchGenesisBlock(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: 'Fetching genesis block'});
             const blockPath = `${req.peerNode.BASE_PATH}/peers/${req.peerNode.name}/${req.body.channelName}.genesis.block`
             await req.installation.fetchGenesisBlock(req.peerNode, req.body.ordererConfig, req.body.channelName, blockPath)
             req.blockPath = blockPath;
+            req.logger.log({level: 'info', message: 'Genesis block fetched successfully'});
             next();
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -122,7 +141,9 @@ module.exports = {
     },
     async joinChannel(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: `Joining channel: ${req.body.channelName}`});
             await req.installation.joinChannel(req.blockPath);
+            req.logger.log({level: 'info', message: `Successfully joined channel: ${req.body.channelName}`});
             res.send(`ok\n`);
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -134,7 +155,9 @@ module.exports = {
     },
     async prepareForCommit(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: `Preparing for commit`});
             const result = await req.installation.prepareForCommit(req.body.chaincodeConfig);
+            req.logger.log({level: 'info', message: `Preparation status: ${result[req.peerNode.orgName]}`});
             res.send(`Result for ${req.peerNode.orgName}: ${result[req.peerNode.orgName]}`);
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -146,9 +169,14 @@ module.exports = {
     },
     async commitChaincode(req, res, next) {
         try {
+            req.logger.log({level: 'info', message: `Commiting chaincode: ${req.body.commitConfig} to channel: ${req.body.channelId}`});
             const isReadyForCommit = await req.installation.isReadyForCommit(req.body.commitConfig);
-            if (!isReadyForCommit) res.status(400).send("All organizations must approve the chaincode\n");
+            if (!isReadyForCommit) {
+                req.logger.log({level: 'info', message: `All organizations must approve the chaincode: ${req.body.commitConfig}`});
+                res.status(400).send("All organizations must approve the chaincode\n");
+            }
             await req.installation.commitChaincode(req.body.commitConfig);
+            req.logger.log({level: 'info', message: `Chaincode: ${req.body.commitConfig} successfully commited to channel: ${req.body.channelId}`});
             res.send("ok\n")
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {

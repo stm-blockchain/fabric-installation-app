@@ -8,14 +8,17 @@ const fileManager = require("../files");
 const FabricCommandGenerator = require(`./FabricCommandGenerator`);
 
 let dockerNetworkExists = false
+let logger;
 
 async function _getPackageId(packageName) {
     try{
+        logger.log({level: `debug`, message: `Get Package ID`});
         const label = _extractLabel(packageName);
         const result = await _getInstalledList(packageName);
         if (!result.hasOwnProperty("installed_chaincodes")) return null;
         const filteredResult = result.installed_chaincodes.filter(element => element.label === label);
         // we expect label to be unique thus the filtered array will have one element or none
+        logger.log({level: `debug`, message: `Get Package ID successful`});
         return !filteredResult.length ? null : filteredResult[0];
     } catch (e) {
         if (e instanceof Errors.FabricError) throw e;
@@ -25,7 +28,9 @@ async function _getPackageId(packageName) {
 
 async function _install(packageName) {
     try {
+        logger.log({level: `debug`, message: `Installing chaincode: ${packageName}`});
         await exec(FabricCommandGenerator.generateInstallCommand(packageName));
+        logger.log({level: `debug`, message: `Chaincode ${packageName} installed successfully`});
         return _getPackageId(packageName);
     } catch (e) {
         if (e instanceof Errors.FabricError) throw e;
@@ -35,8 +40,10 @@ async function _install(packageName) {
 
 async function _approve(approveParams) {
     try {
+        logger.log({level: `debug`, message: `Approving chaincode: ${chaincodeConfig.ccName} for the channel ${chaincodeConfig.channelId}`});
         await exec(FabricCommandGenerator.generateApproveCommand(approveParams));
         let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(approveParams));
+        logger.log({level: `debug`, message: `Approve state: ${stdout}`});
         const result = JSON.parse(stdout);
         return result.approvals;
     } catch (e) {
@@ -46,7 +53,9 @@ async function _approve(approveParams) {
 
 async function _isReadyForCommit(readyParams) {
     try {
+        logger.log({level: `debug`, message: `Checking commit readiness of chaincode ${readyParams.ccName} for channel ${readyParams.channelId}`});
         let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(readyParams));
+        logger.log({level: `debug`, message: `Commit readiness state: ${stdout}`});
         const result = JSON.parse(stdout);
         const values = Object.values(result).filter(element => !element);
         return !(values.length > 0);
@@ -56,17 +65,19 @@ async function _isReadyForCommit(readyParams) {
 }
 
 function _extractLabel(packageName) {
+    logger.log({level: `debug`, message: `Extracting label for package name: ${packageName}`});
     const packageSplit = packageName.split("@");
     const version = packageSplit[1].replace(`.tar.gz`, ``);
+    logger.log({level: `debug`, message: `Label extracted successfully`});
     return `${packageSplit[0]}_${version}`;
 }
 
 async function _getInstalledList() {
     try {
+        logger.log({level: `debug`, message: `Getting installed chaincode list`});
         const {stdout, stderr} = await exec(`${FabricCommandGenerator.Commands.PEER.QUERY_INSTALLED} ${FabricCommandGenerator.Commands.OS.TO_STDOUT}`);
-        console.log(`stdout: ${stdout}`);
+        logger.log({level: `debug`, message: `List of installed chaincodes: ${stdout}`});
         const result = JSON.parse(stdout);
-        console.log(result);
         return result;
     } catch (e) {
         throw new Errors.FabricError(`Queryinstalled Error`, e);
@@ -75,6 +86,7 @@ async function _getInstalledList() {
 
 async function _createNetwork(dockerService) {
     try {
+        logger.log({level: `debug`, message: `List of installed chaincodes: ${stdout}`});
         await dockerService.createNetwork({Name: `ttz_docker_network`});
     } catch (e) {
         throw new Errors.DockerError(`NETWORK CREATION ERROR`, e);
@@ -181,10 +193,15 @@ function _createMspFolder(caNode) {
     }
 }
 
+function _setLogger(loggerInstance) {
+    logger = loggerInstance;
+}
+
 module.exports = class Installation {
 
-    constructor(dockerService) {
+    constructor(dockerService, loggerInstance) {
         this.dockerService = dockerService;
+        _setLogger(loggerInstance);
     }
 
     async prepareForCommit(chaincodeConfig) {

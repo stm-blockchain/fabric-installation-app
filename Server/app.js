@@ -1,16 +1,27 @@
-const express = require('express')
-const bodyParser = require('body-parser')
-const context = require('../Common/lib/context')
-const { Installation, DockerApi } = require('../Common');
-const app = express()
+const express = require('express');
+const bodyParser = require('body-parser');
+const context = require('../Common/lib/context');
+const { Installation, DockerApi, Logger } = require('../Common');
+const app = express();
+const { v4: uuidv4 } = require('uuid');
 
 const inject = (req, res, next) => {
+    const logger = Logger.getLogger(uuidv4());
+    context.setLogger(logger);
     req.context = context;
-    req.installation = new Installation(new DockerApi())
+    req.installation = new Installation(new DockerApi(), logger);
+    req.logger = logger;
     next();
 }
-app.use(bodyParser.json())
+
+const logRequest = (req, res, next) => {
+    req.logger.log({level: 'info', message: `New request received: ${req.originalUrl}`});
+    req.logger.log({level: 'debug', message: `New request received: To ${req.originalUrl} from ${req.ip}\nPayload: ${req.body}`});
+    next();
+}
+app.use(bodyParser.json());
 app.use(inject);
+app.use(logRequest);
 
 context.init().then(() => {
     require('./routes')(app, context);
