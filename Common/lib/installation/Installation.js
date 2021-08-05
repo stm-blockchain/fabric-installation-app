@@ -77,8 +77,7 @@ async function _getInstalledList() {
         logger.log({level: `debug`, message: `Getting installed chaincode list`});
         const {stdout, stderr} = await exec(`${FabricCommandGenerator.Commands.PEER.QUERY_INSTALLED} ${FabricCommandGenerator.Commands.OS.TO_STDOUT}`);
         logger.log({level: `debug`, message: `List of installed chaincodes: ${stdout}`});
-        const result = JSON.parse(stdout);
-        return result;
+        return JSON.parse(stdout);
     } catch (e) {
         throw new Errors.FabricError(`Queryinstalled Error`, e);
     }
@@ -86,20 +85,25 @@ async function _getInstalledList() {
 
 async function _createNetwork(dockerService) {
     try {
-        logger.log({level: `debug`, message: `List of installed chaincodes: ${stdout}`});
+        logger.log({level: `debug`, message: `Creating docker network`});
         await dockerService.createNetwork({Name: `ttz_docker_network`});
+        logger.log({level: `debug`, message: `Docker network created`});
     } catch (e) {
         throw new Errors.DockerError(`NETWORK CREATION ERROR`, e);
     }
 }
 
 async function _handleDockerNetwork(dockerService) {
+    logger.log({level: `debug`, message: `Handle docker network`});
     if (!dockerNetworkExists) {
         try {
+            logger.log({level: `debug`, message: `Checking docker network`});
             await dockerService.checkNetwork(`ttz_docker_network`);
+            logger.log({level: `debug`, message: `Docker network exists`});
             dockerNetworkExists = true;
         } catch (e) {
             if (e.hasOwnProperty(`response`) && e.response.status === 404) {
+                logger.log({level: `debug`, message: `Docker network does not exist`});
                 await _createNetwork(dockerService);
                 return;
             }
@@ -108,26 +112,31 @@ async function _handleDockerNetwork(dockerService) {
     }
 }
 
-function _register(candidateNode, caNode) {
+async function _register(candidateNode, caNode) {
     try {
+        logger.log({level: `debug`, message: `Registering ${candidateNode.name} to ${caNode.name}`});
         let command = FabricCommandGenerator.generateRegisterCommand(candidateNode, caNode);
         process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
-        childProcess.execSync(command);
+        logger.log({level: `debug`, message: `Register command: ${command}`});
+        const { stdout, stderr } = await exec(command);
+        logger.log({level: `debug`, message: `Register state: ${stdout}`});
     } catch (e) {
         throw new Errors.FabricError(`REGISTER NODE ERROR`, e);
     }
 }
 
-function _caEnroll(candidateNode, caNode) {
+async function _caEnroll(candidateNode, caNode) {
     try {
+        logger.log({level: `debug`, message: `Enrolling ${candidateNode.name} to ${caNode.name}`});
         let command = caNode ? FabricCommandGenerator.generateEnrollCommand(candidateNode, caNode)
             : FabricCommandGenerator.generateEnrollCommand(candidateNode);
-        childProcess.execSync(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
+        await exec(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
         process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
-        console.log(`ENROLL CMD: ${command}`)
-        childProcess.execSync(command)
+        logger.log({level: `debug`, message: `Enroll command: ${command}`});
+        const { stdout, stderr } = await exec(command);
+        logger.log({level: `debug`, message: `Enroll state: ${stdout}`});
     } catch (e) {
         throw new Errors.FabricError(`CA ENROLL ERROR`, e);
     }
@@ -135,8 +144,10 @@ function _caEnroll(candidateNode, caNode) {
 
 async function _joinChannel(blockPath) {
     try {
+        logger.log({level: `debug`, message: `Joining channel using the genesis block: ${blockPath}`});
         const command = FabricCommandGenerator.generateJoinCommand(blockPath);
-        await exec(command);
+        const {stdout, stderr } = await exec(command);
+        logger.log({level: `debug`, message: `Join state: ${stdout}`});
     } catch (e) {
         throw new Errors.FabricError(`JOIN CHANNEL ERROR`, e);
     }
@@ -144,8 +155,10 @@ async function _joinChannel(blockPath) {
 
 async function _fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPath) {
     try {
+        logger.log({level: `debug`, message: `Fetching the genesis block from orderer: ${ordererConfig}`});
         const command = FabricCommandGenerator.generateFetchCommand(peerNode, ordererConfig, channelName, blockPath);
-        await exec(command);
+        const {stdout, stderr } = await exec(command);
+        logger.log({level: `debug`, message: `Fetch state: ${stdout}`});
     } catch (e) {
         throw new Errors.FabricError(`FETCH GENESIS ERROR`, e);
     }
@@ -153,20 +166,27 @@ async function _fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPat
 
 async function _commitChaincode(commitConfig) {
     try {
+        logger.log({level: `debug`, message: `Commiting the chaincode using the configuration: ${commitConfig}`});
         const {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitCommand(commitConfig));
-        console.log(`[STDOUT COMMIT]: ${stdout}`);
+        logger.log({level: `debug`, message: `Commit state: ${stdout}`});
     } catch (e) {
         throw new Errors.FabricError(`COMMIT CC ERROR`, e);
     }
 }
 
 async function _runContainerViaEngineApi(dockerService, config) {
+    logger.log({level: `debug`, message: `Running container via engine api: ${config}`});
     try {
         await _handleDockerNetwork(dockerService);
-
+        logger.log({level: `debug`, message: `Creating the container`});
         let createResponse = await dockerService.createContainer(config);
+        logger.log({level: `debug`, message: `Container created`});
+        logger.log({level: `debug`, message: `Connecting to the docker network`});
         await dockerService.connectContainerToNetwork(`ttz_docker_network`, {Container: createResponse.data.Id});
+        logger.log({level: `debug`, message: `Connected to the docker network`});
+        logger.log({level: `debug`, message: `Starting the docker container`});
         await dockerService.startContainer({Id: createResponse.data.Id});
+        logger.log({level: `debug`, message: `Docker container started`});
     } catch (e) {
         if (e instanceof Errors.DockerError) throw e;
         throw new Errors.DockerError(`RUN CONTAINER ERROR`, e);
@@ -174,6 +194,7 @@ async function _runContainerViaEngineApi(dockerService, config) {
 }
 
 function _createMspFolder(caNode) {
+    logger.log({level: `debug`, message: `Creating MSP folder`});
     if (!(caNode instanceof CaNode)) {
         throw new Errors.NodeTypeError(`ERROR \'caNode\' is not an instance of CaNode`, new Error());
     }
@@ -187,6 +208,7 @@ function _createMspFolder(caNode) {
         fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`, `${caNode.BASE_PATH}/msp/config.yaml`);
         childProcess.execSync(`cp ${caNode.BASE_PATH}/fabric-ca/client/org-ca/org-ca-admin/msp/cacerts/* ${caNode.BASE_PATH}/msp/cacerts/`)
         fileManager.copyFile(`${caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`, `${caNode.BASE_PATH}/msp/tlscacerts/tls-ca-cert.pem`);
+        logger.log({level: `debug`, message: `MSP Folder created`});
     } catch (e) {
         if (e instanceof Errors.BaseError) throw e;
         throw new Errors.FolderStructureError(`ERROR CREATE MSP FOLDER`, e);

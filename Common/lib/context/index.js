@@ -33,30 +33,40 @@ let dockerNetworkExists = false;
 let logger;
 
 function _folderPrep() {
+    logger.log({level: `debug`, message: `Folders preparing`});
     let folderExists = fs.existsSync(`${process.env.HOME}/ttz/data`);
     folderExists ? console.log("Data folder already exists")
         : fileManager.mkdir([`${process.env.HOME}/ttz/data`,
             `${process.env.HOME}/ttz/chaincodes`,
             `${process.env.HOME}/ttz/orderers`,
             `${process.env.HOME}/ttz/tlsRootCerts`]);
+    logger.log({level: `debug`, message: `Folders prepared`});
 }
 
 async function _runPostgres() {
    try {
+       logger.log({level: `debug`, message: `Creating postgres container`});
        const response = await dockerService.createContainer(postgresDockerConfig);
+       logger.log({level: `debug`, message: `Postgres container created`});
+       logger.log({level: `debug`, message: `Starting postgres container`});
        await dockerService.startContainer({ Id: response.data.Id });
+       logger.log({level: `debug`, message: `Postgres container started`});
    } catch (e) {
        throw new Errors.DockerError(`ERROR RUNNING DB CONTAINER`, e);
    }
 }
 
 async function _checkContainerExists() {
+    logger.log({level: `debug`, message: `Checking existing postgres container`});
     try {
+        logger.log({level: `debug`, message: `Inspect container`});
         let response = await dockerService.inspectContainer(config.name);
+        logger.log({level: `debug`, message: `Postgres container exists`});
         return response.data.State.Running ? DB_CONTAINER_STATUS.CONTAINER_ALREADY_UP
             : DB_CONTAINER_STATUS.CONTAINER_DOWN;
     } catch (e) {
         if (e.response.status === dockerConfig.NO_SUCH_CONTAINER) {
+            logger.log({level: `debug`, message: `Postgres container does not exist`});
             return DB_CONTAINER_STATUS.NO_SUCH_CONTAINER;
         }
         throw new Errors.DockerError(`CHECK CONTAINER EXISTS ERROR`, e);
@@ -64,10 +74,17 @@ async function _checkContainerExists() {
 }
 
 async function _removeAndRerunContainer() {
+    logger.log({level: `debug`, message: `Remove and rerun postgres container`});
     try {
+        logger.log({level: `debug`, message: `Removing container from network`});
         await dockerService.removeContainerFromNetwork(config.name);
+        logger.log({level: `debug`, message: `Container removed from network`});
+        logger.log({level: `debug`, message: `Creating new postgres container`});
         let response = await dockerService.createContainer(postgresDockerConfig);
+        logger.log({level: `debug`, message: `New postgres container created`});
+        logger.log({level: `debug`, message: `Starting postgres container`});
         await dockerService.startContainer({ Id: response.data.Id });
+        logger.log({level: `debug`, message: `Postgres container started`});
     } catch (e) {
         throw new Errors.DockerError(`REMOVE-RERUN ERROR DB CONTAINER`, e);
     }

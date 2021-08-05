@@ -39,7 +39,7 @@ module.exports = {
                 || (candidateNode instanceof CaNode
                     && candidateNode.isTls))
                 command = command.concat(["--enrollment.profile", `tls`]);
-
+            command.concat(Commands.OS.TO_STDOUT);
             return command.join(" ");
         } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING ENROLL CMD`, e);
@@ -57,10 +57,11 @@ module.exports = {
                 `--id.secret ${candidateNode.secret}`,
                 `--id.type ${candidateNode.nodeType}`,
                 "-u", `https://${caNode.host}:${caNode.port}`,
-                "-M", caNode.mspDir];
+                "-M", caNode.mspDir,
+                Commands.OS.TO_STDOUT];
 
             return command.join(` `);
-        }catch (e) {
+        } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING REGISTER CMD`, e);
         }
     },
@@ -72,8 +73,8 @@ module.exports = {
                 `--cafile ${process.env.HOME}/ttz/orderers/${ordererConfig.ordererOrgName}-tls-ca-cert.pem`,
                 `--tls`,
                 `-c ${channelName}`,
-                `${blockPath}`
-
+                `${blockPath}`,
+                Commands.OS.TO_STDOUT
             ];
 
             return command.join(" ");
@@ -83,7 +84,7 @@ module.exports = {
     },
     generateJoinCommand(blockPath) {
         try {
-            let command = [Commands.PEER.JOIN, `-b ${blockPath}`];
+            let command = [Commands.PEER.JOIN, `-b ${blockPath}`, Commands.OS.TO_STDOUT];
             return command.join(" ");
         } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING JOIN CMD`, e);
@@ -92,7 +93,8 @@ module.exports = {
     generateInstallCommand(packageName) {
         try {
             const command = [Commands.PEER.INSTALL,
-                `${process.env.HOME}/ttz/chaincodes/${packageName}`];
+                `${process.env.HOME}/ttz/chaincodes/${packageName}`,
+                Commands.OS.TO_STDOUT];
             return command.join(" ");
         } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING INSTALL CMD`, e);
@@ -108,7 +110,8 @@ module.exports = {
                 `--package-id ${process.env.CC_PACKAGE_ID}`,
                 `--sequence ${chaincodeConfig.seq}`,
                 `--tls`,
-                `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`]
+                `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`,
+                Commands.OS.TO_STDOUT]
 
             return command.join(" ");
         } catch (e) {
@@ -124,7 +127,8 @@ module.exports = {
                 `--sequence ${chaincodeConfig.seq}`,
                 `--tls`,
                 `--cafile ${process.env.HOME}/ttz/orderers/${chaincodeConfig.ordererOrgName}-tls-ca-cert.pem`,
-                `--output json`];
+                `--output json`,
+                Commands.OS.TO_STDOUT];
 
             return command.join(" ");
         } catch (e) {
@@ -140,7 +144,8 @@ module.exports = {
                 `--version ${commitConfig.version}`,
                 `--sequence ${commitConfig.seq}`,
                 `--tls`,
-                `--cafile ${process.env.HOME}/ttz/orderers/${commitConfig.ordererOrgName}-tls-ca-cert.pem`];
+                `--cafile ${process.env.HOME}/ttz/orderers/${commitConfig.ordererOrgName}-tls-ca-cert.pem`,
+                Commands.OS.TO_STDOUT];
 
             commitConfig.peers.forEach(peer => {
                 let parameter = `--peerAddresses ${peer.peerAddress} --tlsRootCertFiles ${process.env.HOME}/ttz/tlsRootCerts/${peer.orgName}-tls-ca-cert.pem`;
