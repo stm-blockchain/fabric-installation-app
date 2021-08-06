@@ -6,6 +6,7 @@ module.exports = {
             req.logger.log({level: 'info', message: 'Building CaNode'});
             req.caNode = new CaNode(req.body.userName, req.body.password, req.body.port,
                 req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName, req.body.adminSecret);
+            req.caNode.logger = req.logger;
             req.logger.log({level: 'info', message: 'Successfuly built CaNode'});
             next();
         } catch (e) {
@@ -26,7 +27,7 @@ module.exports = {
         } else {
             try {
                 req.logger.log({level: 'info', message: 'Org CA register & enroll to TLS node started'});
-                req.installation.registerAndEnroll(req.caNode, req.context.CA_NODES.tlsCaNode);
+                await req.installation.registerAndEnroll(req.caNode, req.context.CA_NODES.tlsCaNode);
                 req.logger.log({level: 'info', message: 'Org CA register & enroll to TLS node successful'});
                 next();
             } catch (e) {
@@ -59,7 +60,7 @@ module.exports = {
     async enroll(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'CaNode enroll started'});
-            req.installation.caEnroll(req.caNode);
+            await req.installation.caEnroll(req.caNode);
             req.logger.log({level: 'info', message: 'CaNode enroll successful'});
             next();
         } catch (e) {
@@ -94,9 +95,9 @@ module.exports = {
             req.logger.log({level: 'info', message: 'Org Admin register & enroll started'});
             process.env.FABRIC_CA_CLIENT_HOME =`${req.caNode.BASE_PATH}/fabric-ca/client`;
             process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${req.caNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
-            req.installation.runBasicCmd(req.caNode.generateOrgAdminRegisterCommand());
-            req.installation.runBasicCmd(req.caNode.generateOrgAdminEnrollCommand());
-            req.installation.runBasicCmd(`cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
+            await req.installation.runBasicCmd(`Register org admin`, req.caNode.generateOrgAdminRegisterCommand());
+            await req.installation.runBasicCmd(`Enroll org admin`, req.caNode.generateOrgAdminEnrollCommand());
+            await req.installation.runBasicCmd(`Copy config`, `cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
             req.logger.log({level: 'info', message: 'Org Admin register & enroll successful'});
             next();
         } catch (e) {

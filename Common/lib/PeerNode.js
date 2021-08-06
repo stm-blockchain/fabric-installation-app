@@ -8,7 +8,6 @@ module.exports = class PeerNode extends BaseNode {
         super(peerName, password, orgName, csrHosts, port, 2);
         this._port = port;
         this._csrHosts = csrHosts;
-        this.folderPrep();
         this.ENV_FILE = [
             {
                 name: `CORE_PEER_ID`,
@@ -140,11 +139,13 @@ module.exports = class PeerNode extends BaseNode {
 
     folderPrep() {
         try {
+            this._logger.log({level: `debug`, message: `PeerNode preparing folders`});
             let paths = [`${this.BASE_PATH}/peers/${this.name}/msp`,
                 `${this.BASE_PATH}/peers/${this.name}/tls`]
             fileManager.mkdir(paths);
             fileManager.copyFile(`${process.env.FABRIC_CFG_PATH}/config.yaml`,
                 `${this.BASE_PATH}/peers/${this.name}/msp/config.yaml`);
+            this._logger.log({level: `debug`, message: `PeerNode preparing folders successful`});
         } catch (e) {
             throw new Errors.FolderStructureError(`PEER FODLER PREP EERROR`, e);
         }
@@ -152,16 +153,19 @@ module.exports = class PeerNode extends BaseNode {
 
     arrangeFolderStructure(caNode) {
         try {
+            this._logger.log({level: `debug`, message: `PeerNode arranging folder structure`});
             let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
             childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
 
             let mspPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp`;
 
             if (caNode.isTls) {
+                this._logger.log({level: `debug`, message: `Arranging fodlers for a TLS node`});
                 childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-cert.pem`)
                 childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/peers/${this.name}/tls/${this.orgName}-${this.name}-tls-key.pem`)
                 childProcess.execSync(`cp ${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem ${this.BASE_PATH}/peers/${this.name}/tls/tls-ca-cert.pem`)
             } else {
+                this._logger.log({level: `debug`, message: `Arranging fodlers for an Org CA node`});
                 childProcess.execSync(`cp -r ${mspPath}/* ${this.BASE_PATH}/peers/${this.name}/msp/`)
             }
         } catch (e) {

@@ -6,6 +6,8 @@ module.exports = {
           req.logger.log({level: 'info', message: 'Building PeerNode'});
           req.peerNode = new PeerNode(req.body.peerName, req.body.password,
               req.body.orgName, req.body.port, `${req.body.csrHosts}`);
+          req.peerNode.logger = req.logger;
+          req.peerNode.folderPrep();
           req.logger.log({level: 'info', message: 'Successfully built PeerNode'});
           next();
       } catch (e) {
@@ -19,7 +21,7 @@ module.exports = {
     async tlsRegisterEnroll(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'PeerNode TLS register & enroll started'});
-            req.installation.registerAndEnroll(req.peerNode,
+            await req.installation.registerAndEnroll(req.peerNode,
                 req.context.CA_NODES.tlsCaNode);
             req.logger.log({level: 'info', message: 'PeerNode TLS register & enroll successful'});
             next();
@@ -34,7 +36,7 @@ module.exports = {
     async orgRegisterEnroll(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'Org CA register & enroll started'});
-            req.installation.registerAndEnroll(req.peerNode,
+            await req.installation.registerAndEnroll(req.peerNode,
                 req.context.CA_NODES.orgCaNode);
             req.logger.log({level: 'info', message: 'Org CA register & enroll succcessful'});
             next();

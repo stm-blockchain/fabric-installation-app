@@ -23,7 +23,7 @@ app.use(bodyParser.json());
 app.use(inject);
 app.use(logRequest);
 
-context.init().then(() => {
+context.init(Logger.getLogger(`init`)).then(() => {
     require('./routes')(app, context);
     app.listen(8080);
 }).catch(e => {

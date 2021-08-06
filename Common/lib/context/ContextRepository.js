@@ -9,13 +9,21 @@ let CA_NODES = {};
 let PEER_NODES = [];
 let ORDERER_NODES = [];
 
-async function _init() {
+let logger;
+
+async function _init(logger) {
+    _setLogger(logger);
+    logger.log({level: `debug`, message: `Creating tables`});
     await dao.createTable();
+    logger.log({level: `debug`, message: `Tables created`});
+    logger.log({level: `debug`, message: `Fetching nodes`});
     const nodes = await dao.fetchNodes();
+    logger.log({level: `debug`, message: `Nodes fetched`});
     _loadNodeObjects(nodes);
 }
 
 function _updateContextObject(node) {
+    logger.log({level: `debug`, message: `Updating context objects`});
     switch (node.constructor) {
         case CaNode:
             node.isTls ? CA_NODES.tlsCaNode = node :
@@ -31,11 +39,13 @@ function _updateContextObject(node) {
 }
 
 function _getPeerByName(peerConfig) {
+    logger.log({level: `debug`, message: `Getting peer`});
     const result = PEER_NODES.filter(peer => peer.name === peerConfig.peerName && peer.orgName === peerConfig.orgName);
     return result.length > 0 ? result[0] : null;
 }
 
 function _loadNodeObjects(nodes) {
+    logger.log({level: `debug`, message: `Loading node objects`});
     nodes.caNodes.forEach(caNode => {
         let nodeObject = new CaNode(caNode.name, caNode.secret, caNode.port, caNode.org_name,
             caNode.is_tls, caNode.csr_hosts, caNode.admin_name, caNode.admin_secret);
@@ -53,8 +63,12 @@ function _loadNodeObjects(nodes) {
     })
 }
 
+function _setLogger(loggerInstance) {
+    logger = loggerInstance;
+}
+
 module.exports = {
-    init: async () => _init(),
+    init: async (loggerInstance) => _init(loggerInstance),
     getCaNodes: () => {
         return CA_NODES;
     },
@@ -69,6 +83,8 @@ module.exports = {
     },
     updateContext: async (node) => {
         _updateContextObject(node);
+        logger.log({level: `debug`, message: `Inserting node`});
         await dao.insertNode(node);
+        logger.log({level: `debug`, message: `Node inserted`});
     }
 }

@@ -40,7 +40,7 @@ async function _install(packageName) {
 
 async function _approve(approveParams) {
     try {
-        logger.log({level: `debug`, message: `Approving chaincode: ${chaincodeConfig.ccName} for the channel ${chaincodeConfig.channelId}`});
+        logger.log({level: `debug`, message: `Approving chaincode: ${approveParams.ccName} for the channel ${approveParams.channelId}`});
         await exec(FabricCommandGenerator.generateApproveCommand(approveParams));
         let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(approveParams));
         logger.log({level: `debug`, message: `Approve state: ${stdout}`});
@@ -128,7 +128,7 @@ async function _register(candidateNode, caNode) {
 
 async function _caEnroll(candidateNode, caNode) {
     try {
-        logger.log({level: `debug`, message: `Enrolling ${candidateNode.name} to ${caNode.name}`});
+        logger.log({level: `debug`, message: `Enrolling`});
         let command = caNode ? FabricCommandGenerator.generateEnrollCommand(candidateNode, caNode)
             : FabricCommandGenerator.generateEnrollCommand(candidateNode);
         await exec(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
@@ -268,14 +268,14 @@ module.exports = class Installation {
         return _fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPath);
     }
 
-    registerAndEnroll(candidateNode, caNode) {
-        _register(candidateNode, caNode);
-        _caEnroll(candidateNode, caNode);
+    async registerAndEnroll(candidateNode, caNode) {
+        await _register(candidateNode, caNode);
+        await _caEnroll(candidateNode, caNode);
         candidateNode.arrangeFolderStructure(caNode);
     }
 
-    caEnroll(candidateNode, caNode) {
-        _caEnroll(candidateNode, caNode);
+    async caEnroll(candidateNode, caNode) {
+        await _caEnroll(candidateNode, caNode);
     }
 
     caInitFolderPrep(node) {
@@ -288,8 +288,9 @@ module.exports = class Installation {
         fileManager.mkdir(paths);
     }
 
-    runBasicCmd(cmd) {
-        childProcess.execSync(cmd);
+    async runBasicCmd(optName, cmd) {
+        const { stdout, stderr } = await exec(cmd);
+        logger.log({level: `debug`, message: `${optName} state: ${stdout}`});
     }
 
     printLog(error) {

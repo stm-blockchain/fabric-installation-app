@@ -65,7 +65,7 @@ module.exports = class CaNode extends BaseNode {
             Name: `${this._isTls ? "tls-ca" : "org-ca"}.${this.orgName}.com`,
             Image: this.IMAGES.FABRIC_CA,
             Env: this.createEnvForDockerConf(),
-            Cmd: [`sh`,`-c`,`fabric-ca-server start -d -b ${this.name}:${this._password}`],
+            Cmd: [`sh`, `-c`, `fabric-ca-server start -d -b ${this.name}:${this._password}`],
             ExposedPorts: {
                 [port]: {}
             },
@@ -111,7 +111,8 @@ module.exports = class CaNode extends BaseNode {
                 `--id.secret ${this._adminSecret}`,
                 `--id.type admin`,
                 `-u https://${this.host}:${this.port}`,
-                `-M ${this.mspDir}`];
+                `-M ${this.mspDir}`,
+                `2>&1`];
 
             return commandParams.join(" ");
         } catch (e) {
@@ -123,12 +124,13 @@ module.exports = class CaNode extends BaseNode {
         if (this.isTls) throw Error("This method can only be called by a org-ca node");
 
         try {
-            process.env.FABRIC_CA_CLIENT_HOME =`${this.BASE_PATH}/fabric-ca/client`;
-            process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
+            process.env.FABRIC_CA_CLIENT_HOME = `${this.BASE_PATH}/fabric-ca/client`;
+            process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
             let commandParams = [`fabric-ca-client enroll`,
                 `-u https://${this._adminName}:${this._adminSecret}@${this.host}:${this.port}`,
                 `-M org-ca/${this._adminName}/msp`,
-                `--csr.hosts ${this.csrHosts}`]
+                `--csr.hosts ${this.csrHosts}`,
+                `2>&1`]
 
             return commandParams.join(" ");
         } catch (e) {

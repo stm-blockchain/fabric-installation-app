@@ -73,4 +73,8 @@ module.exports = class BaseNode {
     get csrHosts() {
         return `\'${this._csrHosts}\'`;
     }
+
+    set logger(loggerInstance) {
+        this._logger = loggerInstance;
+    }
 }

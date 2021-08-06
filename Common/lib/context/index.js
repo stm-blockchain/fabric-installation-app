@@ -94,7 +94,7 @@ async function _initDbContainer() {
     let containerStatus = await _checkContainerExists();
     switch (containerStatus) {
         case DB_CONTAINER_STATUS.CONTAINER_ALREADY_UP:
-            console.log(`Do nothing`);
+            logger.log({level: `debug`, message: `DB container already up`});
             break;
         case DB_CONTAINER_STATUS.CONTAINER_DOWN:
             await _removeAndRerunContainer();
@@ -107,6 +107,7 @@ async function _initDbContainer() {
 
 function _setLogger(loggerInstance) {
     logger = loggerInstance;
+    logger.log({level: `debug`, message: `Set logger`});
 }
 
 module.exports = {
@@ -114,11 +115,12 @@ module.exports = {
     PEER_NODES: repository.getPeerNodes(),
     ORDERER_NODES: repository.getOrdererNodes(),
     dockerNetworkExists: dockerNetworkExists,
-    init: async () => {
+    init: async (logger) => {
+        _setLogger(logger);
         _folderPrep();
         await _initDbContainer();
         await new Promise(r => setTimeout(r, 4000)); // Should know when postgres server is up
-        await repository.init();
+        await repository.init(logger);
     },
     updateContext: async (node) => {
         await repository.updateContext(node);

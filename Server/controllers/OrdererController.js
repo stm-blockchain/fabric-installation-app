@@ -7,6 +7,8 @@ module.exports = {
             req.ordererNode = new OrdererNode(req.body.userName, req.body.password,
                 req.body.orgName, req.body.port, req.body.csrHosts,
                 req.body.adminName, req.body.adminPw);
+            req.ordererNode.logger = req.logger;
+            req.ordererNode.folderPrep();
             req.logger.log({level: 'info', message: 'Successfuly built OrdererNode'});
             next();
         } catch (e) {
@@ -23,8 +25,8 @@ module.exports = {
             let ordererNode = req.ordererNode;
             process.env.FABRIC_CA_CLIENT_HOME = `${ordererNode.BASE_PATH}/fabric-ca/client`;
             process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${ordererNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
-            req.installation.runBasicCmd(ordererNode.generateAdminRegisterCommand(req.context.CA_NODES.tlsCaNode));
-            req.installation.runBasicCmd(ordererNode.generateAdminEnrollCommand(req.context.CA_NODES.tlsCaNode));
+            await req.installation.runBasicCmd(`Register admin`, ordererNode.generateAdminRegisterCommand(req.context.CA_NODES.tlsCaNode));
+            await req.installation.runBasicCmd(`Enroll admin`, ordererNode.generateAdminEnrollCommand(req.context.CA_NODES.tlsCaNode));
             req.logger.log({level: 'info', message: 'OrdererNode Admin TLS register & enroll successful'});
             next();
         } catch (e) {
@@ -38,7 +40,7 @@ module.exports = {
     async tlsRegisterEnroll(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'OrdererNode TLS register & enroll started'});
-            req.installation.registerAndEnroll(req.ordererNode,
+            await req.installation.registerAndEnroll(req.ordererNode,
                 req.context.CA_NODES.tlsCaNode);
             req.logger.log({level: 'info', message: 'OrdererNode TLS register & enroll successful'});
             next();
@@ -53,7 +55,7 @@ module.exports = {
     async orgRegisterEnroll(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'OrdererNode Org CA register & enroll started'});
-            req.installation.registerAndEnroll(req.ordererNode,
+            await req.installation.registerAndEnroll(req.ordererNode,
                 req.context.CA_NODES.orgCaNode);
             req.logger.log({level: 'info', message: 'OrdererNode Org CA register & enroll successful'});
             next();
