@@ -1,6 +1,9 @@
 const { createLogger, format, transports } = require('winston');
 const date = new Date()
-const logLevel = process.env.INSTALL_LOG_LEVEL || `info`;
+const logLevel = () => {
+    let level = process.env.INSTALL_LOG_LEVEL || `-`;
+    return level.toLowerCase() === `info` || level.toLowerCase() === `debug` ? level.toLowerCase() : `info`;
+}
 
 const myFormat = format.printf( ({ level, message, timestamp }) => {
     return `${timestamp} ${level}: ${message}`;
@@ -15,8 +18,8 @@ module.exports.getLogger = (label) => {
         ),
         transports: [
             new transports.File({
-                level: logLevel.toLowerCase(),
-                filename: `${process.env.HOME}/ttzTest/${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}.log`
+                level: logLevel(),
+                filename: `${process.env.HOME}/ttz/logs/${date.getUTCFullYear()}-${date.getUTCMonth()}-${date.getUTCDate()}.log`
             }),
             new transports.Console({
                 level: `debug`,

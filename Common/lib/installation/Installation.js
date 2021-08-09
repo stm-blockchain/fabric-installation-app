@@ -43,7 +43,7 @@ async function _approve(approveParams) {
         logger.log({level: `debug`, message: `Approving chaincode: ${approveParams.ccName} for the channel ${approveParams.channelId}`});
         await exec(FabricCommandGenerator.generateApproveCommand(approveParams));
         let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(approveParams));
-        logger.log({level: `debug`, message: `Approve state: ${stdout}`});
+        logger.log({level: `debug`, message: `Approve state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
         const result = JSON.parse(stdout);
         return result.approvals;
     } catch (e) {
@@ -55,7 +55,7 @@ async function _isReadyForCommit(readyParams) {
     try {
         logger.log({level: `debug`, message: `Checking commit readiness of chaincode ${readyParams.ccName} for channel ${readyParams.channelId}`});
         let {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitReadinessCommand(readyParams));
-        logger.log({level: `debug`, message: `Commit readiness state: ${stdout}`});
+        logger.log({level: `debug`, message: `Commit readiness state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
         const result = JSON.parse(stdout);
         const values = Object.values(result).filter(element => !element);
         return !(values.length > 0);
@@ -76,7 +76,7 @@ async function _getInstalledList() {
     try {
         logger.log({level: `debug`, message: `Getting installed chaincode list`});
         const {stdout, stderr} = await exec(`${FabricCommandGenerator.Commands.PEER.QUERY_INSTALLED} ${FabricCommandGenerator.Commands.OS.TO_STDOUT}`);
-        logger.log({level: `debug`, message: `List of installed chaincodes: ${stdout}`});
+        logger.log({level: `debug`, message: `List of installed chaincodes: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
         return JSON.parse(stdout);
     } catch (e) {
         throw new Errors.FabricError(`Queryinstalled Error`, e);
@@ -120,7 +120,7 @@ async function _register(candidateNode, caNode) {
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
         logger.log({level: `debug`, message: `Register command: ${command}`});
         const { stdout, stderr } = await exec(command);
-        logger.log({level: `debug`, message: `Register state: ${stdout}`});
+        logger.log({level: `debug`, message: `Register state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
     } catch (e) {
         throw new Errors.FabricError(`REGISTER NODE ERROR`, e);
     }
@@ -136,7 +136,7 @@ async function _caEnroll(candidateNode, caNode) {
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
         logger.log({level: `debug`, message: `Enroll command: ${command}`});
         const { stdout, stderr } = await exec(command);
-        logger.log({level: `debug`, message: `Enroll state: ${stdout}`});
+        logger.log({level: `debug`, message: `Enroll state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
     } catch (e) {
         throw new Errors.FabricError(`CA ENROLL ERROR`, e);
     }
@@ -147,7 +147,7 @@ async function _joinChannel(blockPath) {
         logger.log({level: `debug`, message: `Joining channel using the genesis block: ${blockPath}`});
         const command = FabricCommandGenerator.generateJoinCommand(blockPath);
         const {stdout, stderr } = await exec(command);
-        logger.log({level: `debug`, message: `Join state: ${stdout}`});
+        logger.log({level: `debug`, message: `Join state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
     } catch (e) {
         throw new Errors.FabricError(`JOIN CHANNEL ERROR`, e);
     }
@@ -158,7 +158,7 @@ async function _fetchGenesisBlock(peerNode, ordererConfig, channelName, blockPat
         logger.log({level: `debug`, message: `Fetching the genesis block from orderer: ${ordererConfig}`});
         const command = FabricCommandGenerator.generateFetchCommand(peerNode, ordererConfig, channelName, blockPath);
         const {stdout, stderr } = await exec(command);
-        logger.log({level: `debug`, message: `Fetch state: ${stdout}`});
+        logger.log({level: `debug`, message: `Fetch state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
     } catch (e) {
         throw new Errors.FabricError(`FETCH GENESIS ERROR`, e);
     }
@@ -168,7 +168,7 @@ async function _commitChaincode(commitConfig) {
     try {
         logger.log({level: `debug`, message: `Commiting the chaincode using the configuration: ${commitConfig}`});
         const {stdout, stderr} = await exec(FabricCommandGenerator.generateCommitCommand(commitConfig));
-        logger.log({level: `debug`, message: `Commit state: ${stdout}`});
+        logger.log({level: `debug`, message: `Commit state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
     } catch (e) {
         throw new Errors.FabricError(`COMMIT CC ERROR`, e);
     }
@@ -290,7 +290,7 @@ module.exports = class Installation {
 
     async runBasicCmd(optName, cmd) {
         const { stdout, stderr } = await exec(cmd);
-        logger.log({level: `debug`, message: `${optName} state: ${stdout}`});
+        logger.log({level: `debug`, message: `${optName} state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`});
     }
 
     printLog(error) {

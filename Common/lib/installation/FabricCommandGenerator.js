@@ -40,6 +40,7 @@ module.exports = {
                     && candidateNode.isTls))
                 command = command.concat(["--enrollment.profile", `tls`]);
 
+            command.push(Commands.OS.TO_STDOUT);
             return command.join(" ");
         } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING ENROLL CMD`, e);

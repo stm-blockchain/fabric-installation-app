@@ -39,7 +39,8 @@ function _folderPrep() {
         : fileManager.mkdir([`${process.env.HOME}/ttz/data`,
             `${process.env.HOME}/ttz/chaincodes`,
             `${process.env.HOME}/ttz/orderers`,
-            `${process.env.HOME}/ttz/tlsRootCerts`]);
+            `${process.env.HOME}/ttz/tlsRootCerts`,
+            `${process.env.HOME}/ttz/logs`]);
     logger.log({level: `debug`, message: `Folders prepared`});
 }
 
