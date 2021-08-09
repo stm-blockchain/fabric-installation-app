@@ -1,5 +1,6 @@
 const BaseNode = require(`./BaseNode`)
 const childProcess = require("child_process");
+const Errors = require(`./error`);
 
 module.exports = class CaNode extends BaseNode {
 
@@ -64,7 +65,7 @@ module.exports = class CaNode extends BaseNode {
             Name: `${this._isTls ? "tls-ca" : "org-ca"}.${this.orgName}.com`,
             Image: this.IMAGES.FABRIC_CA,
             Env: this.createEnvForDockerConf(),
-            Cmd: [`sh`,`-c`,`fabric-ca-server start -d -b ${this.name}:${this._password}`],
+            Cmd: [`sh`, `-c`, `fabric-ca-server start -d -b ${this.name}:${this._password}`],
             ExposedPorts: {
                 [port]: {}
             },
@@ -87,40 +88,54 @@ module.exports = class CaNode extends BaseNode {
     }
 
     arrangeFolderStructure(caNode) {
-        let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
-        childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
+        try {
+            let baseKeyPath = `${this.BASE_PATH}/fabric-ca/client/${caNode.isTls ? `tls-ca` : `org-ca`}/${this.name}/msp/keystore`;
+            childProcess.execSync(`mv ${baseKeyPath}/*_sk ${baseKeyPath}/key.pem`)
 
-        if (!this.isTls) {
-            let mspPath = `${this.BASE_PATH}/fabric-ca/client/tls-ca/${this.name}/msp`;
-            childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
-            childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
+            if (!this.isTls) {
+                let mspPath = `${this.BASE_PATH}/fabric-ca/client/tls-ca/${this.name}/msp`;
+                childProcess.execSync(`cp ${mspPath}/signcerts/cert.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
+                childProcess.execSync(`cp ${mspPath}/keystore/key.pem ${this.BASE_PATH}/fabric-ca/server/org-ca/tls/`)
+            }
+        } catch (e) {
+            throw new Errors.FolderStructureError(`CA FOLDER STRUCTURE ERROR`, e);
         }
     }
 
     generateOrgAdminRegisterCommand() {
-        if (this.isTls) throw Error("This method can only be called by a org-ca node");
+        if (this.isTls) throw new Errors.NodeTypeError(`ERROR TLS CA CANNOT REGISTER AN ORG ADMIN`, new Error());
 
-        let commandParams = [`fabric-ca-client register -d`,
-        `--id.name ${this._adminName}`,
-        `--id.secret ${this._adminSecret}`,
-        `--id.type admin`,
-        `-u https://${this.host}:${this.port}`,
-        `-M ${this.mspDir}`];
+        try {
+            let commandParams = [`fabric-ca-client register -d`,
+                `--id.name ${this._adminName}`,
+                `--id.secret ${this._adminSecret}`,
+                `--id.type admin`,
+                `-u https://${this.host}:${this.port}`,
+                `-M ${this.mspDir}`,
+                `2>&1`];
 
-        return commandParams.join(" ");
+            return commandParams.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`CA ORG-ADMIN REGISTER CMD ERROR`, e);
+        }
     }
 
     generateOrgAdminEnrollCommand() {
         if (this.isTls) throw Error("This method can only be called by a org-ca node");
 
-        process.env.FABRIC_CA_CLIENT_HOME =`${this.BASE_PATH}/fabric-ca/client`;
-        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES =`${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
-        let commandParams = [`fabric-ca-client enroll`,
-        `-u https://${this._adminName}:${this._adminSecret}@${this.host}:${this.port}`,
-        `-M org-ca/${this._adminName}/msp`,
-        `--csr.hosts ${this.csrHosts}`]
+        try {
+            process.env.FABRIC_CA_CLIENT_HOME = `${this.BASE_PATH}/fabric-ca/client`;
+            process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${this.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`;
+            let commandParams = [`fabric-ca-client enroll`,
+                `-u https://${this._adminName}:${this._adminSecret}@${this.host}:${this.port}`,
+                `-M org-ca/${this._adminName}/msp`,
+                `--csr.hosts ${this.csrHosts}`,
+                `2>&1`]
 
-        return commandParams.join(" ");
+            return commandParams.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`CA ORG-ADMIN ENROLL CMD ERROR`, e);
+        }
     }
 
     get adminName() {

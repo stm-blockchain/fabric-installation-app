@@ -1,8 +1,8 @@
 const { Installation } = require('../Common/index');
-const installation = new Installation();
 const CaController = require('./controllers/CaController')
 const PeerController = require(`./controllers/PeerController`)
 const OrdererController = require(`./controllers/OrdererController`);
+const ErrorHandler = require(`./controllers/ErrorHandler`);
 
 module.exports = (app, context) => {
     app.post('/initCa',
@@ -15,10 +15,6 @@ module.exports = (app, context) => {
         CaController.updateContext);
 
     app.post(`/initPeer`,
-        (req, res, next) => {
-            PeerController.installation = installation;
-            next();
-        },
         PeerController.buildPeerNode,
         PeerController.tlsRegisterEnroll,
         PeerController.orgRegisterEnroll,
@@ -39,4 +35,17 @@ module.exports = (app, context) => {
         PeerController.setUpCliEnv,
         PeerController.fetchGenesisBlock,
         PeerController.joinChannel)
+
+    app.post(`/prepareCommit`,
+        PeerController.getPeer,
+        PeerController.setUpCliEnv,
+        PeerController.prepareForCommit)
+
+    app.post(`/commitChaincode`,
+        PeerController.getPeer,
+        PeerController.setUpCliEnv,
+        PeerController.commitChaincode)
+
+    // Error handler must always be declared last according to Express.js docs
+    app.use(ErrorHandler.handleErrors)
 }

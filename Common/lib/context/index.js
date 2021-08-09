@@ -2,14 +2,10 @@ const fileManager = require("../files");
 const fs = require("fs");
 const config = require("./config");
 const dockerConfig = require(`../dockerConfig`);
-const db = require("../db")
 const dockerApi = require("../dockerApi");
 const dockerService = new dockerApi();
-const CaNode = require("../CaNode");
-const PeerNode = require("../PeerNode");
-const OrdererNode = require("../OrdererNode");
-const BaseNode = require("../BaseNode");
-const { v4: uuidv4 } = require('uuid');
+const repository = require(`./ContextRepository`);
+const Errors = require(`../error`);
 
 const DB_CONTAINER_STATUS= {
     CONTAINER_ALREADY_UP: 1,
@@ -33,211 +29,108 @@ const postgresDockerConfig = {
     }
 }
 
-let CA_NODES = {};
-let PEER_NODES = [];
-let ORDERER_NODES = [];
 let dockerNetworkExists = false;
+let logger;
 
-function folderPrep() {
+function _folderPrep() {
+    logger.log({level: `debug`, message: `Folders preparing`});
     let folderExists = fs.existsSync(`${process.env.HOME}/ttz/data`);
     folderExists ? console.log("Data folder already exists")
-        : fileManager.mkdir([`${process.env.HOME}/ttz/data`]);
+        : fileManager.mkdir([`${process.env.HOME}/ttz/data`,
+            `${process.env.HOME}/ttz/chaincodes`,
+            `${process.env.HOME}/ttz/orderers`,
+            `${process.env.HOME}/ttz/tlsRootCerts`,
+            `${process.env.HOME}/ttz/logs`]);
+    logger.log({level: `debug`, message: `Folders prepared`});
 }
 
-async function runPostgres() {
+async function _runPostgres() {
    try {
-       let response = await dockerService.createContainer(postgresDockerConfig);
+       logger.log({level: `debug`, message: `Creating postgres container`});
+       const response = await dockerService.createContainer(postgresDockerConfig);
+       logger.log({level: `debug`, message: `Postgres container created`});
+       logger.log({level: `debug`, message: `Starting postgres container`});
        await dockerService.startContainer({ Id: response.data.Id });
+       logger.log({level: `debug`, message: `Postgres container started`});
    } catch (e) {
-       console.log(`Db container could not start properly: ${e.response.message}`);
-       console.log(e.stack);
-       process.exit(dockerConfig.SERVER_ERROR);
+       throw new Errors.DockerError(`ERROR RUNNING DB CONTAINER`, e);
    }
 }
 
-async function createTables() {
-    const client = await db.connect();
+async function _checkContainerExists() {
+    logger.log({level: `debug`, message: `Checking existing postgres container`});
     try {
-        await client.query(`CREATE TABLE base_nodes ( node_id uuid PRIMARY KEY, name VARCHAR(50), secret VARCHAR(50), org_name VARCHAR(50), csr_hosts VARCHAR(50), port INT NOT NULL, type INT NOT NULL);`);
-        await client.query(`CREATE TABLE orderer_nodes ( orderer_id uuid PRIMARY KEY, node_id uuid NOT NULL, admin_name VARCHAR(50), admin_secret VARCHAR(50),FOREIGN KEY (node_id) REFERENCES base_nodes (node_id));`);
-        await client.query(`CREATE TABLE ca_nodes ( ca_id uuid PRIMARY KEY, node_id uuid NOT NULL, admin_name VARCHAR(50), admin_secret VARCHAR(50), is_tls BOOLEAN NOT NULL,FOREIGN KEY (node_id) REFERENCES base_nodes (node_id));`);
-    } catch (e) {
-        console.log(`${e.message}: \n${e.stack}`);
-    } finally {
-        client.release();
-    }
-}
-
-async function fetcNodes() {
-    let nodes = {};
-    let response;
-    let ordererQuery = `SELECT * FROM base_nodes INNER JOIN orderer_nodes ON base_nodes.node_id = orderer_nodes.node_id`;
-    let caQuery = `SELECT * FROM base_nodes INNER JOIN ca_nodes ON base_nodes.node_id = ca_nodes.node_id`;
-    const client = await db.connect();
-    try {
-        response = await client.query(caQuery);
-        nodes.caNodes = response.rows;
-        response = await client.query(ordererQuery);
-        nodes.ordererNodes = response.rows;
-        response = await client.query("SELECT * FROM base_nodes WHERE base_nodes.type = $1", ["2"]);
-        nodes.peerNodes = response.rows;
-        return nodes;
-    } catch (e) {
-        console.log(`${e.message}: \n${e.stack}`);
-        return null;
-    } finally {
-        client.release();
-    }
-}
-
-function loadNodeObjects(nodes) {
-    nodes.caNodes.forEach(caNode => {
-        let nodeObject = new CaNode(caNode.name, caNode.secret, caNode.port, caNode.org_name,
-            caNode.is_tls, caNode.csr_hosts, caNode.admin_name, caNode.admin_secret);
-        caNode.is_tls ? CA_NODES.tlsCaNode = nodeObject : CA_NODES.orgCaNode = nodeObject;
-    });
-
-    nodes.peerNodes.forEach(peerNode => {
-        PEER_NODES.push(new PeerNode(peerNode.name, peerNode.secret, peerNode.org_name,
-            peerNode.port, peerNode.csr_hosts));
-    });
-
-    nodes.ordererNodes.forEach(ordererNode => {
-        ORDERER_NODES.push(new OrdererNode(ordererNode.name, ordererNode.secret, ordererNode.org_name,
-            ordererNode.port, ordererNode.admin_name, ordererNode.admin_secret));
-    })
-}
-
-function prepareQueries(node) {
-    let node_id = uuidv4();
-    let type_id = uuidv4();
-    let baseQuery = `INSERT INTO base_nodes(node_id, name, secret, org_name, csr_hosts, port, type) ` +
-        `VALUES (${`\'${node_id}\'`}, '${node.name}', '${node.secret}', '${node.orgName}', ${node.csrHosts}, ${node.port}, ${node.type});`
-    let nodeQuery = ``;
-    switch (node.constructor) {
-        case CaNode:
-            nodeQuery = `INSERT INTO ca_nodes(ca_id, node_id, admin_name, admin_secret, is_tls) VALUES (${`\'${type_id}\'`}, ${`\'${node_id}\'`}, ${node.isTls ? null : `\'${node.adminName}\'`}, ${node.isTls ? null :  `\'${node.adminSecret}\'`}, ${node.isTls});`
-            break;
-        case PeerNode:
-            break;
-        case OrdererNode:
-            nodeQuery = `INSERT INTO orderer_nodes(orderer_id, node_id, admin_name, admin_secret) VALUES (${`\'${type_id}\'`}, ${`\'${node_id}\'`}, ${`\'${node.adminName}\'`}, ${`\'${node.adminPw}\'`});`
-            break;
-    }
-    return { baseQuery: baseQuery, nodeQuery: nodeQuery };
-}
-
-async function writeNode(queries) {
-    const client = await db.connect();
-    try {
-        await client.query(queries.baseQuery);
-        await client.query(queries.nodeQuery);
-    } catch (e) {
-        console.log(`${e.message}: \n${e.stack}`);
-    } finally {
-        client.release();
-    }
-}
-
-async function checkContainerExists() {
-    try {
+        logger.log({level: `debug`, message: `Inspect container`});
         let response = await dockerService.inspectContainer(config.name);
+        logger.log({level: `debug`, message: `Postgres container exists`});
         return response.data.State.Running ? DB_CONTAINER_STATUS.CONTAINER_ALREADY_UP
             : DB_CONTAINER_STATUS.CONTAINER_DOWN;
     } catch (e) {
         if (e.response.status === dockerConfig.NO_SUCH_CONTAINER) {
+            logger.log({level: `debug`, message: `Postgres container does not exist`});
             return DB_CONTAINER_STATUS.NO_SUCH_CONTAINER;
         }
-        console.log(`Docker Engine Error`);
-        console.log(e.stack);
-        process.exit(dockerConfig.SERVER_ERROR);
+        throw new Errors.DockerError(`CHECK CONTAINER EXISTS ERROR`, e);
     }
 }
 
-async function removeAndRerunContainer() {
+async function _removeAndRerunContainer() {
+    logger.log({level: `debug`, message: `Remove and rerun postgres container`});
     try {
+        logger.log({level: `debug`, message: `Removing container from network`});
         await dockerService.removeContainerFromNetwork(config.name);
+        logger.log({level: `debug`, message: `Container removed from network`});
+        logger.log({level: `debug`, message: `Creating new postgres container`});
         let response = await dockerService.createContainer(postgresDockerConfig);
+        logger.log({level: `debug`, message: `New postgres container created`});
+        logger.log({level: `debug`, message: `Starting postgres container`});
         await dockerService.startContainer({ Id: response.data.Id });
+        logger.log({level: `debug`, message: `Postgres container started`});
     } catch (e) {
-        console.log(`Db container could not start properly: ${e.response.message}`);
-        console.log(e.stack);
-        process.exit(dockerConfig.SERVER_ERROR);
+        throw new Errors.DockerError(`REMOVE-RERUN ERROR DB CONTAINER`, e);
     }
 }
 
-async function initDbContainer() {
-    let containerStatus = await checkContainerExists();
+async function _initDbContainer() {
+    let containerStatus = await _checkContainerExists();
     switch (containerStatus) {
         case DB_CONTAINER_STATUS.CONTAINER_ALREADY_UP:
-            console.log(`Do nothing`);
+            logger.log({level: `debug`, message: `DB container already up`});
             break;
         case DB_CONTAINER_STATUS.CONTAINER_DOWN:
-            await removeAndRerunContainer();
+            await _removeAndRerunContainer();
             break;
         case DB_CONTAINER_STATUS.NO_SUCH_CONTAINER:
-            await runPostgres();
+            await _runPostgres();
             break;
     }
 }
 
-function updateContextObject(node) {
-    switch (node.constructor) {
-        case CaNode:
-            node.isTls ? CA_NODES.tlsCaNode = node :
-                CA_NODES.orgCaNode = node;
-            break;
-        case PeerNode:
-            PEER_NODES.push(node);
-            break;
-        case OrdererNode:
-            ORDERER_NODES.push(node);
-            break;
-    }
-}
-
-async function updateContextDb(node) {
-    try {
-        let queries = prepareQueries(node);
-        await writeNode(queries);
-    } catch (e) {
-        console.log(`Error when updating db: ${e.message}`);
-        console.log(e.stack);
-    }
-}
-
-function getPeerByName(peerName) {
-    const result = PEER_NODES.filter(peer => peer.name === peerName);
-    return result.length > 0 ? result[0] : null;
+function _setLogger(loggerInstance) {
+    logger = loggerInstance;
+    logger.log({level: `debug`, message: `Set logger`});
 }
 
 module.exports = {
-    CA_NODES: CA_NODES,
-    PEER_NODES: PEER_NODES,
-    ORDERER_NODES: ORDERER_NODES,
+    CA_NODES: repository.getCaNodes(),
+    PEER_NODES: repository.getPeerNodes(),
+    ORDERER_NODES: repository.getOrdererNodes(),
     dockerNetworkExists: dockerNetworkExists,
-    init: async () => {
-        try {
-            folderPrep();
-            await initDbContainer();
-            await new Promise(r => setTimeout(r, 4000));
-            await createTables();
-            let nodes = await fetcNodes();
-            loadNodeObjects(nodes);
-        } catch (e) {
-            console.log(e.message);
-            console.log(e.stack);
-        }
-    },
-    writeNode: async (node) => {
-        await writeNode(prepareQueries(node));
+    init: async (logger) => {
+        _setLogger(logger);
+        _folderPrep();
+        await _initDbContainer();
+        await new Promise(r => setTimeout(r, 4000)); // Should know when postgres server is up
+        await repository.init(logger);
     },
     updateContext: async (node) => {
-        updateContextObject(node);
-        await updateContextDb(node);
+        await repository.updateContext(node);
     },
-    getPeer: (peerName) => {
-        return getPeerByName(peerName);
+    getPeer: (peerConfig) => {
+        return repository.getPeerByName(peerConfig);
+    },
+    setLogger: (loggerInstace) => {
+        _setLogger(loggerInstace);
     }
 }
 
@@ -246,4 +139,3 @@ if (require.main === module) {
 } else {
     console.log('required as a module');
 }
-
