@@ -1,16 +1,17 @@
 <template>
-  <div class="flexgrid-demo">
+  <div class="splash-container">
     <div class="p-grid p-jc-center p-align-center vertical-container">
       <div class="p-col p-text-center" style="margin-left: 15em; margin-right: 15em">
         <div class="p-card" style="padding-bottom: 15em; padding-top: 15em">
           <h1>Türk Tedarik Zinciri</h1>
           <h5>Ağ Kurulum Uygulaması</h5>
           <div class="p-col-12">
-            <InputText type="text" placeholder="Organizasyon Adı" class="p-col-3 p-text-center"></InputText>
+            <InputText v-model="orgName" type="text" placeholder="Organizasyon Adı"
+                       class="p-col-3 p-text-center" :disabled="isOrgUp"></InputText>
           </div>
 
           <div class="p-col-12">
-            <Button label="Organizasyon Oluştur" class="p-col p-col-3" @click="onOrganizationBtnClick"></Button>
+            <Button :label="btnText" class="p-col p-col-3" @click="onOrganizationBtnClick"></Button>
           </div>
 
         </div>
@@ -20,11 +21,55 @@
 </template>
 
 <script>
+import SplashService from "../service/SplashService";
+import { INIT_ITEMS, EVENTS } from "../utilities/Utils";
+
 export default {
   name: "Splash",
+  data() {
+    return {
+      orgName: ``,
+      btnText: ``,
+      isOrgUp: false
+    }
+  },
   methods: {
     onOrganizationBtnClick() {
-      this.$emit('show-app');
+      if (!this.orgName.trim()) alert(`Plesae enter org name`)
+      else {
+        localStorage.setItem(`orgName`, this.orgName);
+        this.$emit(EVENTS.NAVIGATE_TO_APP);
+      }
+    },
+    init(res) {
+      if (res.orgName) {
+        this.orgName = res.orgName;
+        this.isOrgUp = true;
+      }
+      this.setBtnText();
+      this.setLocalStorage(res);
+    },
+    setBtnText() {
+      this.isOrgUp ? this.btnText = `Sonraki Adim` : this.btnText = `Organizasyon Olustur`;
+    },
+    setLocalStorage(res) {
+      if (res.orgName) localStorage.setItem(INIT_ITEMS.ORG_CA, res.orgName);
+      this.clearStorageKey(INIT_ITEMS.ORG_CA);
+      if (res.tlsCa) localStorage.setItem(INIT_ITEMS.TLS_CA, res.tlsCa);
+      this.clearStorageKey(INIT_ITEMS.TLS_CA);
+      if (res.orgCa) localStorage.setItem(INIT_ITEMS.ORG_CA, res.orgCa);
+      this.clearStorageKey(INIT_ITEMS.ORG_CA);
+    },
+    clearStorageKey(key) {
+      localStorage.setItem(key, ``);
+    }
+  },
+  async created() {
+    try {
+      const res = await SplashService.getInitClient();
+      this.init(res);
+    } catch (e) {
+      alert(`Error: /initClient`);
     }
   }
 }
@@ -32,7 +77,7 @@ export default {
 
 <style scoped lang="scss">
 
-.flexgrid-demo {
+.splash-container {
   .box {
     background-color: #ffffff;
     text-align: center;

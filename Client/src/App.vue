@@ -1,5 +1,5 @@
 <template>
-  <Splash @show-app="toggleShowApp" v-show="!showApp"/>
+  <Splash @navigate-to-app="toggleShowApp" v-show="!showApp"/>
     <div :class="containerClass"  @click="onWrapperClick" v-show="showApp">
       <AppTopBar @menu-toggle="onMenuToggle"/>
 

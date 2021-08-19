@@ -1,0 +1,20 @@
+{
+  "initClient": {
+    "orgName": "Org1",
+    "tlsCa": {
+      "userName": "tls-ca-admin",
+      "password": "tls-ca-adminpw",
+      "port": "7052",
+      "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82"
+    },
+    "orgCa": {
+      "userName": "org-ca-admin",
+      "password": "org-ca-adminpw",
+      "port": "7053",
+      "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82",
+      "adminName": "org-admin",
+      "adminSecret": "org-adminpw"
+    }
+  },
+  "initClient1" : {}
+}

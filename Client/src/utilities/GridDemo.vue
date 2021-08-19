@@ -1,5 +1,5 @@
 <template>
-	<div class="flexgrid-demo">
+	<div class="splash-container">
 		<h4>Grid System</h4>
 		<p>Grid is a lightweight flex based responsive layout utility optimized for mobile phones, tablets and desktops.</p>
 
@@ -393,7 +393,7 @@
 </script>
 
 <style lang="scss">
-	.flexgrid-demo {
+	.splash-container {
 		.box {
 			background-color: #ffffff;
 			text-align: center;
