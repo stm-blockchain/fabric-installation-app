@@ -22,7 +22,7 @@
 
 <script>
 import SplashService from "../service/SplashService";
-import { INIT_ITEMS, EVENTS } from "../utilities/Utils";
+import { INIT_ITEMS, EVENTS } from "@/utilities/Utils";
 
 export default {
   name: "Splash",
@@ -35,7 +35,7 @@ export default {
   },
   methods: {
     onOrganizationBtnClick() {
-      if (!this.orgName.trim()) alert(`Plesae enter org name`)
+      if (!this.orgName.trim()) alert(`Plesae enter org name`);
       else {
         localStorage.setItem(`orgName`, this.orgName);
         this.$emit(EVENTS.NAVIGATE_TO_APP);

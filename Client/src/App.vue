@@ -1,29 +1,30 @@
 <template>
   <Splash @navigate-to-app="toggleShowApp" v-show="!showApp"/>
     <div :class="containerClass"  @click="onWrapperClick" v-show="showApp">
-      <AppTopBar @menu-toggle="onMenuToggle"/>
+      <AppTopBar/>
 
-      <transition name="layout-sidebar">
+      <div class="layout-sidebar">
         <div :class="sidebarClass" @click="onSidebarClick" v-show="isSidebarVisible()">
-          <div class="layout-logo">
-            <router-link to="/">
-              <img alt="Logo" :src="logo"/>
-            </router-link>
-          </div>
+<!--          <div class="layout-logo">-->
+<!--            <router-link to="/">-->
+<!--              <img alt="Logo" :src="logo"/>-->
+<!--            </router-link>-->
+<!--          </div>-->
 
           <AppProfile/>
-<!--          <AppMenu :model="menu" @menuitem-click="onMenuItemClick"/>-->
+          <AppMenu :model="caMenu" @menuitem-click="onMenuItemClick"/>
         </div>
-      </transition>
+      </div>
 
+<!--      <AppMenu :model="caMenu" @menuitem-click="onMenuItemClick" :class="sidebarClass" class="p-justify-center"/>-->
       <div class="layout-main">
         <router-view/>
       </div>
 
-      <AppConfig :layoutMode="layoutMode" :layoutColorMode="layoutColorMode" @layout-change="onLayoutChange"
-                 @layout-color-change="onLayoutColorChange"/>
+<!--      <AppConfig :layoutMode="layoutMode" :layoutColorMode="layoutColorMode" @layout-change="onLayoutChange"-->
+<!--                 @layout-color-change="onLayoutColorChange"/>-->
 
-      <AppFooter/>
+<!--      <AppFooter/>-->
 
     </div>
 </template>
@@ -31,25 +32,25 @@
 <script>
 import AppTopBar from './AppTopbar.vue';
 import AppProfile from './AppProfile.vue';
-// import AppMenu from './AppMenu.vue';
-import AppConfig from './AppConfig.vue';
-import AppFooter from './AppFooter.vue';
+import AppMenu from './AppMenu.vue';
+// import AppConfig from './AppConfig.vue';
+// import AppFooter from './AppFooter.vue';
 import Splash from "@/views/Splash";
 
 export default {
   components: {
     'AppTopBar': AppTopBar,
     'AppProfile': AppProfile,
-    // 'AppMenu': AppMenu,
-    'AppConfig': AppConfig,
-    'AppFooter': AppFooter,
+    'AppMenu': AppMenu,
+    // 'AppConfig': AppConfig,
+    // 'AppFooter': AppFooter,
     'Splash': Splash
   },
   data() {
     return {
       showApp: false,
       layoutMode: 'static',
-      layoutColorMode: 'dark',
+      layoutColorMode: 'light',
       staticMenuInactive: false,
       overlayMenuActive: false,
       mobileMenuActive: false,
@@ -155,6 +156,10 @@ export default {
             window.location = "https://github.com/primefaces/sigma-vue"
           }
         }
+      ],
+      caMenu: [
+        {label: 'TLS CA Oluştur', icon: 'pi pi-fw pi-home'},
+        {label: 'ORG CA Oluştur', icon: 'pi pi-fw pi-home'},
       ]
     }
   },
@@ -167,7 +172,7 @@ export default {
   methods: {
     toggleShowApp() {
       this.showApp = true;
-      this.$router.push({name: "dashboard"});
+      this.$router.push({name: "empty"});
     },
     onWrapperClick() {
       if (!this.menuClick) {
