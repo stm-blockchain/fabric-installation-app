@@ -1,32 +1,17 @@
 <template>
-  <Splash @navigate-to-app="toggleShowApp" v-show="!showApp"/>
-    <div :class="containerClass"  @click="onWrapperClick" v-show="showApp">
-      <AppTopBar/>
-
-      <div class="layout-sidebar">
-        <div :class="sidebarClass" @click="onSidebarClick" v-show="isSidebarVisible()">
-<!--          <div class="layout-logo">-->
-<!--            <router-link to="/">-->
-<!--              <img alt="Logo" :src="logo"/>-->
-<!--            </router-link>-->
-<!--          </div>-->
-
-          <AppProfile/>
-          <AppMenu :model="caMenu" @menuitem-click="onMenuItemClick"/>
-        </div>
+  <div :class="containerClass" @click="onWrapperClick">
+    <AppTopBar v-show="showApp"/>
+    <div class="layout-sidebar" v-show="showApp">
+      <div :class="sidebarClass" @click="onSidebarClick">
+        <AppProfile/>
+        <AppMenu :model="caMenu" @menuitem-click="onMenuItemClick" />
       </div>
-
-<!--      <AppMenu :model="caMenu" @menuitem-click="onMenuItemClick" :class="sidebarClass" class="p-justify-center"/>-->
-      <div class="layout-main">
-        <router-view/>
-      </div>
-
-<!--      <AppConfig :layoutMode="layoutMode" :layoutColorMode="layoutColorMode" @layout-change="onLayoutChange"-->
-<!--                 @layout-color-change="onLayoutColorChange"/>-->
-
-<!--      <AppFooter/>-->
-
     </div>
+
+    <div :class="isSplash()">
+      <router-view @navigate-to-app="toggleShowApp" @hide-app="hideApp"/>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -35,7 +20,7 @@ import AppProfile from './AppProfile.vue';
 import AppMenu from './AppMenu.vue';
 // import AppConfig from './AppConfig.vue';
 // import AppFooter from './AppFooter.vue';
-import Splash from "@/views/Splash";
+// import Splash from "@/views/Splash";
 
 export default {
   components: {
@@ -44,8 +29,9 @@ export default {
     'AppMenu': AppMenu,
     // 'AppConfig': AppConfig,
     // 'AppFooter': AppFooter,
-    'Splash': Splash
+    // 'Splash': Splash
   },
+
   data() {
     return {
       showApp: false,
@@ -163,16 +149,27 @@ export default {
       ]
     }
   },
+  created() {
+    this.showApp = false;
+    this.$router.push({name: 'splash'});
+  },
   watch: {
-    $route() {
-      this.menuActive = false;
-      this.$toast.removeAllGroups();
+    $route(to) {
+      if(to.name === "splash") this.showApp = false;
+      if(to.fullPath === "/") this.$router.push({name: "splash"});
     }
   },
   methods: {
     toggleShowApp() {
       this.showApp = true;
-      this.$router.push({name: "empty"});
+      this.$router.push({name: "caInput"});
+    },
+    hideApp() {
+      this.showApp = false;
+      this.$router.push({name: "splash"});
+    },
+    isSplash() {
+      return this.showApp ? 'layout-main' : '';
     },
     onWrapperClick() {
       if (!this.menuClick) {

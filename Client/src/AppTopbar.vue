@@ -3,7 +3,7 @@
 <!--    <button class="p-link layout-menu-button" @click="onMenuToggle">-->
 <!--      <span class="pi pi-bars"></span>-->
 <!--    </button>-->
-    <div class="layout-topbar-icons p-mr-6">
+    <div class="layout-topbar-icons p-mr-6" v-show="true">
 <!--			<span class="layout-topbar-search">-->
 <!--				<InputText type="text" placeholder="Search"/>-->
 <!--				<span class="layout-topbar-search-icon pi pi-search"></span>-->

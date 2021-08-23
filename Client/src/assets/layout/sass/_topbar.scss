@@ -5,6 +5,7 @@
     color: #ffffff;
     z-index: 999;
     right: 0;
+    box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.16);
     @include clearfix();
     //@include linear-gradient-left($topbarLeftBgColor,$topbarRightBgColor);
   @include linear-gradient($menuBgColorFirst, $menuBgColorLast);

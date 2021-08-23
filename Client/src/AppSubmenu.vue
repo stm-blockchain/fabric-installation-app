@@ -17,9 +17,9 @@
 					<i v-if="item.items" class="pi pi-fw pi-angle-down menuitem-toggle-icon"></i>
 					<span v-if="item.badge" class="menuitem-badge">{{item.badge}}</span>
 				</a>
-				<transition name="layout-submenu-wrapper">
-					<appsubmenu v-show="activeIndex === i" :items="visible(item) && item.items" @menuitem-click="$emit('menuitem-click', $event)"></appsubmenu>
-				</transition>
+<!--				<transition name="layout-submenu-wrapper">-->
+<!--					<appsubmenu v-show="activeIndex === i" :items="visible(item) && item.items" @menuitem-click="$emit('menuitem-click', $event)"></appsubmenu>-->
+<!--				</transition>-->
 			</li>
 			<li class="p-menu-separator" :style="item.style" v-if="visible(item) && item.separator" :key="'separator' + i" role="separator"></li>
 		</template>
@@ -56,7 +56,8 @@ export default {
                 item.command({originalEvent: event, item: item});
 			}
 
-			this.activeIndex = index === this.activeIndex ? null : index;
+			console.log(index)
+			this.activeIndex = 0;
 
 			this.$emit('menuitem-click', {
 				originalEvent: event,

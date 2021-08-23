@@ -3,6 +3,16 @@ import Dashboard from './components/Dashboard.vue';
 
 const routes = [
     {
+        path: '/',
+        name: 'home',
+        component: () => import('./views/Splash'),
+    },
+    {
+        path: '/splash',
+        name: 'splash',
+        component: () => import('./views/Splash'),
+    },
+    {
         path: '/dashboard',
         name: 'dashboard',
         component: Dashboard,
@@ -155,9 +165,9 @@ const routes = [
         component: () => import('./pages/TimelineDemo.vue'),
     },
     {
-        path: '/empty',
-        name: 'empty',
-        component: () => import('./components/EmptyPage.vue'),
+        path: '/caInput',
+        name: 'caInput',
+        component: () => import('./components/CaInput.vue'),
     },
     {
         path: '/documentation',
