@@ -28,5 +28,54 @@
     "csrHosts": "",
     "adminName": "",
     "adminSecret": ""
-  }
+  },
+  "peers": [
+    {
+      "peerName": "peer1",
+      "password": "peer1pw",
+      "orgName": "Org1",
+      "port": 7052,
+      "csrHosts": "0.0.0.0,*.Org1.com"
+    },
+    {
+      "peerName": "peer2",
+      "password": "peer2pw",
+      "orgName": "Org1",
+      "port": 7053,
+      "csrHosts": "0.0.0.0,*.Org1.com"
+    },
+    {
+      "peerName": "peer3",
+      "password": "peer3pw",
+      "orgName": "Org1",
+      "port": 7054,
+      "csrHosts": "0.0.0.0,*.Org1.com"
+    }
+  ],
+  "initPeer": [
+    {
+      "peerName": "peer4",
+      "password": "peer4pw",
+      "orgName": "Org1",
+      "port": "2222",
+      "csrHosts": "111111111111",
+      "id": 1
+    },
+    {
+      "peerName": "peer5",
+      "password": "peer5pw",
+      "orgName": "Org1",
+      "port": "8888",
+      "csrHosts": "asdddasdasd",
+      "id": 2
+    },
+    {
+      "peerName": "peer6",
+      "password": "şkşkş",
+      "orgName": "Org1",
+      "port": "kşlkşl",
+      "csrHosts": "lşlkşlk",
+      "id": 3
+    }
+  ]
 }
