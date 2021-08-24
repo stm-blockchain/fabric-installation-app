@@ -1,6 +1,6 @@
 <template>
   <div :class="containerClass" @click="onWrapperClick">
-    <AppTopBar v-show="showApp" :show-items="showTopBarItems"/>
+    <AppTopBar v-show="showApp" :show-items="showTopBarItems" :current-tab="selecedTab"/>
     <div class="layout-sidebar" v-show="showApp">
       <div :class="sidebarClass" @click="onSidebarClick">
         <AppProfile/>
@@ -150,11 +150,12 @@ export default {
       ],
       showTopBarItems : false,
       peerMenu: [
-        {label: 'Yeni Peer', icon: 'pi pi-moon', to: '/somewhere'},
-        {label: 'Channel', icon: 'pi pi-fw pi-home', to: '/somewhere'},
-        {label: 'Chaincode', icon: 'pi pi-fw pi-home', to: '/somewhere'}
+        {label: 'Yeni Peer', to: '/newPeer'},
+        {label: 'Channel', to: '/joinChannel'},
+        {label: 'Chaincode', to: '/somewhere'}
       ],
-      baseMenu: []
+      baseMenu: [],
+      selecedTab: ''
     }
   },
   created() {
@@ -165,25 +166,28 @@ export default {
     $route(to) {
       if(to.name === "splash") {
         this.showApp = false;
-        this.updateSideMenu(MENU_TYPES.CA);
+        this.baseMenu = this.caMenu;
       }
       if(to.fullPath === "/") this.$router.push({name: "splash"});
-      if (to.name === 'dashboard') this.updateSideMenu(MENU_TYPES.PEER);
+      if (to.name === 'newPeer') this.updateMenuAndTab(MENU_TYPES.PEER);
+      if (to.name === 'caInput' && this.showTopBarItems) this.updateMenuAndTab(MENU_TYPES.CA);
     }
   },
   methods: {
-    updateSideMenu(type) {
+    updateMenuAndTab(type) {
       switch (type) {
         case MENU_TYPES.PEER:
           this.baseMenu = this.peerMenu;
+          this.selecedTab = MENU_TYPES.PEER;
           break;
         case MENU_TYPES.CA:
           this.baseMenu = this.caMenu;
+          this.selecedTab = MENU_TYPES.CA;
           break;
       }
     },
     toggleTopBarItems() {
-      this.showTopBarItems = !this.showTopBarItems;
+      this.showTopBarItems = true;
     },
     toggleShowApp() {
       this.showApp = true;

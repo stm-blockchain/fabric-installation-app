@@ -13,6 +13,16 @@ const routes = [
         component: () => import('./views/Splash'),
     },
     {
+        path: '/newPeer',
+        name: 'newPeer',
+        component: () => import('./components/NewPeer'),
+    },
+    {
+        path: '/joinChannel',
+        name: 'joinChannel',
+        component: () => import('./components/JoinChannel'),
+    },
+    {
         path: '/dashboard',
         name: 'dashboard',
         component: Dashboard,
