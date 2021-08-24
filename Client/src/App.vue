@@ -1,15 +1,15 @@
 <template>
   <div :class="containerClass" @click="onWrapperClick">
-    <AppTopBar v-show="showApp"/>
+    <AppTopBar v-show="showApp" :show-items="showTopBarItems"/>
     <div class="layout-sidebar" v-show="showApp">
       <div :class="sidebarClass" @click="onSidebarClick">
         <AppProfile/>
-        <AppMenu :model="caMenu" @menuitem-click="onMenuItemClick" />
+        <AppMenu :model="baseMenu" @menuitem-click="onMenuItemClick" />
       </div>
     </div>
 
     <div :class="isSplash()">
-      <router-view @navigate-to-app="toggleShowApp" @hide-app="hideApp"/>
+      <router-view @navigate-to-app="toggleShowApp" @hide-app="hideApp" @show-top-bar-items="toggleTopBarItems"/>
     </div>
   </div>
 </template>
@@ -18,6 +18,7 @@
 import AppTopBar from './AppTopbar.vue';
 import AppProfile from './AppProfile.vue';
 import AppMenu from './AppMenu.vue';
+import { MENU_TYPES } from "@/utilities/Utils";
 // import AppConfig from './AppConfig.vue';
 // import AppFooter from './AppFooter.vue';
 // import Splash from "@/views/Splash";
@@ -144,9 +145,16 @@ export default {
         }
       ],
       caMenu: [
-        {label: 'TLS CA Oluştur', icon: 'pi pi-fw pi-home'},
-        {label: 'ORG CA Oluştur', icon: 'pi pi-fw pi-home'},
-      ]
+        {label: 'TLS CA Oluştur', icon: 'pi pi-moon', disabled : true, step: "1"},
+        {label: 'ORG CA Oluştur', icon: 'pi pi-fw pi-home', disabled : true, step: "2"},
+      ],
+      showTopBarItems : false,
+      peerMenu: [
+        {label: 'Yeni Peer', icon: 'pi pi-moon', to: '/somewhere'},
+        {label: 'Channel', icon: 'pi pi-fw pi-home', to: '/somewhere'},
+        {label: 'Chaincode', icon: 'pi pi-fw pi-home', to: '/somewhere'}
+      ],
+      baseMenu: []
     }
   },
   created() {
@@ -155,11 +163,28 @@ export default {
   },
   watch: {
     $route(to) {
-      if(to.name === "splash") this.showApp = false;
+      if(to.name === "splash") {
+        this.showApp = false;
+        this.updateSideMenu(MENU_TYPES.CA);
+      }
       if(to.fullPath === "/") this.$router.push({name: "splash"});
+      if (to.name === 'dashboard') this.updateSideMenu(MENU_TYPES.PEER);
     }
   },
   methods: {
+    updateSideMenu(type) {
+      switch (type) {
+        case MENU_TYPES.PEER:
+          this.baseMenu = this.peerMenu;
+          break;
+        case MENU_TYPES.CA:
+          this.baseMenu = this.caMenu;
+          break;
+      }
+    },
+    toggleTopBarItems() {
+      this.showTopBarItems = !this.showTopBarItems;
+    },
     toggleShowApp() {
       this.showApp = true;
       this.$router.push({name: "caInput"});

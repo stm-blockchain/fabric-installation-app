@@ -53,7 +53,7 @@
         </div>
 
         <div class="p-col-3">
-          <Button label="Önceki Adım" v-show="isDisabled" class="p-button-outlined p-col-12"
+          <Button label="Önceki Adım" class="p-button-outlined p-col-12"
                   icon="pi pi-arrow-circle-left" @click="onBackBtnClick"/>
         </div>
 
@@ -91,6 +91,7 @@ export default {
   },
   methods: {
     initTls() {
+      this.clear();
       this.isTls = true;
       this.title = 'TLS CA Sunucu Bilgilerini Girin';
       if (localStorage.getItem(INIT_ITEMS.TLS_CA)) {
@@ -105,6 +106,7 @@ export default {
       this.isDisabled ? this.btnMsg = 'Sonraki Adım' : this.btnMsg = 'TLS Sunucusu Oluştur';
     },
     initOrg() {
+      this.clear();
       this.isTls = false;
       this.title = 'ORG CA Sunucu Bilgilerini Girin';
       if (localStorage.getItem(INIT_ITEMS.ORG_CA)) {
@@ -129,7 +131,9 @@ export default {
       if (this.isTls) {
         this.initOrg();
       } else {
-        alert("new page")
+        // alert("new page")
+        this.$emit(EVENTS.SHOW_TOP_BAR_ITEMS);
+        this.$router.push({name: 'newPeer' });
       }
     },
     onBackBtnClick() {
@@ -153,7 +157,7 @@ export default {
       try {
         const reqData = this.generateReqBody();
         this.isTls ? localStorage.setItem(INIT_ITEMS.TLS_CA, JSON.stringify(reqData)) :
-            localStorage.setItem(INIT_ITEMS.ORG_CA, JSON.stringify(reqData))
+            localStorage.setItem(INIT_ITEMS.ORG_CA, JSON.stringify(reqData));
         await CaService.startUpCaServer(reqData);
         this.clear();
         alert("post is ok");
@@ -163,6 +167,7 @@ export default {
     },
     clear() {
       this.isTls = false;
+      this.isDisabled = false;
       this.userName = '';
       this.password = '';
       this.adminName = '';

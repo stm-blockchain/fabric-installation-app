@@ -1,5 +1,5 @@
 {
-  "initClien1": {
+  "initClient": {
     "orgName": "Org1",
     "tlsCa": {
       "userName": "tls-ca-admin",
@@ -16,17 +16,17 @@
       "adminSecret": "org-adminpw"
     }
   },
-  "initClient": {
+  "initClient1": {
     "orgName": "Org1"
   },
   "initCa": {
-    "userName": "org-ca",
-    "password": "asdfasf",
-    "port": "adfafaf",
+    "userName": "",
+    "password": "",
+    "port": "",
     "isTls": false,
     "orgName": "",
-    "csrHosts": "sfsafaf",
-    "adminName": "asfa",
-    "adminSecret": "fafasf"
+    "csrHosts": "",
+    "adminName": "",
+    "adminSecret": ""
   }
 }
