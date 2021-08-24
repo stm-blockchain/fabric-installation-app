@@ -22,7 +22,7 @@
 
 <script>
 import SplashService from "../service/SplashService";
-import { INIT_ITEMS, EVENTS } from "../utilities/Utils";
+import { INIT_ITEMS, EVENTS } from "@/utilities/Utils";
 
 export default {
   name: "Splash",
@@ -35,7 +35,7 @@ export default {
   },
   methods: {
     onOrganizationBtnClick() {
-      if (!this.orgName.trim()) alert(`Plesae enter org name`)
+      if (!this.orgName.trim()) alert(`Plesae enter org name`);
       else {
         localStorage.setItem(`orgName`, this.orgName);
         this.$emit(EVENTS.NAVIGATE_TO_APP);
@@ -54,11 +54,11 @@ export default {
     },
     setLocalStorage(res) {
       if (res.orgName) localStorage.setItem(INIT_ITEMS.ORG_CA, res.orgName);
-      this.clearStorageKey(INIT_ITEMS.ORG_CA);
-      if (res.tlsCa) localStorage.setItem(INIT_ITEMS.TLS_CA, res.tlsCa);
-      this.clearStorageKey(INIT_ITEMS.TLS_CA);
-      if (res.orgCa) localStorage.setItem(INIT_ITEMS.ORG_CA, res.orgCa);
-      this.clearStorageKey(INIT_ITEMS.ORG_CA);
+      else this.clearStorageKey(INIT_ITEMS.ORG_CA);
+      if (res.tlsCa) localStorage.setItem(INIT_ITEMS.TLS_CA, JSON.stringify(res.tlsCa));
+      else this.clearStorageKey(INIT_ITEMS.TLS_CA);
+      if (res.orgCa) localStorage.setItem(INIT_ITEMS.ORG_CA, JSON.stringify(res.orgCa));
+      else this.clearStorageKey(INIT_ITEMS.ORG_CA);
     },
     clearStorageKey(key) {
       localStorage.setItem(key, ``);

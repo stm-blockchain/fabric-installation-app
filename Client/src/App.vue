@@ -1,55 +1,43 @@
 <template>
-  <Splash @navigate-to-app="toggleShowApp" v-show="!showApp"/>
-    <div :class="containerClass"  @click="onWrapperClick" v-show="showApp">
-      <AppTopBar @menu-toggle="onMenuToggle"/>
-
-      <transition name="layout-sidebar">
-        <div :class="sidebarClass" @click="onSidebarClick" v-show="isSidebarVisible()">
-          <div class="layout-logo">
-            <router-link to="/">
-              <img alt="Logo" :src="logo"/>
-            </router-link>
-          </div>
-
-          <AppProfile/>
-<!--          <AppMenu :model="menu" @menuitem-click="onMenuItemClick"/>-->
-        </div>
-      </transition>
-
-      <div class="layout-main">
-        <router-view/>
+  <div :class="containerClass" @click="onWrapperClick">
+    <AppTopBar v-show="showApp" :show-items="showTopBarItems"/>
+    <div class="layout-sidebar" v-show="showApp">
+      <div :class="sidebarClass" @click="onSidebarClick">
+        <AppProfile/>
+        <AppMenu :model="baseMenu" @menuitem-click="onMenuItemClick" />
       </div>
-
-      <AppConfig :layoutMode="layoutMode" :layoutColorMode="layoutColorMode" @layout-change="onLayoutChange"
-                 @layout-color-change="onLayoutColorChange"/>
-
-      <AppFooter/>
-
     </div>
+
+    <div :class="isSplash()">
+      <router-view @navigate-to-app="toggleShowApp" @hide-app="hideApp" @show-top-bar-items="toggleTopBarItems"/>
+    </div>
+  </div>
 </template>
 
 <script>
 import AppTopBar from './AppTopbar.vue';
 import AppProfile from './AppProfile.vue';
-// import AppMenu from './AppMenu.vue';
-import AppConfig from './AppConfig.vue';
-import AppFooter from './AppFooter.vue';
-import Splash from "@/views/Splash";
+import AppMenu from './AppMenu.vue';
+import { MENU_TYPES } from "@/utilities/Utils";
+// import AppConfig from './AppConfig.vue';
+// import AppFooter from './AppFooter.vue';
+// import Splash from "@/views/Splash";
 
 export default {
   components: {
     'AppTopBar': AppTopBar,
     'AppProfile': AppProfile,
-    // 'AppMenu': AppMenu,
-    'AppConfig': AppConfig,
-    'AppFooter': AppFooter,
-    'Splash': Splash
+    'AppMenu': AppMenu,
+    // 'AppConfig': AppConfig,
+    // 'AppFooter': AppFooter,
+    // 'Splash': Splash
   },
+
   data() {
     return {
       showApp: false,
       layoutMode: 'static',
-      layoutColorMode: 'dark',
+      layoutColorMode: 'light',
       staticMenuInactive: false,
       overlayMenuActive: false,
       mobileMenuActive: false,
@@ -155,19 +143,58 @@ export default {
             window.location = "https://github.com/primefaces/sigma-vue"
           }
         }
-      ]
+      ],
+      caMenu: [
+        {label: 'TLS CA Oluştur', icon: 'pi pi-moon', disabled : true, step: "1"},
+        {label: 'ORG CA Oluştur', icon: 'pi pi-fw pi-home', disabled : true, step: "2"},
+      ],
+      showTopBarItems : false,
+      peerMenu: [
+        {label: 'Yeni Peer', icon: 'pi pi-moon', to: '/somewhere'},
+        {label: 'Channel', icon: 'pi pi-fw pi-home', to: '/somewhere'},
+        {label: 'Chaincode', icon: 'pi pi-fw pi-home', to: '/somewhere'}
+      ],
+      baseMenu: []
     }
   },
+  created() {
+    this.showApp = false;
+    this.$router.push({name: 'splash'});
+  },
   watch: {
-    $route() {
-      this.menuActive = false;
-      this.$toast.removeAllGroups();
+    $route(to) {
+      if(to.name === "splash") {
+        this.showApp = false;
+        this.updateSideMenu(MENU_TYPES.CA);
+      }
+      if(to.fullPath === "/") this.$router.push({name: "splash"});
+      if (to.name === 'dashboard') this.updateSideMenu(MENU_TYPES.PEER);
     }
   },
   methods: {
+    updateSideMenu(type) {
+      switch (type) {
+        case MENU_TYPES.PEER:
+          this.baseMenu = this.peerMenu;
+          break;
+        case MENU_TYPES.CA:
+          this.baseMenu = this.caMenu;
+          break;
+      }
+    },
+    toggleTopBarItems() {
+      this.showTopBarItems = !this.showTopBarItems;
+    },
     toggleShowApp() {
       this.showApp = true;
-      this.$router.push({name: "dashboard"});
+      this.$router.push({name: "caInput"});
+    },
+    hideApp() {
+      this.showApp = false;
+      this.$router.push({name: "splash"});
+    },
+    isSplash() {
+      return this.showApp ? 'layout-main' : '';
     },
     onWrapperClick() {
       if (!this.menuClick) {

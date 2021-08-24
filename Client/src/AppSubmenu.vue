@@ -12,7 +12,8 @@
 				</router-link>
 				<a v-if="!item.to" :href="item.url||'#'" :style="item.style" :class="[item.class, 'p-ripple', {'p-disabled': item.disabled}]"
 					@click="onMenuItemClick($event,item,i)" :target="item.target" role="menuitem" v-ripple>
-					<i :class="item.icon"></i>
+					<i v-if="!item.step" :class="item.icon"></i>
+          <span v-if="item.step">{{item.step}}. </span>
 					<span>{{item.label}}</span>
 					<i v-if="item.items" class="pi pi-fw pi-angle-down menuitem-toggle-icon"></i>
 					<span v-if="item.badge" class="menuitem-badge">{{item.badge}}</span>
@@ -56,7 +57,8 @@ export default {
                 item.command({originalEvent: event, item: item});
 			}
 
-			this.activeIndex = index === this.activeIndex ? null : index;
+			console.log(index)
+			this.activeIndex = 0;
 
 			this.$emit('menuitem-click', {
 				originalEvent: event,
@@ -71,5 +73,7 @@ export default {
 </script>
 
 <style scoped>
-
+.p-disabled {
+  opacity: 1;
+}
 </style>

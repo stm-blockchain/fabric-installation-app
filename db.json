@@ -16,5 +16,17 @@
       "adminSecret": "org-adminpw"
     }
   },
-  "initClient1" : {}
+  "initClient1": {
+    "orgName": "Org1"
+  },
+  "initCa": {
+    "userName": "",
+    "password": "",
+    "port": "",
+    "isTls": false,
+    "orgName": "",
+    "csrHosts": "",
+    "adminName": "",
+    "adminSecret": ""
+  }
 }
