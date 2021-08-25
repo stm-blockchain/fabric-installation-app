@@ -52,6 +52,7 @@
       "csrHosts": "0.0.0.0,*.Org1.com"
     }
   ],
+  "peers1": [],
   "initPeer": [
     {
       "peerName": "peer4",
@@ -76,6 +77,34 @@
       "port": "kşlkşl",
       "csrHosts": "lşlkşlk",
       "id": 3
+    }
+  ],
+  "joinChannel": {
+    "peerConfig": {
+      "peerName": "peer1",
+      "orgName": "Org1"
+    },
+    "ordererConfig": {
+      "ordererAddress": "ddddd-",
+      "ordererOrgName": "dddddd"
+    },
+    "channelName": "test-3"
+  },
+  "channels": [
+    {
+      "label": "ttz-channel-1"
+    },
+    {
+      "label": "ttz-channel-2"
+    },
+    {
+      "label": "ttz-channel-3"
+    },
+    {
+      "label": "ttz-channel-4"
+    },
+    {
+      "label": "ttz-channel-5"
     }
   ]
 }
