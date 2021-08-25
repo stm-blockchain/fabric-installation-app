@@ -23,6 +23,11 @@ const routes = [
         component: () => import('./components/JoinChannel'),
     },
     {
+        path: '/chaincode',
+        name: 'chaincode',
+        component: () => import('./components/ChaincodeOperations'),
+    },
+    {
         path: '/dashboard',
         name: 'dashboard',
         component: Dashboard,
