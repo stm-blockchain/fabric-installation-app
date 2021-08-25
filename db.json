@@ -81,14 +81,14 @@
   ],
   "joinChannel": {
     "peerConfig": {
-      "peerName": "peer1",
+      "peerName": "peer3",
       "orgName": "Org1"
     },
     "ordererConfig": {
-      "ordererAddress": "ddddd-",
-      "ordererOrgName": "dddddd"
+      "ordererAddress": "aaaaa",
+      "ordererOrgName": "aaaaa"
     },
-    "channelName": "test-3"
+    "channelName": "test-4"
   },
   "channels": [
     {
