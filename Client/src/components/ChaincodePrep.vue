@@ -1,5 +1,6 @@
 <template>
-  <ChaincodeConfigDialog :visible="showDialog" @close-dialog="showDialog=false"/>
+  <ChaincodeConfigDialog :visible="showConfigDialog" @close-dialog="showConfigDialog=false"/>
+  <ChaincodeNewEndorserDialog :visible="showDialog" @close-dialog="showDialog=false"/>
   <div class="p-grid ">
     <div class="p-col-6 padding-left-zero">
       <h6 class="p-text-left p-mt-2">Düğümler</h6>
@@ -28,7 +29,7 @@
       </DataTable>
       <div class="p-col-9"></div>
       <div class="p-col-3 padding-zero ">
-        <Button class="p-col-12 p-mt-4"  @click="onBackBtnClick"></Button>
+        <Button class="p-col-12 p-mt-4"></Button>
       </div>
     </div>
 
@@ -40,7 +41,7 @@
       </DataTable>
       <div class="p-col-9"></div>
       <div class="p-col-3 padding-zero ">
-        <Button class="p-col-12 p-mt-4"  @click="onBackBtnClick"></Button>
+        <Button class="p-col-12 p-mt-4"></Button>
       </div>
     </div>
 
@@ -55,11 +56,13 @@
 
 <script>
 import ChaincodeConfigDialog from "@/components/ChaincodeConfigDialog";
+import ChaincodeNewEndorserDialog from "@/components/ChaincodeNewEndorserDialog";
 
 export default {
   name: "ChaincodePrep",
   components: {
-    'ChaincodeConfigDialog': ChaincodeConfigDialog
+    'ChaincodeConfigDialog': ChaincodeConfigDialog,
+    'ChaincodeNewEndorserDialog': ChaincodeNewEndorserDialog
   },
   data() {
     return {
@@ -76,14 +79,9 @@ export default {
   },
   methods: {
     onBackBtnClick() {
-      this.showDialog = true;
-    },
-    openBasic() {
-      this.displayBasic = true;
-    },
-    closeBasic() {
-      this.displayBasic = false;
-    },
+      this.showConfigDialog = true;
+      console.log(this.showConfigDialog);
+    }
   },
   props: {
     showEndorserTable: {

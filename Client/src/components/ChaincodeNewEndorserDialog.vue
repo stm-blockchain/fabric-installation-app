@@ -5,20 +5,6 @@
     </template>
     <div class="p-grid p-pb-2 p-pl-3 p-pr-3">
       <div class="p-col-6">
-        <h6 class="p-text-left">Kanallar</h6>
-        <div class="p-inputgroup padding-left-zero">
-          <Dropdown placeholder="Kanal Seçin"/>
-        </div>
-      </div>
-
-      <div class="p-col-6">
-        <h6 class="p-text-left">Kanallar</h6>
-        <div class="p-inputgroup padding-left-zero">
-          <Dropdown placeholder="Paket Seçin"/>
-        </div>
-      </div>
-
-      <div class="p-col-6">
         <h6 class="p-text-left">Chaincode Adı</h6>
         <div class="padding-left-zero p-inputgroup">
           <InputText placeholder="Chaincode Adı"/>
@@ -31,37 +17,23 @@
           <InputText placeholder="Chaincode Versiyonu"/>
         </div>
       </div>
-
-      <div class="p-col-6">
-        <h6 class="p-text-left">Sekans No</h6>
-        <div class="padding-left-zero p-inputgroup">
-          <InputText placeholder="Sekans No"/>
-        </div>
-      </div>
-
-      <div class="p-col-9">
-      </div>
-
-      <div class="p-col-3 p-align-end">
-        <Button class="p-col-12" @click="onBackBtnClick"></Button>
-      </div>
-
     </div>
+    <template #footer>
+      <Button class="p-col-12" @click="onBackBtnClick"></Button>
+    </template>
   </Dialog>
 </template>
 
 <script>
 export default {
-  name: "ChaincodeConfigDialog",
+  name: "ChaincodeNewEndorserDialog",
+  data() {
+    return {display: false}
+  },
   props: ['visible'],
   methods: {
     onBackBtnClick() {
       this.$emit('close-dialog')
-    }
-  },
-  data() {
-    return {
-      display: false
     }
   },
   watch: {
