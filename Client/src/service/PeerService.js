@@ -8,9 +8,12 @@ export default {
         return Api().post('/initPeer', data);
     },
     queryChannel(data) {
-        return Api().get('/channels', data).then(res => res.data);
+        return Api().get('/channels', { params: data }).then(res => res.data);
     },
     joinChannel(data) {
         return Api().post('/joinChannel', data);
+    },
+    prepareCommit(data) {
+        return Api().post(`/prepareCommit`, data);
     }
 }

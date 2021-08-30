@@ -106,5 +106,19 @@
     {
       "label": "ttz-channel-5"
     }
-  ]
+  ],
+  "prepareCommit": {
+    "peerConfig": {
+      "peerName": "peer1",
+      "orgName": "Org1"
+    },
+    "chaincodeConfig": {
+      "ordererAddress": "",
+      "channelId": "ttz-channel-1",
+      "ccName": "wwwww",
+      "version": "wwwww",
+      "seq": "wwwww",
+      "packageName": "gvta"
+    }
+  }
 }
