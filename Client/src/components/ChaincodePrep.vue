@@ -145,7 +145,7 @@ export default {
         },
         chaincodeConfig: {
           ordererAddress: this.ordererAddress,
-          ordererOrgName: this.ordererOrgName,
+          ordererOrgName: this.orderderOrg,
           channelId: this.config.channelId,
           ccName: this.config.ccName,
           version: this.config.version,

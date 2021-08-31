@@ -109,15 +109,16 @@
   ],
   "prepareCommit": {
     "peerConfig": {
-      "peerName": "peer1",
+      "peerName": "peer2",
       "orgName": "Org1"
     },
     "chaincodeConfig": {
-      "ordererAddress": "",
-      "channelId": "ttz-channel-1",
-      "ccName": "wwwww",
-      "version": "wwwww",
-      "seq": "wwwww",
+      "ordererAddress": "172.20.20.42.7051",
+      "ordererOrgName": "Org1",
+      "channelId": "ttz-channel-2",
+      "ccName": "gvta",
+      "version": "0.0.2",
+      "seq": "2",
       "packageName": "gvta"
     }
   }
