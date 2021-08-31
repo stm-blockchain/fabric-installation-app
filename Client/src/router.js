@@ -25,7 +25,7 @@ const routes = [
     {
         path: '/chaincode',
         name: 'chaincode',
-        component: () => import('./components/ChaincodeOperations'),
+        component: () => import('./views/ChaincodeOperations'),
     },
     {
         path: '/dashboard',
