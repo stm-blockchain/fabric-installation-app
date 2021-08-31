@@ -30,6 +30,8 @@ module.exports = (app, context) => {
         OrdererController.startOrderer,
         OrdererController.updateContext);
 
+    app.get('/initClient')
+
     app.post(`/joinChannel`,
         PeerController.getPeer,
         PeerController.setUpCliEnv,
