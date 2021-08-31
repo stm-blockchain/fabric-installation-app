@@ -14,6 +14,7 @@ const Commands = {
     PEER: {
         FETCH: "peer channel fetch",
         JOIN: "peer channel join",
+        LIST: "peer channel list",
         FETCH_OLDEST: "oldest",
         INSTALL: "peer lifecycle chaincode install",
         QUERY_INSTALLED: "peer lifecycle chaincode queryinstalled -O json",
@@ -156,6 +157,15 @@ module.exports = {
             return command.join(" ");
         } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING COMMIT CMD`, e);
+        }
+    },
+    generateChannelListCommand() {
+        try {
+            const command = [Commands.PEER.LIST,
+                Commands.OS.TO_STDOUT];
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING LIST CMD`, e);
         }
     }
 }

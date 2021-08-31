@@ -142,12 +142,17 @@ module.exports = {
                     password: req.context.CA_NODES.orgCaNode.secret,
                     port: req.context.CA_NODES.orgCaNode.port,
                     csrHosts: req.context.CA_NODES.orgCaNode.csrHosts,
-                    adminName: "org-admin",
-                    adminSecret: "org-adminpw"
+                    adminName: req.context.CA_NODES.orgCaNode.adminName,
+                    adminSecret: req.context.CA_NODES.orgCaNode.adminSecret
                 }
             }
+            res.send(responseBody);
         } catch (e) {
-
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER INIT CLIENT`, e);
+                next(wrappedError);
+            }
+            next(e);
         }
     }
 }

@@ -4,6 +4,7 @@ const context = require('../Common/lib/context');
 const { Installation, DockerApi, Logger } = require('../Common');
 const app = express();
 const { v4: uuidv4 } = require('uuid');
+const ErrorHandler = require('./controllers/ErrorHandler')
 
 const inject = (req, res, next) => {
     const logger = Logger.getLogger(uuidv4());
@@ -22,9 +23,10 @@ const logRequest = (req, res, next) => {
 app.use(bodyParser.json());
 app.use(inject);
 app.use(logRequest);
+require('./routes')(app, context);
+app.use(ErrorHandler.handleErrors);
 
 context.init(Logger.getLogger(`init`)).then(() => {
-    require('./routes')(app, context);
     app.listen(8080);
 }).catch(e => {
     console.log(e.stack);

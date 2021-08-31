@@ -142,6 +142,10 @@ module.exports = class CaNode extends BaseNode {
         return this._adminName;
     }
 
+    get adminSecret() {
+        return this._adminSecret;
+    }
+
     get password() {
         return this._password;
     }

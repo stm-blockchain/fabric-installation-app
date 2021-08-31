@@ -30,7 +30,19 @@ module.exports = (app, context) => {
         OrdererController.startOrderer,
         OrdererController.updateContext);
 
-    app.get('/initClient')
+    app.get('/initClient',
+        CaController.initClient)
+
+    app.get('/peers',
+        PeerController.getPeers)
+
+    app.post('/channels',
+        PeerController.getPeer,
+        PeerController.setUpCliEnv,
+        PeerController.getChannels)
+
+    app.get('/packages',
+        PeerController.getChaincodePackageNames)
 
     app.post(`/joinChannel`,
         PeerController.getPeer,
@@ -47,7 +59,4 @@ module.exports = (app, context) => {
         PeerController.getPeer,
         PeerController.setUpCliEnv,
         PeerController.commitChaincode)
-
-    // Error handler must always be declared last according to Express.js docs
-    app.use(ErrorHandler.handleErrors)
 }
