@@ -1,4 +1,6 @@
 <template>
+  <Toast/>
+  <ProgressBar v-model:display="progressBarShown" @show-progress-bar="showProgressBar"/>
   <div :class="containerClass" @click="onWrapperClick">
     <AppTopBar v-show="showApp" :show-items="showTopBarItems" :current-tab="selecedTab"/>
     <div class="layout-sidebar" v-show="showApp">
@@ -9,7 +11,8 @@
     </div>
 
     <div :class="isSplash()">
-      <router-view @navigate-to-app="toggleShowApp" @hide-app="hideApp" @show-top-bar-items="toggleTopBarItems"/>
+      <router-view @navigate-to-app="toggleShowApp" @hide-app="hideApp" @show-top-bar-items="toggleTopBarItems"
+                   @show-progress-bar="showProgressBar" @show-toast="showToast"/>
     </div>
   </div>
 </template>
@@ -18,6 +21,7 @@
 import AppTopBar from './AppTopbar.vue';
 import AppProfile from './AppProfile.vue';
 import AppMenu from './AppMenu.vue';
+import ProgressBar from "@/components/ProgressBar";
 import { MENU_TYPES } from "@/utilities/Utils";
 // import AppConfig from './AppConfig.vue';
 // import AppFooter from './AppFooter.vue';
@@ -28,6 +32,7 @@ export default {
     'AppTopBar': AppTopBar,
     'AppProfile': AppProfile,
     'AppMenu': AppMenu,
+    'ProgressBar': ProgressBar
     // 'AppConfig': AppConfig,
     // 'AppFooter': AppFooter,
     // 'Splash': Splash
@@ -36,6 +41,7 @@ export default {
   data() {
     return {
       showApp: false,
+      progressBarShown: false,
       layoutMode: 'static',
       layoutColorMode: 'light',
       staticMenuInactive: false,
@@ -174,6 +180,14 @@ export default {
     }
   },
   methods: {
+    showToast(config) {
+      config.life = 3000;
+      this.$toast.add(config);
+    },
+    showProgressBar(show) {
+      this.progressBarShown = show;
+      console.log(show);
+    },
     updateMenuAndTab(type) {
       switch (type) {
         case MENU_TYPES.PEER:

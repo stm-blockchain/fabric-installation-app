@@ -77,18 +77,34 @@
       "port": "kşlkşl",
       "csrHosts": "lşlkşlk",
       "id": 3
+    },
+    {
+      "peerName": "Peer5",
+      "password": "pw",
+      "orgName": "Org1",
+      "port": "wwwww",
+      "csrHosts": "172.20.20.83:4494",
+      "id": 4
+    },
+    {
+      "peerName": "peer10",
+      "password": "pw",
+      "orgName": "Org1",
+      "port": "7088",
+      "csrHosts": "172.20.20.42,*.Org1.com",
+      "id": 5
     }
   ],
   "joinChannel": {
     "peerConfig": {
-      "peerName": "peer3",
+      "peerName": "peer2",
       "orgName": "Org1"
     },
     "ordererConfig": {
-      "ordererAddress": "aaaaa",
-      "ordererOrgName": "aaaaa"
+      "ordererAddress": "172.20.20.80:7088",
+      "ordererOrgName": "STM"
     },
-    "channelName": "test-4"
+    "channelName": "test"
   },
   "channels": [
     {
@@ -113,12 +129,12 @@
       "orgName": "Org1"
     },
     "chaincodeConfig": {
-      "ordererAddress": "172.20.20.42.7051",
-      "ordererOrgName": "Org1",
+      "ordererAddress": "sssss",
+      "ordererOrgName": "ssssss",
       "channelId": "ttz-channel-2",
-      "ccName": "gvta",
-      "version": "0.0.2",
-      "seq": "2",
+      "ccName": "ssss",
+      "version": "ssss",
+      "seq": "ssss",
       "packageName": "gvta"
     }
   }

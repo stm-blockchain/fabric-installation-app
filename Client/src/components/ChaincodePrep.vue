@@ -58,10 +58,13 @@
 import ChaincodeConfigDialog from "@/components/ChaincodeConfigDialog";
 import ChaincodeNewEndorserDialog from "@/components/ChaincodeNewEndorserDialog";
 import PeerService from "../service/PeerService";
-import {INIT_ITEMS} from "../utilities/Utils";
+import {EVENTS, INIT_ITEMS, RESPONSE_STATE} from "@/utilities/Utils";
+
+const SUMMARY = 'Akıllı Kontrat İşlemleri';
 
 export default {
   name: "ChaincodePrep",
+  emits: [EVENTS.SHOW_PROGRESS_BAR, EVENTS.SHOW_TOAST],
   components: {
     'ChaincodeConfigDialog': ChaincodeConfigDialog,
     'ChaincodeNewEndorserDialog': ChaincodeNewEndorserDialog
@@ -108,13 +111,15 @@ export default {
     },
     async getPeers() {
       try {
+        this.showProgess(true);
         this.channels = []
         this.peers = await PeerService.getPeers();
         this.peers.forEach(i => {
           i.label = `${i.peerName}.${i.orgName}.com`;
         });
+        this.showProgess(false);
       } catch (e) {
-        alert(`Error: ${e.message}`);
+        this.fail('Düğüm Listesini Çekme İşlemi Başarısız');
       } finally {
         this.peerDisabled = this.peers.length === 0;
       }
@@ -156,12 +161,13 @@ export default {
     },
     async send() {
       try {
+        this.showProgess(true);
         const body = this.generateReqBody();
         await PeerService.prepareCommit(body);
         this.clearConfig();
-        alert(`Success`);
+        this.success('Akıllı Kontrat Hazırlık İşlemi Başarılı');
       } catch (e) {
-        alert(`Error: ${e.message}`);
+        this.fail('Akıllı Kontrat Hazırlık İşlemi Başarısız')
       }
     },
     clearConfig() {
@@ -179,6 +185,25 @@ export default {
         {type: 'Sekans No', value:  `-`},
         {type: 'Paket', value:  `-`},
       ]
+    },
+    showProgess(show) {
+      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
+    },
+    success(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.SUCCESS,
+        summary: SUMMARY,
+        detail: msg
+      });
+    },
+    fail(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.ERROR,
+        summary: SUMMARY,
+        detail: msg
+      });
     }
   },
   props: {
@@ -192,11 +217,22 @@ export default {
   },
   watch: {
     selectedPeer: async function(newPeer) { // watch it
-      this.channels = [];
-      const channels = await PeerService.queryChannel(newPeer.peerName);
-      channels.forEach(i => {
-        this.channels.push(i);
-      })
+      try {
+        this.showProgess(true);
+        this.channels = [];
+        const channels = await PeerService.queryChannel({
+          peerConfig: {
+            peerName: newPeer.peerName,
+            orgName: localStorage.getItem(INIT_ITEMS.ORG_NAME)
+          }
+        });
+        channels.forEach(i => {
+          this.channels.push(i);
+        });
+        this.showProgess(false);
+      } catch (e) {
+        this.fail(`${newPeer.peerName} Düğümünün Katıldığı Kanalları Çekme İşlemi Başarısız`);
+      }
     }
   }
 }

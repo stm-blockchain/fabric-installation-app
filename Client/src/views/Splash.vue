@@ -22,7 +22,9 @@
 
 <script>
 import SplashService from "../service/SplashService";
-import { INIT_ITEMS, EVENTS } from "@/utilities/Utils";
+import {INIT_ITEMS, EVENTS, RESPONSE_STATE} from "@/utilities/Utils";
+
+const SUMMARY = 'Açılış Ekranı';
 
 export default {
   name: "Splash",
@@ -62,14 +64,35 @@ export default {
     },
     clearStorageKey(key) {
       localStorage.setItem(key, ``);
+    },
+    showProgess(show) {
+      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
+    },
+    success(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.SUCCESS,
+        summary: SUMMARY,
+        detail: msg
+      });
+    },
+    fail(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.ERROR,
+        summary: SUMMARY,
+        detail: msg
+      });
     }
   },
   async created() {
     try {
+      this.showProgess(true);
       const res = await SplashService.getInitClient();
       this.init(res);
+      this.showProgess(false);
     } catch (e) {
-      alert(`Error: /initClient`);
+      this.fail(`Error: ${e.message}`);
     }
   }
 }

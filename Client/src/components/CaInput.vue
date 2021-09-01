@@ -67,8 +67,10 @@
 </template>
 
 <script>
-import {INIT_ITEMS, EVENTS} from "@/utilities/Utils";
+import {INIT_ITEMS, EVENTS, RESPONSE_STATE} from "@/utilities/Utils";
 import CaService from "@/service/CaService";
+
+const SUMMARY = 'Ca Sunucu Oluştur';
 
 export default {
   name: "CaInput",
@@ -147,7 +149,7 @@ export default {
         password: this.password,
         port: this.port,
         isTls: this.isTls,
-        orgName: localStorage.getItem(INIT_ITEMS.ORG_CA),
+        orgName: localStorage.getItem(INIT_ITEMS.ORG_NAME),
         csrHosts: this.hostAddresses,
         adminName: this.adminName,
         adminSecret: this.adminSecret
@@ -155,14 +157,26 @@ export default {
     },
     async send() {
       try {
+        this.$emit(EVENTS.SHOW_PROGRESS_BAR, true);
         const reqData = this.generateReqBody();
         this.isTls ? localStorage.setItem(INIT_ITEMS.TLS_CA, JSON.stringify(reqData)) :
             localStorage.setItem(INIT_ITEMS.ORG_CA, JSON.stringify(reqData));
         await CaService.startUpCaServer(reqData);
         this.clear();
-        alert("post is ok");
+        this.$emit(EVENTS.SHOW_TOAST, {
+          severity: RESPONSE_STATE.SUCCESS,
+          summary: SUMMARY,
+          detail: this.isTls ? 'TLS CA Sunucu Başarıyla Oluşturuldu' : 'Org CA Sunucu Başarıyla Oluşturuldu'
+        });
+        this.$emit(EVENTS.SHOW_PROGRESS_BAR, false);
       } catch (e) {
-        alert(`Error: ${e.message}`);
+        console.log(e);
+        this.$emit(EVENTS.SHOW_PROGRESS_BAR, false);
+        this.$emit(EVENTS.SHOW_TOAST, {
+          severity: RESPONSE_STATE.ERROR,
+          summary: SUMMARY,
+          detail: this.isTls ? 'TLS CA Sunucu Oluşturma İşlemi Başarısız' : 'Org CA Sunucu Oluşturma İşlemi Başarısız'
+        });
       }
     },
     clear() {

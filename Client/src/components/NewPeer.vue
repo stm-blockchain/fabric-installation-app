@@ -55,7 +55,9 @@
 
 <script>
 import PeerService from "@/service/PeerService";
-import { INIT_ITEMS } from "@/utilities/Utils";
+import {EVENTS, INIT_ITEMS, RESPONSE_STATE} from "@/utilities/Utils";
+
+const SUMMARY = 'Yeni Düğüm';
 
 export default {
   name: "NewPeer",
@@ -82,11 +84,13 @@ export default {
   },
   async mounted() {
     try {
+      this.showProgess(true);
       this.clearItems();
       const data = await PeerService.getPeers();
       this.setItems(data);
+      this.showProgess(false);
     } catch (e) {
-      alert(`Error: ${e.message}`);
+      this.fail('Düğümler Çekilirken Hata Oluştu');
     }
   },
   methods: {
@@ -154,13 +158,33 @@ export default {
     },
     async sendNewPeer() {
       try {
+        this.showProgess(true);
         const reqData = this.generateReqBody();
         await PeerService.createPeer(reqData);
         this.clear();
-        alert(`Success`);
+        this.success('Yeni Peer Oluşturma İşlemi Başarılı');
       } catch (e) {
-        alert(`Error: ${e.message}`);
+        this.fail('Yeni Peer Oluşturma İşlemi Başarısız');
       }
+    },
+    showProgess(show) {
+      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
+    },
+    success(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.SUCCESS,
+        summary: SUMMARY,
+        detail: msg
+      });
+    },
+    fail(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.ERROR,
+        summary: SUMMARY,
+        detail: msg
+      });
     }
   }
 }

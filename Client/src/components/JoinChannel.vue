@@ -53,9 +53,10 @@
 
 <script>
 import PeerService from "@/service/PeerService";
-import { INIT_ITEMS } from "@/utilities/Utils";
+import {EVENTS, INIT_ITEMS, RESPONSE_STATE} from "@/utilities/Utils";
 
 const JOIN_CHANNEL = 'Yeni Bir Kanala Katıl';
+const SUMMARY = 'Kanal İşlemleri';
 
 export default {
   name: "JoinChannel",
@@ -83,12 +84,14 @@ export default {
   methods: {
     async getPeers() {
       try {
+        this.showProgess(true);
         this.peers = await PeerService.getPeers();
         this.peers.forEach(i => {
           i.label = `${i.peerName}.${i.orgName}.com`;
         });
+        this.showProgess(false);
       } catch (e) {
-        alert(`Error: ${e.message}`);
+        this.fail('Düğüm Listesi Çekilirken Bir Hata Oluştu');
       } finally {
         this.peerDisabled = this.peers.length === 0;
       }
@@ -122,24 +125,55 @@ export default {
     },
     async send() {
       try {
+        this.showProgess(true);
         const body = this.generateReqBody();
         await PeerService.joinChannel(body);
         this.channels.push({label: this.newChannelName});
         this.selectedChannel = {label: this.newChannelName};
-        alert(`Success`)
+        this.success(`Kanala Katılma İşlemi Başarılı: ${this.newChannelName}`);
       } catch (e) {
-        alert(`Error: ${e.message}`);
+        this.fail(`Kanala Katılma İşlemi Başarısız: ${this.newChannelName}`);
       }
+    },
+    showProgess(show) {
+      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
+    },
+    success(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.SUCCESS,
+        summary: SUMMARY,
+        detail: msg
+      });
+    },
+    fail(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.ERROR,
+        summary: SUMMARY,
+        detail: msg
+      });
     }
   },
   watch: {
     selectedPeer: async function(newPeer) { // watch it
-      if (this.channelDisabled) this.channelDisabled = false;
-      this.channels = [{label: JOIN_CHANNEL}];
-      const channels = await PeerService.queryChannel(newPeer.peerName);
-      channels.forEach(i => {
-        this.channels.push(i);
-      })
+      try {
+        this.showProgess(true);
+        if (this.channelDisabled) this.channelDisabled = false;
+        this.channels = [{label: JOIN_CHANNEL}];
+        const channels = await PeerService.queryChannel({
+          peerConfig: {
+            peerName: newPeer.peerName,
+            orgName: localStorage.getItem(INIT_ITEMS.ORG_NAME)
+          }
+        });
+        channels.forEach(i => {
+          this.channels.push(i);
+        });
+        this.showProgess(false);
+      } catch (e) {
+        this.fail(`${newPeer.peerName} Düğümünün Katıldığı Kanalları Çekme İşlemi Başarısız`);
+      }
     },
     selectedChannel: function(newChannel) { // watch it
       console.log(newChannel)

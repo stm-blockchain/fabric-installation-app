@@ -12,6 +12,9 @@ const inject = (req, res, next) => {
     req.context = context;
     req.installation = new Installation(new DockerApi(), logger);
     req.logger = logger;
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "*");
+    res.header("Access-Control-Allow-Headers", "Content-Type")
     next();
 }
 
@@ -27,7 +30,8 @@ require('./routes')(app, context);
 app.use(ErrorHandler.handleErrors);
 
 context.init(Logger.getLogger(`init`)).then(() => {
-    app.listen(8080);
+    app.listen(5000);
+    console.log('Listening: http://localhost:5000');
 }).catch(e => {
     console.log(e.stack);
 });
