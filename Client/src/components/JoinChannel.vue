@@ -53,13 +53,17 @@
 
 <script>
 import PeerService from "@/service/PeerService";
-import {EVENTS, INIT_ITEMS, RESPONSE_STATE} from "@/utilities/Utils";
+import EventService from "../service/EventService";
+import { INIT_ITEMS } from "@/utilities/Utils";
 
 const JOIN_CHANNEL = 'Yeni Bir Kanala Katıl';
 const SUMMARY = 'Kanal İşlemleri';
 
 export default {
   name: "JoinChannel",
+  created() {
+    this.eventService = new EventService(this, SUMMARY);
+  },
   mounted() {
     this.clear();
     this.getPeers();
@@ -78,20 +82,21 @@ export default {
       btnDisabled: true,
       peerDisabled: true,
       channelDisabled: true,
-      showJoinChannelInput: false
+      showJoinChannelInput: false,
+      eventService: null
     }
   },
   methods: {
     async getPeers() {
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         this.peers = await PeerService.getPeers();
         this.peers.forEach(i => {
           i.label = `${i.peerName}.${i.orgName}.com`;
         });
-        this.showProgess(false);
+        this.eventService.showProgress(false);
       } catch (e) {
-        this.fail('Düğüm Listesi Çekilirken Bir Hata Oluştu');
+        this.eventService.fail('Düğüm Listesi Çekilirken Bir Hata Oluştu');
       } finally {
         this.peerDisabled = this.peers.length === 0;
       }
@@ -125,40 +130,21 @@ export default {
     },
     async send() {
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         const body = this.generateReqBody();
         await PeerService.joinChannel(body);
         this.channels.push({label: this.newChannelName});
         this.selectedChannel = {label: this.newChannelName};
-        this.success(`Kanala Katılma İşlemi Başarılı: ${this.newChannelName}`);
+        this.eventService.success(`Kanala Katılma İşlemi Başarılı: ${this.newChannelName}`);
       } catch (e) {
-        this.fail(`Kanala Katılma İşlemi Başarısız: ${this.newChannelName}`);
+        this.eventService.fail(`Kanala Katılma İşlemi Başarısız: ${this.newChannelName}`);
       }
-    },
-    showProgess(show) {
-      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
-    },
-    success(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.SUCCESS,
-        summary: SUMMARY,
-        detail: msg
-      });
-    },
-    fail(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.ERROR,
-        summary: SUMMARY,
-        detail: msg
-      });
     }
   },
   watch: {
     selectedPeer: async function(newPeer) { // watch it
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         if (this.channelDisabled) this.channelDisabled = false;
         this.channels = [{label: JOIN_CHANNEL}];
         const channels = await PeerService.queryChannel({
@@ -170,9 +156,9 @@ export default {
         channels.forEach(i => {
           this.channels.push(i);
         });
-        this.showProgess(false);
+        this.eventService.showProgress(false);
       } catch (e) {
-        this.fail(`${newPeer.peerName} Düğümünün Katıldığı Kanalları Çekme İşlemi Başarısız`);
+        this.eventService.fail(`${newPeer.peerName} Düğümünün Katıldığı Kanalları Çekme İşlemi Başarısız`);
       }
     },
     selectedChannel: function(newChannel) { // watch it

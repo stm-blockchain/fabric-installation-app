@@ -22,7 +22,8 @@
 
 <script>
 import SplashService from "../service/SplashService";
-import {INIT_ITEMS, EVENTS, RESPONSE_STATE} from "@/utilities/Utils";
+import EventService from "../service/EventService";
+import {INIT_ITEMS, EVENTS } from "@/utilities/Utils";
 
 const SUMMARY = 'Açılış Ekranı';
 
@@ -32,7 +33,8 @@ export default {
     return {
       orgName: ``,
       btnText: ``,
-      isOrgUp: false
+      isOrgUp: false,
+      eventService: null
     }
   },
   methods: {
@@ -64,35 +66,17 @@ export default {
     },
     clearStorageKey(key) {
       localStorage.setItem(key, ``);
-    },
-    showProgess(show) {
-      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
-    },
-    success(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.SUCCESS,
-        summary: SUMMARY,
-        detail: msg
-      });
-    },
-    fail(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.ERROR,
-        summary: SUMMARY,
-        detail: msg
-      });
     }
   },
   async created() {
+    this.eventService = new EventService(this, SUMMARY);
     try {
-      this.showProgess(true);
+      this.eventService.showProgress(true);
       const res = await SplashService.getInitClient();
       this.init(res);
-      this.showProgess(false);
+      this.eventService.showProgress(false);
     } catch (e) {
-      this.fail(`Error: ${e.message}`);
+      this.eventService.fail(`Error: ${e.message}`);
     }
   }
 }

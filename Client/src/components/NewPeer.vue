@@ -55,7 +55,8 @@
 
 <script>
 import PeerService from "@/service/PeerService";
-import {EVENTS, INIT_ITEMS, RESPONSE_STATE} from "@/utilities/Utils";
+import EventService from "../service/EventService";
+import { INIT_ITEMS } from "@/utilities/Utils";
 
 const SUMMARY = 'Yeni Düğüm';
 
@@ -79,19 +80,14 @@ export default {
       password: '',
       orgName: localStorage.getItem(INIT_ITEMS.ORG_NAME),
       port: '',
-      csrHosts: ''
+      csrHosts: '',
+      eventService: null
     }
+  },created() {
+    this.eventService = new EventService(this, SUMMARY);
   },
-  async mounted() {
-    try {
-      this.showProgess(true);
-      this.clearItems();
-      const data = await PeerService.getPeers();
-      this.setItems(data);
-      this.showProgess(false);
-    } catch (e) {
-      this.fail('Düğümler Çekilirken Hata Oluştu');
-    }
+  mounted() {
+    this.init();
   },
   methods: {
     onClick() {
@@ -99,6 +95,17 @@ export default {
         // send here
         this.$router.push({name: 'joinChannel'})
       } else this.sendNewPeer();
+    },
+    async init() {
+      try {
+        this.eventService.showProgress(true);
+        this.clearItems();
+        const data = await PeerService.getPeers();
+        this.setItems(data);
+        this.eventService.showProgress(false);
+      } catch (e) {
+        this.eventService.fail('Düğümler Çekilirken Hata Oluştu');
+      }
     },
     setLabel(label) {
       this.splitLabel = label;
@@ -138,14 +145,14 @@ export default {
     itemSelected(item, label) {
       this.setLabel(label);
       this.showPeer(item);
-      this.btnMsg = 'Sonraki Adım'
+      this.btnMsg = 'Sonraki Adım';
       this.isSelected = true;
     },
     newPeer() {
       this.isSelected = false;
       this.setLabel('Yeni DÜğüm');
       this.clear();
-      this.btnMsg = 'Düğüm Oluştur'
+      this.btnMsg = 'Düğüm Oluştur';
     },
     generateReqBody() {
       return {
@@ -158,33 +165,14 @@ export default {
     },
     async sendNewPeer() {
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         const reqData = this.generateReqBody();
         await PeerService.createPeer(reqData);
         this.clear();
-        this.success('Yeni Peer Oluşturma İşlemi Başarılı');
+        this.eventService.success('Yeni Peer Oluşturma İşlemi Başarılı');
       } catch (e) {
-        this.fail('Yeni Peer Oluşturma İşlemi Başarısız');
+        this.eventService.fail('Yeni Peer Oluşturma İşlemi Başarısız');
       }
-    },
-    showProgess(show) {
-      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
-    },
-    success(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.SUCCESS,
-        summary: SUMMARY,
-        detail: msg
-      });
-    },
-    fail(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.ERROR,
-        summary: SUMMARY,
-        detail: msg
-      });
     }
   }
 }

@@ -67,8 +67,9 @@
 </template>
 
 <script>
-import {INIT_ITEMS, EVENTS, RESPONSE_STATE} from "@/utilities/Utils";
+import { INIT_ITEMS, EVENTS } from "@/utilities/Utils";
 import CaService from "@/service/CaService";
+import EventService from "../service/EventService";
 
 const SUMMARY = 'Ca Sunucu Oluştur';
 
@@ -85,8 +86,12 @@ export default {
       hostAddresses: '',
       port: '',
       isDisabled: false,
-      title: ''
+      title: '',
+      eventService: null
     }
+  },
+  created() {
+    this.eventService = new EventService(this, SUMMARY);
   },
   mounted() {
     this.initTls();
@@ -158,22 +163,22 @@ export default {
     },
     async send() {
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         const reqData = this.generateReqBody();
         this.isTls ? localStorage.setItem(INIT_ITEMS.TLS_CA, JSON.stringify(reqData)) :
             localStorage.setItem(INIT_ITEMS.ORG_CA, JSON.stringify(reqData));
         await CaService.startUpCaServer(reqData);
         this.clear();
-        this.success(`${this.isTls ? 'TLS CA Sunucusu Başarıyla Oluşturuldu'
+        this.eventService.success(`${this.isTls ? 'TLS CA Sunucusu Başarıyla Oluşturuldu'
             : 'ORG CA Sunucusu Başarıyla Oluşturuldu'}`);
+        this.navigate();
       } catch (e) {
         console.log(e);
-        this.fail(`${this.isTls ? 'TLS CA Sunucusu Oluşturma İşlemi Başarısız'
+        this.eventService.fail(`${this.isTls ? 'TLS CA Sunucusu Oluşturma İşlemi Başarısız'
             : 'ORG CA Sunucusu Oluşturma İşlemi Başarısız'}`);
       }
     },
     clear() {
-      // this.isTls = false;
       this.isDisabled = false;
       this.userName = '';
       this.password = '';
@@ -181,26 +186,6 @@ export default {
       this.adminSecret = '';
       this.hostAddresses = '';
       this.port = '';
-    },
-    showProgess(show) {
-      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
-    },
-    success(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.SUCCESS,
-        summary: SUMMARY,
-        detail: msg
-      });
-      this.navigate();
-    },
-    fail(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.ERROR,
-        summary: SUMMARY,
-        detail: msg
-      });
     }
   }
 }

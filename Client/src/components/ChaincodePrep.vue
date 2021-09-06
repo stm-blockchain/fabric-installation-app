@@ -58,7 +58,8 @@
 import ChaincodeConfigDialog from "@/components/ChaincodeConfigDialog";
 import ChaincodeNewEndorserDialog from "@/components/ChaincodeNewEndorserDialog";
 import PeerService from "../service/PeerService";
-import {EVENTS, INIT_ITEMS, RESPONSE_STATE} from "@/utilities/Utils";
+import EventService from "../service/EventService";
+import {EVENTS, INIT_ITEMS } from "@/utilities/Utils";
 
 const SUMMARY = 'Akıllı Kontrat İşlemleri';
 
@@ -68,6 +69,9 @@ export default {
   components: {
     'ChaincodeConfigDialog': ChaincodeConfigDialog,
     'ChaincodeNewEndorserDialog': ChaincodeNewEndorserDialog
+  },
+  created() {
+    this.eventService = new EventService(this, SUMMARY);
   },
   data() {
     return {
@@ -99,7 +103,8 @@ export default {
         seq: `-`,
         packageName: `-`
       },
-      channels: []
+      channels: [],
+      eventService: null
     }
   },
   methods: {
@@ -111,15 +116,15 @@ export default {
     },
     async getPeers() {
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         this.channels = []
         this.peers = await PeerService.getPeers();
         this.peers.forEach(i => {
           i.label = `${i.peerName}.${i.orgName}.com`;
         });
-        this.showProgess(false);
+        this.eventService.showProgress(false);
       } catch (e) {
-        this.fail('Düğüm Listesini Çekme İşlemi Başarısız');
+        this.eventService.fail('Düğüm Listesini Çekme İşlemi Başarısız');
       } finally {
         this.peerDisabled = this.peers.length === 0;
       }
@@ -161,13 +166,13 @@ export default {
     },
     async send() {
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         const body = this.generateReqBody();
         await PeerService.prepareCommit(body);
         this.clearConfig();
-        this.success('Akıllı Kontrat Hazırlık İşlemi Başarılı');
+        this.eventService.success('Akıllı Kontrat Hazırlık İşlemi Başarılı');
       } catch (e) {
-        this.fail('Akıllı Kontrat Hazırlık İşlemi Başarısız')
+        this.eventService.fail('Akıllı Kontrat Hazırlık İşlemi Başarısız');
       }
     },
     clearConfig() {
@@ -185,25 +190,6 @@ export default {
         {type: 'Sekans No', value:  `-`},
         {type: 'Paket', value:  `-`},
       ]
-    },
-    showProgess(show) {
-      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
-    },
-    success(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.SUCCESS,
-        summary: SUMMARY,
-        detail: msg
-      });
-    },
-    fail(msg) {
-      this.showProgess(false);
-      this.$emit(EVENTS.SHOW_TOAST, {
-        severity: RESPONSE_STATE.ERROR,
-        summary: SUMMARY,
-        detail: msg
-      });
     }
   },
   props: {
@@ -218,7 +204,7 @@ export default {
   watch: {
     selectedPeer: async function(newPeer) { // watch it
       try {
-        this.showProgess(true);
+        this.eventService.showProgress(true);
         this.channels = [];
         const channels = await PeerService.queryChannel({
           peerConfig: {
@@ -229,9 +215,9 @@ export default {
         channels.forEach(i => {
           this.channels.push(i);
         });
-        this.showProgess(false);
+        this.eventService.showProgress(false);
       } catch (e) {
-        this.fail(`${newPeer.peerName} Düğümünün Katıldığı Kanalları Çekme İşlemi Başarısız`);
+        this.eventService.fail(`${newPeer.peerName} Düğümünün Katıldığı Kanalları Çekme İşlemi Başarısız`);
       }
     }
   }
