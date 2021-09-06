@@ -130,12 +130,13 @@ export default {
       if (!this.isDisabled) {
         this.send();
       }
+    },
+    navigate() {
       if (this.isTls) {
         this.initOrg();
       } else {
-        // alert("new page")
         this.$emit(EVENTS.SHOW_TOP_BAR_ITEMS);
-        this.$router.push({name: 'newPeer' });
+        this.$router.push({name: 'newPeer'});
       }
     },
     onBackBtnClick() {
@@ -157,30 +158,22 @@ export default {
     },
     async send() {
       try {
-        this.$emit(EVENTS.SHOW_PROGRESS_BAR, true);
+        this.showProgess(true);
         const reqData = this.generateReqBody();
         this.isTls ? localStorage.setItem(INIT_ITEMS.TLS_CA, JSON.stringify(reqData)) :
             localStorage.setItem(INIT_ITEMS.ORG_CA, JSON.stringify(reqData));
         await CaService.startUpCaServer(reqData);
         this.clear();
-        this.$emit(EVENTS.SHOW_TOAST, {
-          severity: RESPONSE_STATE.SUCCESS,
-          summary: SUMMARY,
-          detail: this.isTls ? 'TLS CA Sunucu Başarıyla Oluşturuldu' : 'Org CA Sunucu Başarıyla Oluşturuldu'
-        });
-        this.$emit(EVENTS.SHOW_PROGRESS_BAR, false);
+        this.success(`${this.isTls ? 'TLS CA Sunucusu Başarıyla Oluşturuldu'
+            : 'ORG CA Sunucusu Başarıyla Oluşturuldu'}`);
       } catch (e) {
         console.log(e);
-        this.$emit(EVENTS.SHOW_PROGRESS_BAR, false);
-        this.$emit(EVENTS.SHOW_TOAST, {
-          severity: RESPONSE_STATE.ERROR,
-          summary: SUMMARY,
-          detail: this.isTls ? 'TLS CA Sunucu Oluşturma İşlemi Başarısız' : 'Org CA Sunucu Oluşturma İşlemi Başarısız'
-        });
+        this.fail(`${this.isTls ? 'TLS CA Sunucusu Oluşturma İşlemi Başarısız'
+            : 'ORG CA Sunucusu Oluşturma İşlemi Başarısız'}`);
       }
     },
     clear() {
-      this.isTls = false;
+      // this.isTls = false;
       this.isDisabled = false;
       this.userName = '';
       this.password = '';
@@ -188,6 +181,26 @@ export default {
       this.adminSecret = '';
       this.hostAddresses = '';
       this.port = '';
+    },
+    showProgess(show) {
+      this.$emit(EVENTS.SHOW_PROGRESS_BAR, show);
+    },
+    success(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.SUCCESS,
+        summary: SUMMARY,
+        detail: msg
+      });
+      this.navigate();
+    },
+    fail(msg) {
+      this.showProgess(false);
+      this.$emit(EVENTS.SHOW_TOAST, {
+        severity: RESPONSE_STATE.ERROR,
+        summary: SUMMARY,
+        detail: msg
+      });
     }
   }
 }
