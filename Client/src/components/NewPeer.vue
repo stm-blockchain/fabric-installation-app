@@ -85,8 +85,6 @@ export default {
     }
   },created() {
     this.eventService = new EventService(this, SUMMARY);
-  },
-  mounted() {
     this.init();
   },
   methods: {

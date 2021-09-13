@@ -134,7 +134,7 @@ export default {
     onNextStepClick() {
       if (!this.isDisabled) {
         this.send();
-      }
+      } else this.navigate();
     },
     navigate() {
       if (this.isTls) {
@@ -171,6 +171,7 @@ export default {
         this.clear();
         this.eventService.success(`${this.isTls ? 'TLS CA Sunucusu Başarıyla Oluşturuldu'
             : 'ORG CA Sunucusu Başarıyla Oluşturuldu'}`);
+        await new Promise(r => setTimeout(r, 500));
         this.navigate();
       } catch (e) {
         console.log(e);
