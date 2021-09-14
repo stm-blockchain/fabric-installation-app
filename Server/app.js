@@ -20,7 +20,7 @@ const inject = (req, res, next) => {
 
 const logRequest = (req, res, next) => {
     req.logger.log({level: 'info', message: `New request received: ${req.originalUrl}`});
-    req.logger.log({level: 'debug', message: `New request received: To ${req.originalUrl} from ${req.ip}\nPayload: ${req.body}`});
+    req.logger.log({level: 'debug', message: `New request received: To ${req.originalUrl} from ${req.ip}\nPayload: ${JSON.stringify(req.body, null, 2)}`});
     next();
 }
 app.use(bodyParser.json());

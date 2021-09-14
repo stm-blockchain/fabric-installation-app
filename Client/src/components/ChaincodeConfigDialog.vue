@@ -51,9 +51,18 @@
 </template>
 
 <script>
+import PeerService from "@/service/PeerService";
+import EventService from "@/service/EventService";
+
+const SUMMARY = 'Kontrat Konfigürasyonu';
+
 export default {
   name: "ChaincodeConfigDialog",
   props: ['visible', `channels`],
+  created() {
+    this.eventService = new EventService(this, SUMMARY);
+    this.getPackages();
+  },
   methods: {
     onBtnClick() {
       this.$emit('close-dialog');
@@ -64,6 +73,13 @@ export default {
         seq: this.seq,
         packageName: this.selectedPackage.label
       })
+    },
+    async getPackages() {
+      try {
+        this.packages = await PeerService.getPackages();
+      } catch (e) {
+        this.eventService.fail('Kontrat Paketleri Çekilirken Bir Hata Oluştu');
+      }
     }
   },
   data() {
@@ -74,11 +90,10 @@ export default {
       version: ``,
       seq: ``,
       packageName: ``,
-      packages: [
-        {label: `gvta`}
-      ],
+      packages: [],
       selectedPackage: null,
-      selectedChannel: null
+      selectedChannel: null,
+      eventService: null
     }
   },
   watch: {
