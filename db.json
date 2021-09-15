@@ -1,0 +1,141 @@
+{
+  "initClient": {
+    "orgName": "Org1",
+    "tlsCa": {
+      "userName": "tls-ca-admin",
+      "password": "tls-ca-adminpw",
+      "port": "7052",
+      "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82"
+    },
+    "orgCa": {
+      "userName": "org-ca-admin",
+      "password": "org-ca-adminpw",
+      "port": "7053",
+      "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82",
+      "adminName": "org-admin",
+      "adminSecret": "org-adminpw"
+    }
+  },
+  "initClient1": {
+    "orgName": "Org1"
+  },
+  "initCa": {
+    "userName": "",
+    "password": "",
+    "port": "",
+    "isTls": false,
+    "orgName": "",
+    "csrHosts": "",
+    "adminName": "",
+    "adminSecret": ""
+  },
+  "peers": [
+    {
+      "peerName": "peer1",
+      "password": "peer1pw",
+      "orgName": "Org1",
+      "port": 7052,
+      "csrHosts": "0.0.0.0,*.Org1.com"
+    },
+    {
+      "peerName": "peer2",
+      "password": "peer2pw",
+      "orgName": "Org1",
+      "port": 7053,
+      "csrHosts": "0.0.0.0,*.Org1.com"
+    },
+    {
+      "peerName": "peer3",
+      "password": "peer3pw",
+      "orgName": "Org1",
+      "port": 7054,
+      "csrHosts": "0.0.0.0,*.Org1.com"
+    }
+  ],
+  "peers1": [],
+  "initPeer": [
+    {
+      "peerName": "peer4",
+      "password": "peer4pw",
+      "orgName": "Org1",
+      "port": "2222",
+      "csrHosts": "111111111111",
+      "id": 1
+    },
+    {
+      "peerName": "peer5",
+      "password": "peer5pw",
+      "orgName": "Org1",
+      "port": "8888",
+      "csrHosts": "asdddasdasd",
+      "id": 2
+    },
+    {
+      "peerName": "peer6",
+      "password": "şkşkş",
+      "orgName": "Org1",
+      "port": "kşlkşl",
+      "csrHosts": "lşlkşlk",
+      "id": 3
+    },
+    {
+      "peerName": "Peer5",
+      "password": "pw",
+      "orgName": "Org1",
+      "port": "wwwww",
+      "csrHosts": "172.20.20.83:4494",
+      "id": 4
+    },
+    {
+      "peerName": "peer10",
+      "password": "pw",
+      "orgName": "Org1",
+      "port": "7088",
+      "csrHosts": "172.20.20.42,*.Org1.com",
+      "id": 5
+    }
+  ],
+  "joinChannel": {
+    "peerConfig": {
+      "peerName": "peer2",
+      "orgName": "Org1"
+    },
+    "ordererConfig": {
+      "ordererAddress": "172.20.20.80:7088",
+      "ordererOrgName": "STM"
+    },
+    "channelName": "test"
+  },
+  "channels": [
+    {
+      "label": "ttz-channel-1"
+    },
+    {
+      "label": "ttz-channel-2"
+    },
+    {
+      "label": "ttz-channel-3"
+    },
+    {
+      "label": "ttz-channel-4"
+    },
+    {
+      "label": "ttz-channel-5"
+    }
+  ],
+  "prepareCommit": {
+    "peerConfig": {
+      "peerName": "peer2",
+      "orgName": "Org1"
+    },
+    "chaincodeConfig": {
+      "ordererAddress": "sssss",
+      "ordererOrgName": "ssssss",
+      "channelId": "ttz-channel-2",
+      "ccName": "ssss",
+      "version": "ssss",
+      "seq": "ssss",
+      "packageName": "gvta"
+    }
+  }
+}

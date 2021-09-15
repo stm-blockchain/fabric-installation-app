@@ -123,5 +123,36 @@ module.exports = {
             }
             next(e);
         }
+    },
+    async initClient(req, res, next) {
+        try {
+            const responseBody = {}
+            if(req.context.CA_NODES.tlsCaNode) {
+                responseBody.orgName = req.context.CA_NODES.tlsCaNode.orgName;
+                responseBody.tlsCa = {
+                    userName: req.context.CA_NODES.tlsCaNode.name,
+                    password: req.context.CA_NODES.tlsCaNode.secret,
+                    port: req.context.CA_NODES.tlsCaNode.port,
+                    csrHosts: req.context.CA_NODES.tlsCaNode.csrHosts
+                }
+            }
+            if (req.context.CA_NODES.orgCaNode) {
+                responseBody.orgCa = {
+                    userName: req.context.CA_NODES.orgCaNode.name,
+                    password: req.context.CA_NODES.orgCaNode.secret,
+                    port: req.context.CA_NODES.orgCaNode.port,
+                    csrHosts: req.context.CA_NODES.orgCaNode.csrHosts,
+                    adminName: req.context.CA_NODES.orgCaNode.adminName,
+                    adminSecret: req.context.CA_NODES.orgCaNode.adminSecret
+                }
+            }
+            res.send(responseBody);
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER INIT CLIENT`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
     }
 }

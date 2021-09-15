@@ -5,7 +5,7 @@ module.exports = {
       try {
           req.logger.log({level: 'info', message: 'Building PeerNode'});
           req.peerNode = new PeerNode(req.body.peerName, req.body.password,
-              req.body.orgName, req.body.port, `${req.body.csrHosts}`);
+              req.body.orgName, parseInt(req.body.port), `${req.body.csrHosts}`);
           req.peerNode.logger = req.logger;
           req.peerNode.folderPrep();
           req.logger.log({level: 'info', message: 'Successfully built PeerNode'});
@@ -97,7 +97,8 @@ module.exports = {
 
             if (!peer) {
                 req.logger.log({level: 'info', message: 'No such peer'});
-                res.status(400).send(`No such peer`);
+                const wrappedError = new Errors.GenericError(`ERROR NO SUCH PEER`, new Error());
+                return next(wrappedError);
             }
 
             req.peerNode = peer;
@@ -183,6 +184,56 @@ module.exports = {
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER COMMIT`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+    async getPeers(req, res, next) {
+        try {
+            const peers = req.context.PEER_NODES;
+            const body = []
+            peers.forEach(i => {
+                body.push({
+                    peerName: i.name,
+                    password: i.secret,
+                    orgName: i.orgName,
+                    port: i.port,
+                    csrHosts: i.csrHosts
+                })
+            });
+            res.send(body);
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR GET PEERS`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+    async getChannels(req, res, next) {
+        try {
+            const channels = await req.installation.getChannels();
+            const responseBody = [];
+            channels.forEach(i => {
+                responseBody.push({label: i})
+            });
+            res.send(responseBody);
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR GET CHANNELS`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+    async getChaincodePackageNames(req, res, next) {
+        try {
+            const result = req.installation.getChaincodePackageNames();
+            return res.send(result);
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR GET CHAINCODE PACKAGE NAMES`, e);
                 next(wrappedError);
             }
             next(e);

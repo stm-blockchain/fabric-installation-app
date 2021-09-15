@@ -55,6 +55,15 @@ class ManageFile {
             throw new Errors.FolderStructureError(`ENV FILE ERROR`, e);
         }
     }
+
+    getFileNames(folderName) {
+        try {
+            const path = `${BASE}/ttz/${folderName}`;
+            return fs.readdirSync(path);
+        } catch (e) {
+            throw new Errors.FolderStructureError(`FILE NAMES ERROR`, e);
+        }
+    }
 }
 
 let fileManager;
@@ -84,4 +93,8 @@ exports.createEnvFile = (envList, path)=> {
 
 exports.mkdir = (paths) => {
     fileManager.mkdir(paths)
+}
+
+exports.getFileNames = (folderName) => {
+    return fileManager.getFileNames(folderName);
 }

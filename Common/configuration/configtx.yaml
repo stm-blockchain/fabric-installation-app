@@ -33,7 +33,7 @@ Organizations:
         ID: Org2
 
         # MSPDir is the filesystem path which contains the MSP configuration.
-        MSPDir: ./Org2/msp
+        MSPDir: /home/test/ttz/Org2/msp
 
         # Policies defines the set of policies at this level of the config tree
         # For organization policies, their canonical path is usually
@@ -41,13 +41,13 @@ Organizations:
         Policies: &Org2Policies
             Readers:
                 Type: Signature
-                # Rule: "OR('orderingservice.member')"
+                # Rule: "OR('Org1.member')"
                 # If your MSP is configured with the new NodeOUs, you might
                 # want to use a more specific rule like the following:
                 Rule: "OR('Org2.admin', 'Org2.peer', 'Org2.client')"
             Writers:
                 Type: Signature
-                # Rule: "OR('orderingservice.member')"
+                # Rule: "OR('Org1.member')"
                 # If your MSP is configured with the new NodeOUs, you might
                 # want to use a more specific rule like the following:
                 Rule: "OR('Org2.admin', 'Org2.client')"
@@ -60,7 +60,7 @@ Organizations:
 
         AnchorPeers:
             - Host: peer1.Org2.com
-              Port: 9054
+              Port: 7058
 
     - &Org1
         # Name is the key by which this org will be referenced in channel

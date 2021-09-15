@@ -120,7 +120,7 @@ module.exports = {
         _setLogger(logger);
         _folderPrep();
         await _initDbContainer();
-        await new Promise(r => setTimeout(r, 4000)); // Should know when postgres server is up
+        await new Promise(r => setTimeout(r, 6000)); // Should know when postgres server is up
         await repository.init(logger);
     },
     updateContext: async (node) => {
