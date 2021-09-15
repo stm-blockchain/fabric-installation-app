@@ -229,11 +229,23 @@ module.exports = {
     },
     async getChaincodePackageNames(req, res, next) {
         try {
-            const result = req.installation.getChaincodePackageNames();
+            const result = await req.installation.getChaincodePackageNames();
             return res.send(result);
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR GET CHAINCODE PACKAGE NAMES`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+    async queryApprovedChaincodes(req, res, next) {
+        try {
+            const result = await req.installation.queryApprovedChaincodeNames(req.body.channelName, req.body.ccName);
+            res.send({sequence: result.sequence, version: result.version});
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR QUERYAPPROVED CHAINCODES`, e);
                 next(wrappedError);
             }
             next(e);

@@ -204,6 +204,20 @@ async function _commitChaincode(commitConfig) {
     }
 }
 
+async function _queryApprovedChaincode(channelName, ccName) {
+    try {
+        logger.log({level: `debug`, message: `Querying the chaincode: ${ccName} from the channel: ${channelName}`});
+        const {stdout, stderr} = await exec(FabricCommandGenerator.generateQueryApprovedCommand(channelName, ccName));
+        logger.log({
+            level: `debug`,
+            message: `\n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`
+        });
+        return JSON.parse(stdout);
+    } catch (e) {
+        throw new Errors.FabricError(`COMMIT CC ERROR`, e);
+    }
+}
+
 async function _runContainerViaEngineApi(dockerService, config) {
     logger.log({level: `debug`, message: `Running container via engine api: ${config}`});
     try {
@@ -347,6 +361,10 @@ module.exports = class Installation {
 
     getChaincodePackageNames() {
         return _getChaincodePackageNames();
+    }
+
+    queryApprovedChaincodeNames(channelName, ccName) {
+        return _queryApprovedChaincode(channelName, ccName);
     }
 
     caInitFolderPrep(node) {
