@@ -19,6 +19,7 @@ const Commands = {
         INSTALL: "peer lifecycle chaincode install",
         QUERY_INSTALLED: "peer lifecycle chaincode queryinstalled -O json",
         APPROVE: "peer lifecycle chaincode approveformyorg",
+        QUERY_APPROVED: "peer lifecycle chaincode queryapproved --output json",
         CHECK_COMMIT_READINESS: "peer lifecycle chaincode checkcommitreadiness",
         COMMIT: "peer lifecycle chaincode commit"
     }
@@ -118,6 +119,19 @@ module.exports = {
             return command.join(" ");
         } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING APPROVE CMD`, e);
+        }
+    },
+    generateQueryApprovedCommand(channelName, ccName) {
+        try {
+            const command = [Commands.PEER.QUERY_APPROVED,
+                `-C ${channelName}`,
+                `-n ${ccName}`,
+                Commands.OS.TO_STDOUT
+            ];
+
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING QUERYAPPROVED CMD`, e);
         }
     },
     generateCommitReadinessCommand(chaincodeConfig) {
