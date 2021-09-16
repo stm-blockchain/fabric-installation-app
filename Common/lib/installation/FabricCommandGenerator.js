@@ -21,7 +21,8 @@ const Commands = {
         APPROVE: "peer lifecycle chaincode approveformyorg",
         QUERY_APPROVED: "peer lifecycle chaincode queryapproved --output json",
         CHECK_COMMIT_READINESS: "peer lifecycle chaincode checkcommitreadiness",
-        COMMIT: "peer lifecycle chaincode commit"
+        COMMIT: "peer lifecycle chaincode commit",
+        QUERY_COMMITTED: "peer lifecycle chaincode querycommitted --output json"
     }
 }
 
@@ -171,6 +172,21 @@ module.exports = {
             return command.join(" ");
         } catch (e) {
             throw new Errors.CommandGenerationError(`ERROR GENERATING COMMIT CMD`, e);
+        }
+    },
+    generateQueryCommittedCommand(channelName, ordererConfig) {
+        // peer lifecycle chaincode querycommitted -o $ORDERER_ADDRESS --channelID test
+        // channel --cafile $ORDERER_TLS_CA --output json
+        try {
+            const command = [Commands.PEER.QUERY_COMMITTED,
+                `-o ${ordererConfig.ordererAddress}`,
+                `--channekID ${channelName}`,
+                `--cafile ${process.env.HOME}/ttz/orderers/${ordererConfig.ordererOrgName}-tls-ca-cert.pem`,
+                Commands.OS.TO_STDOUT
+            ];
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING QUERYCOMMITTED CMD`, e);
         }
     },
     generateChannelListCommand() {

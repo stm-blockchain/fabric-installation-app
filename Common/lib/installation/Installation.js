@@ -218,6 +218,40 @@ async function _queryApprovedChaincode(channelName, ccName) {
     }
 }
 
+async function _queryCommuttedChaincodes(channelName, ordererConfig) {
+    try {
+        const {stdout, stderr} = await exec(FabricCommandGenerator.generateQueryCommittedCommand(channelName, ordererConfig));
+        logger.log({
+            level: `debug`,
+            message: `\n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`
+        });
+        return JSON.parse(stdout);
+    } catch (e) {
+        throw new Errors.FabricError(`QUERYCOMMITTED CC ERROR`, e);
+    }
+}
+
+async function _ccStates(channelName, ordererConfig) {
+    const committedMap = {}
+    const approvedList = []
+    const installedCCs = await _getInstalledList();
+    const commitedCCs = await _queryCommuttedChaincodes(channelName, ordererConfig);
+    commitedCCs.chaincode_definitions.forEach(cc => committedMap[cc.name] = true);
+    const notCommittedCCS = installedCCs.installed_chaincodes.filter(cc => {
+        const name = cc.label.split(`_`)[0];
+        return !committedMap[name];
+    });
+
+    for (let i = 0; i < notCommittedCCS.length; i++) {
+        try {
+            const name = notCommittedCCS.label.split(`_`)[0];
+            approvedList.push(await exec(FabricCommandGenerator.generateQueryApprovedCommand(channelName, name)));
+        } catch (e) {
+            // log
+        }
+    }
+}
+
 async function _runContainerViaEngineApi(dockerService, config) {
     logger.log({level: `debug`, message: `Running container via engine api: ${config}`});
     try {
@@ -364,7 +398,7 @@ module.exports = class Installation {
     }
 
     queryApprovedChaincodeNames(channelName, ccName) {
-        return _queryApprovedChaincode(channelName, ccName);
+        return _chaincodeStates(channelName, ccName);
     }
 
     caInitFolderPrep(node) {
