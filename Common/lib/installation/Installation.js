@@ -218,9 +218,9 @@ async function _queryApprovedChaincode(channelName, ccName) {
     }
 }
 
-async function _queryCommuttedChaincodes(channelName, ordererConfig) {
+async function _queryCommittedChaincodes(channelName) {
     try {
-        const {stdout, stderr} = await exec(FabricCommandGenerator.generateQueryCommittedCommand(channelName, ordererConfig));
+        const {stdout, stderr} = await exec(FabricCommandGenerator.generateQueryCommittedCommand(channelName));
         logger.log({
             level: `debug`,
             message: `\n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`
@@ -231,25 +231,52 @@ async function _queryCommuttedChaincodes(channelName, ordererConfig) {
     }
 }
 
-async function _ccStates(channelName, ordererConfig) {
-    const committedMap = {}
-    const approvedList = []
+async function _ccStates(channelName) {
+    const committedMap = {};
+    const approvedList = [];
+    const finalList = [];
+    let notCommittedCCS = [];
+
     const installedCCs = await _getInstalledList();
-    const commitedCCs = await _queryCommuttedChaincodes(channelName, ordererConfig);
-    commitedCCs.chaincode_definitions.forEach(cc => committedMap[cc.name] = true);
-    const notCommittedCCS = installedCCs.installed_chaincodes.filter(cc => {
-        const name = cc.label.split(`_`)[0];
-        return !committedMap[name];
-    });
+    const commitedCCs = await _queryCommittedChaincodes(channelName);
+    if (commitedCCs.chaincode_definitions) {
+        commitedCCs.chaincode_definitions.forEach(cc => committedMap[cc.name] = true);
+    }
+
+    if(installedCCs.installed_chaincodes) {
+        notCommittedCCS = installedCCs.installed_chaincodes.filter(cc => {
+            const name = cc.label.split(`_`)[0];
+            return !committedMap[name];
+        });
+    }
 
     for (let i = 0; i < notCommittedCCS.length; i++) {
+        const name = notCommittedCCS[i].label.split(`_`)[0];
+        const version = notCommittedCCS[i].label.split(`_`)[1];
         try {
-            const name = notCommittedCCS.label.split(`_`)[0];
-            approvedList.push(await exec(FabricCommandGenerator.generateQueryApprovedCommand(channelName, name)));
+            const approved = await _queryApprovedChaincode(channelName, name);
+            approved.name = name;
+            approved.state = "approved";
+            approvedList.push({state: "approved", name: name, version: approved.version, sequence: approved.sequence});
         } catch (e) {
-            // log
+            console.log(e.message);
+            notCommittedCCS[i].state = "installed";
+            notCommittedCCS[i].name = name;
+            notCommittedCCS[i].version = version;
+            approvedList.push({state: "installed", name: name, version: version});
         }
     }
+
+    console.log(approvedList);
+    if (commitedCCs.chaincode_definitions) {
+        commitedCCs.chaincode_definitions.forEach(cc => {
+            finalList.push({name: cc.name, version: cc.version, sequence: cc.sequence, state: "committed"});
+        });
+    }
+
+    finalList.concat(approvedList);
+    console.log(finalList);
+    return finalList.concat(approvedList);
 }
 
 async function _runContainerViaEngineApi(dockerService, config) {
@@ -397,8 +424,8 @@ module.exports = class Installation {
         return _getChaincodePackageNames();
     }
 
-    queryApprovedChaincodeNames(channelName, ccName) {
-        return _chaincodeStates(channelName, ccName);
+    ccStates(channelName, ccName) {
+        return _ccStates(channelName, ccName);
     }
 
     caInitFolderPrep(node) {

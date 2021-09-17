@@ -41,10 +41,10 @@ module.exports = (app, context) => {
         PeerController.setUpCliEnv,
         PeerController.getChannels)
 
-    app.post('/approvedChaincode',
+    app.post('/ccStates',
         PeerController.getPeer,
         PeerController.setUpCliEnv,
-        PeerController.queryApprovedChaincodes)
+        PeerController.ccStates)
 
     app.get('/packages',
         PeerController.getChaincodePackageNames)

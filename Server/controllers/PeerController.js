@@ -239,10 +239,10 @@ module.exports = {
             next(e);
         }
     },
-    async queryApprovedChaincodes(req, res, next) {
+    async ccStates(req, res, next) {
         try {
-            const result = await req.installation.queryApprovedChaincodeNames(req.body.channelName, req.body.ccName);
-            res.send({sequence: result.sequence, version: result.version});
+            const result = await req.installation.ccStates(req.body.channelName, req.body.ordererConfig);
+            res.send(JSON.stringify(result, null, 2));
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR QUERYAPPROVED CHAINCODES`, e);

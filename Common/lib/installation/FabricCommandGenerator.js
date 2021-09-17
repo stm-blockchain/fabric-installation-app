@@ -175,13 +175,9 @@ module.exports = {
         }
     },
     generateQueryCommittedCommand(channelName, ordererConfig) {
-        // peer lifecycle chaincode querycommitted -o $ORDERER_ADDRESS --channelID test
-        // channel --cafile $ORDERER_TLS_CA --output json
         try {
             const command = [Commands.PEER.QUERY_COMMITTED,
-                `-o ${ordererConfig.ordererAddress}`,
-                `--channekID ${channelName}`,
-                `--cafile ${process.env.HOME}/ttz/orderers/${ordererConfig.ordererOrgName}-tls-ca-cert.pem`,
+                `--channelID ${channelName}`,
                 Commands.OS.TO_STDOUT
             ];
             return command.join(" ");
