@@ -6,6 +6,7 @@ const PeerNode = require(`../PeerNode`);
 const Errors = require(`../error`);
 const fileManager = require("../files");
 const FabricCommandGenerator = require(`./FabricCommandGenerator`);
+const { CHAINCODE_STATES } = require(`../Utils`)
 
 let dockerNetworkExists = false
 let logger;
@@ -220,6 +221,7 @@ async function _queryApprovedChaincode(channelName, ccName) {
 
 async function _queryCommittedChaincodes(channelName) {
     try {
+        logger.log({level: `debug`, message: `Querying the committed chaincodes from the channel: ${channelName}`});
         const {stdout, stderr} = await exec(FabricCommandGenerator.generateQueryCommittedCommand(channelName));
         logger.log({
             level: `debug`,
@@ -232,10 +234,10 @@ async function _queryCommittedChaincodes(channelName) {
 }
 
 async function _ccStates(channelName) {
+    logger.log({level: `debug`, message: `Begin fetching Chaincode States`});
     const committedMap = {};
-    const approvedList = [];
+    const notCommittedCCs = [];
     const finalList = [];
-    let notCommittedCCS = [];
 
     const installedCCs = await _getInstalledList();
     const commitedCCs = await _queryCommittedChaincodes(channelName);
@@ -243,40 +245,46 @@ async function _ccStates(channelName) {
         commitedCCs.chaincode_definitions.forEach(cc => committedMap[cc.name] = true);
     }
 
-    if(installedCCs.installed_chaincodes) {
-        notCommittedCCS = installedCCs.installed_chaincodes.filter(cc => {
+    if (installedCCs.installed_chaincodes) {
+        for (const cc of installedCCs.installed_chaincodes) {
             const name = cc.label.split(`_`)[0];
-            return !committedMap[name];
-        });
-    }
-
-    for (let i = 0; i < notCommittedCCS.length; i++) {
-        const name = notCommittedCCS[i].label.split(`_`)[0];
-        const version = notCommittedCCS[i].label.split(`_`)[1];
-        try {
-            const approved = await _queryApprovedChaincode(channelName, name);
-            approved.name = name;
-            approved.state = "approved";
-            approvedList.push({state: "approved", name: name, version: approved.version, sequence: approved.sequence});
-        } catch (e) {
-            console.log(e.message);
-            notCommittedCCS[i].state = "installed";
-            notCommittedCCS[i].name = name;
-            notCommittedCCS[i].version = version;
-            approvedList.push({state: "installed", name: name, version: version});
+            const version = cc.label.split(`_`)[1];
+            if (!committedMap[name]) {
+                try {
+                    const approved = await _queryApprovedChaincode(channelName, name);
+                    approved.name = name;
+                    notCommittedCCs.push({
+                        state: CHAINCODE_STATES.APPROVED,
+                        name: name,
+                        version: approved.version,
+                        sequence: approved.sequence
+                    });
+                } catch (e) {
+                    console.log(e.message);
+                    cc.name = name;
+                    cc.version = version;
+                    notCommittedCCs.push({state: CHAINCODE_STATES.INSTALLED, name: name, version: version});
+                }
+            }
         }
     }
+    logger.log({level: `debug`, message: `NotCommittedCCs: ${JSON.stringify(notCommittedCCs, null, 2)}`});
 
-    console.log(approvedList);
     if (commitedCCs.chaincode_definitions) {
         commitedCCs.chaincode_definitions.forEach(cc => {
-            finalList.push({name: cc.name, version: cc.version, sequence: cc.sequence, state: "committed"});
+            finalList.push({
+                name: cc.name,
+                version: cc.version,
+                sequence: cc.sequence,
+                state: CHAINCODE_STATES.COMMITTED
+            });
         });
     }
 
-    finalList.concat(approvedList);
-    console.log(finalList);
-    return finalList.concat(approvedList);
+    finalList.concat(notCommittedCCs);
+    logger.log({level: `debug`, message: `FinalList: ${JSON.stringify(finalList, null, 2)}`});
+    logger.log({level: `debug`, message: `Chaincode States Fetched`});
+    return finalList.concat(notCommittedCCs);
 }
 
 async function _runContainerViaEngineApi(dockerService, config) {
