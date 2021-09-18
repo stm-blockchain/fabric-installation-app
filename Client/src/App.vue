@@ -158,7 +158,8 @@ export default {
       peerMenu: [
         {label: 'Yeni Peer', to: '/newPeer'},
         {label: 'Channel', to: '/joinChannel'},
-        {label: 'Chaincode', to: '/chaincode'}
+        {label: 'Chaincode', to: '/chaincode'},
+        {label: 'Peer Operations', to: '/peerOperations'}
       ],
       baseMenu: [],
       selecedTab: ''

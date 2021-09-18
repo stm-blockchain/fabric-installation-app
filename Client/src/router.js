@@ -28,6 +28,11 @@ const routes = [
         component: () => import('./views/ChaincodeOperations'),
     },
     {
+        path: '/peerOperations',
+        name: 'peerOperations',
+        component: () => import('./components/PeerOperations'),
+    },
+    {
         path: '/dashboard',
         name: 'dashboard',
         component: Dashboard,
