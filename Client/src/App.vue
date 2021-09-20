@@ -176,7 +176,7 @@ export default {
         this.baseMenu = this.caMenu;
       }
       if(to.fullPath === "/") this.$router.push({name: "splash"});
-      if (to.name === 'newPeer' || to.name === 'joinChannel' || to.name === 'chaincode') this.updateMenuAndTab(MENU_TYPES.PEER);
+      if (to.name === 'newPeer' || to.name === 'joinChannel' || to.name === 'chaincode' || to.name === 'peerOperations') this.updateMenuAndTab(MENU_TYPES.PEER);
       if (to.name === 'caInput' && this.showTopBarItems) this.updateMenuAndTab(MENU_TYPES.CA);
     }
   },

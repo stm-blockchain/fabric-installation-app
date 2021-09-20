@@ -198,6 +198,7 @@ module.exports = {
                     peerName: i.name,
                     password: i.secret,
                     orgName: i.orgName,
+                    host: i.host,
                     port: i.port,
                     csrHosts: i.csrHosts
                 })
