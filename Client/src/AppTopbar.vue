@@ -57,7 +57,7 @@ export default {
           this.ordererBackground = '';
           break;
         case MENU_TYPES.PEER:
-          this.$router.push({name: 'newPeer'})
+          this.$router.push({name: 'peerOperations'})
           this.peerBackground = BACKGROUND_WHITE;
           this.ordererBackground = '';
           this.caBackground = '';

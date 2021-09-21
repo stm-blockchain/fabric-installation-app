@@ -141,7 +141,7 @@ export default {
         this.initOrg();
       } else {
         this.$emit(EVENTS.SHOW_TOP_BAR_ITEMS);
-        this.$router.push({name: 'newPeer'});
+        this.$router.push({name: 'peerOperations'});
       }
     },
     onBackBtnClick() {

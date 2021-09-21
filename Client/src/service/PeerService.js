@@ -13,6 +13,9 @@ export default {
     queryChannel(data) {
         return Api().post('/channels', data).then(res => res.data);
     },
+    chaincodeStates(data) {
+      return Api().post('/ccStates', data).then(res => res.data);
+    },
     joinChannel(data) {
         return Api().post('/joinChannel', data).then(res => res.data);
     },

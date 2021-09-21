@@ -23,9 +23,6 @@ import AppProfile from './AppProfile.vue';
 import AppMenu from './AppMenu.vue';
 import ProgressBar from "@/components/ProgressBar";
 import { MENU_TYPES } from "@/utilities/Utils";
-// import AppConfig from './AppConfig.vue';
-// import AppFooter from './AppFooter.vue';
-// import Splash from "@/views/Splash";
 
 export default {
   components: {
@@ -33,9 +30,6 @@ export default {
     'AppProfile': AppProfile,
     'AppMenu': AppMenu,
     'ProgressBar': ProgressBar
-    // 'AppConfig': AppConfig,
-    // 'AppFooter': AppFooter,
-    // 'Splash': Splash
   },
 
   data() {
@@ -156,9 +150,10 @@ export default {
       ],
       showTopBarItems : false,
       peerMenu: [
-        {label: 'Yeni Peer', to: '/newPeer'},
-        {label: 'Channel', to: '/joinChannel'},
-        {label: 'Chaincode', to: '/chaincode'}
+        // {label: 'Yeni Peer', to: '/newPeer'},
+        // {label: 'Channel', to: '/joinChannel'},
+        // {label: 'Chaincode', to: '/chaincode'},
+        {label: 'Peer Operations', disabled : true}
       ],
       baseMenu: [],
       selecedTab: ''
@@ -175,7 +170,7 @@ export default {
         this.baseMenu = this.caMenu;
       }
       if(to.fullPath === "/") this.$router.push({name: "splash"});
-      if (to.name === 'newPeer' || to.name === 'joinChannel' || to.name === 'chaincode') this.updateMenuAndTab(MENU_TYPES.PEER);
+      if (to.name === 'peerOperations') this.updateMenuAndTab(MENU_TYPES.PEER);
       if (to.name === 'caInput' && this.showTopBarItems) this.updateMenuAndTab(MENU_TYPES.CA);
     }
   },

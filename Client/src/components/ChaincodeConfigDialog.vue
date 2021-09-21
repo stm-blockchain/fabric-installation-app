@@ -1,16 +1,9 @@
 <template>
-  <Dialog v-model:visible="display" @hide="onBtnClick">
+  <Dialog v-model:visible="display" @hide="onHide" @show="init" style="width: 80%">
     <template #header>
       Chaincode Bilgileri
     </template>
-    <div class="p-grid p-pb-2 p-pl-3 p-pr-3">
-      <div class="p-col-6">
-        <h6 class="p-text-left">Kanallar</h6>
-        <div class="p-inputgroup padding-left-zero">
-          <Dropdown v-model="selectedChannel" :options="channels" optionLabel="label" placeholder="Kanal Seçin"/>
-        </div>
-      </div>
-
+    <div class="p-grid p-pb-2 ">
       <div class="p-col-6">
         <h6 class="p-text-left">Paket</h6>
         <div class="p-inputgroup padding-left-zero">
@@ -18,17 +11,29 @@
         </div>
       </div>
 
+      <div class="p-col-6" >
+        <h6 class="p-text-left">Orderer Bilgleri</h6>
+        <div class="p-col padding-zero p-inputgroup">
+          <div class="p-col padding-left-zero p-inputgroup">
+            <InputText v-model="ordererAddress" placeholder="Orderer Adresi"/>
+          </div>
+          <div class="p-col padding-left-zero p-inputgroup">
+            <InputText v-model="ordererOrgName" placeholder="Orderder Org Adı"/>
+          </div>
+        </div>
+      </div>
+
       <div class="p-col-6">
         <h6 class="p-text-left">Chaincode Adı</h6>
         <div class="padding-left-zero p-inputgroup">
-          <InputText v-model="ccName" placeholder="Chaincode Adı"/>
+          <InputText v-model="ccName" placeholder="Chaincode Adı" :disabled="true"/>
         </div>
       </div>
 
       <div class="p-col-6">
         <h6 class="p-text-left">Chaincode Versiyonu</h6>
         <div class="padding-left-zero p-inputgroup">
-          <InputText v-model="version" placeholder="Chaincode Versiyonu"/>
+          <InputText v-model="version" placeholder="Chaincode Versiyonu" :disabled="true"/>
         </div>
       </div>
 
@@ -58,21 +63,29 @@ const SUMMARY = 'Kontrat Konfigürasyonu';
 
 export default {
   name: "ChaincodeConfigDialog",
-  props: ['visible', `channels`],
+  props: ['visible'],
   created() {
     this.eventService = new EventService(this, SUMMARY);
-    this.getPackages();
   },
   methods: {
+    init() {
+      this.getPackages();
+      this.clear();
+    },
     onBtnClick() {
-      this.$emit('close-dialog');
-      this.$emit(`create-cc`, {
-        channelId: this.selectedChannel.label,
-        ccName: this.ccName,
-        version: this.version,
-        seq: this.seq,
-        packageName: this.selectedPackage.label
-      })
+      this.$emit(`close-dialog`, {
+        chaincodeConfig: {
+          ccName: this.ccName,
+          version: this.version,
+          seq: this.seq,
+          packageName: this.selectedPackage.label,
+          ordererAddress: this.ordererAddress,
+          ordererOrgName: this.ordererOrgName
+        }
+      });
+    },
+    onHide() {
+      this.$emit('close-dialog', {});
     },
     async getPackages() {
       try {
@@ -80,6 +93,20 @@ export default {
       } catch (e) {
         this.eventService.fail('Kontrat Paketleri Çekilirken Bir Hata Oluştu');
       }
+    },
+    setChaincodeNameVersion(packageName) {
+      const packageTokens = packageName.split("@");
+      this.ccName = packageTokens[0];
+      this.version = packageTokens[1].replace('.tar.gz', '');
+    },
+    clear() {
+      this.ccName = '';
+      this.version = '';
+      this.ordererOrgName = '';
+      this.ordererAddress = '';
+      this.seq = '';
+      this.packageName = '';
+      this.selectedPackage = null
     }
   },
   data() {
@@ -90,20 +117,34 @@ export default {
       version: ``,
       seq: ``,
       packageName: ``,
+      ordererAddress: '',
+      ordererOrgName: '',
       packages: [],
       selectedPackage: null,
-      selectedChannel: null,
       eventService: null
     }
   },
   watch: {
     visible: function (newValue) {
       this.display = newValue;
+    },
+    selectedPackage: function (newPackage) {
+      if (newPackage) {
+        console.log(newPackage);
+        this.setChaincodeNameVersion(newPackage.label);
+      }
     }
   }
 }
 </script>
 
 <style scoped>
+.padding-left-zero {
+  padding-left: 0 !important;
+  padding-top: 0 !important;
+}
 
+.padding-zero {
+  padding: 0 !important;
+}
 </style>
