@@ -2,6 +2,7 @@
   <div>
     <NewPeerDialog :visible="showNewPeerDialog" @close-dialog="onNewPeerDialogClosed"/>
     <JoinChannelDialog :visible="showNewChannelDialog" @close-dialog="onNewChannelDialogClosed"/>
+    <ChaincodeConfigDialog :visible="showChaincodeConfigDialog" @close-dialog="onCcConfigDialogClosed"/>
     <div class="p-grid p-pb-6">
       <div class="p-col-12 p-text-center">
         <div class="p-toolbar background-white">
@@ -27,17 +28,18 @@
             <Button class="p-text-right" icon="pi pi-plus" iconPos="right" label="Yeni Kanala Katıl"
                     @click="showNewChannelDialog=true"></Button>
           </div>
-          <DataTable :value="channels" class="border p-mt-2 p-mb-6" v-model:selection="selectedChannel"
+          <DataTable v-if="showChannels" :value="channels" class="border p-mt-2 p-mb-6 p-ml-2 p-mr-2" v-model:selection="selectedChannel"
                      selectionMode="single"
                      data-key="channelName">
             <Column field="label" header="Kanal Adı"></Column>
           </DataTable>
+          <h6 class="p-text-center p-col" v-if="!showChannels">Kanal Bulunmamaktadır</h6>
           <div class="p-grid p-m-0" v-show="showChaincodeDetails">
             <div class="p-col-9">
-              <h6 class="p-text-left p-mt-2 p-text-bold">Kanal 2 Yüklü Akıllı Kontratlar</h6>
+              <h6 class="p-text-left p-mt-2 p-text-bold" v-text="chaincodesTitle()"></h6>
             </div>
             <div class="p-col-3 p-text-right p-m-0">
-              <Button icon="pi pi-plus" iconPos="right" label="Yeni Akıllı Kontrat Yükle"></Button>
+              <Button icon="pi pi-plus" iconPos="right" label="Yeni Akıllı Kontrat Yükle" @click="showChaincodeConfigDialog=true"></Button>
             </div>
             <DataTable :value="chaincodes" class="border p-mt-2">
               <Column field="name" header="Akıllı Kontrat Adı"></Column>
@@ -58,6 +60,7 @@ import EventService from "@/service/EventService";
 import NewPeerDialog from "@/components/NewPeerDialog";
 import JoinChannelDialog from "@/components/JoinChannelDialog";
 import {EVENTS, INIT_ITEMS} from "@/utilities/Utils";
+import ChaincodeConfigDialog from "@/components/ChaincodeConfigDialog";
 
 const SUMMARY = "Düğüm İşlemleri";
 
@@ -66,7 +69,8 @@ export default {
   emits: [EVENTS.SHOW_PROGRESS_BAR, EVENTS.SHOW_TOAST],
   components: {
     'NewPeerDialog': NewPeerDialog,
-    'JoinChannelDialog': JoinChannelDialog
+    'JoinChannelDialog': JoinChannelDialog,
+    'ChaincodeConfigDialog': ChaincodeConfigDialog
   },
   created() {
     this.eventService = new EventService(this, SUMMARY);
@@ -75,6 +79,9 @@ export default {
   methods: {
     channelsTitle() {
       return this.selectedPeer ? `${this.selectedPeer.peerName} Dahil Olunan Kanallar` : '';
+    },
+    chaincodesTitle() {
+      return this.selectedChannel ? `${this.selectedChannel.label} Yüklü Akıllı Kontratlar` : '';
     },
     onNewPeerClick() {
       this.showNewPeerDialog = true;
@@ -93,6 +100,17 @@ export default {
           orgName: this.selectedPeer.orgName
         }
         this.sendNewChannel(data.channelConfig);
+      }
+    },
+    onCcConfigDialogClosed(data) {
+      this.showChaincodeConfigDialog = false;
+      if (data.chaincodeConfig) {
+        data.peerConfig = {
+          peerName: this.selectedPeer.peerName,
+          orgName: this.selectedPeer.orgName
+        }
+        data.chaincodeConfig.channelId = this.selectedChannel.label;
+        this.sendChaincodePrep(data);
       }
     },
     async getPeers() {
@@ -117,6 +135,7 @@ export default {
         channels.forEach(i => {
           this.channels.push(i);
         });
+        channels.length === 0 ? this.showChannels = false : this.showChannels = true;
         this.eventService.showProgress(false);
         this.showDetails = true;
         this.showChaincodeDetails = false;
@@ -168,6 +187,22 @@ export default {
       } catch (e) {
         this.eventService.fail(`Kanala Katılma İşlemi Başarısız: ${data.channelName}`);
       }
+    },
+    async sendChaincodePrep(data) {
+      try {
+        this.eventService.showProgress(true);
+        await PeerService.prepareCommit(data);
+        this.chaincodes = await PeerService.chaincodeStates({
+          channelName: this.selectedChannel.label,
+          peerConfig: {
+            peerName: this.selectedPeer.peerName,
+            orgName: this.selectedPeer.orgName
+          }
+        });
+        this.eventService.success('Akıllı Kontrat Hazırlık İşlemi Başarılı');
+      } catch (e) {
+        this.eventService.fail('Akıllı Kontrat Hazırlık İşlemi Başarısız');
+      }
     }
   },
   data() {
@@ -179,9 +214,11 @@ export default {
       selectedChannel: null,
       eventService: null,
       showDetails: false,
+      showChannels: false,
       showChaincodeDetails: false,
       showNewPeerDialog: false,
-      showNewChannelDialog: false
+      showNewChannelDialog: false,
+      showChaincodeConfigDialog: false
     }
   },
   watch: {
