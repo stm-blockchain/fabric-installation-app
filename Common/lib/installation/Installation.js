@@ -213,9 +213,19 @@ async function _queryApprovedChaincode(channelName, ccName) {
             level: `debug`,
             message: `\n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`
         });
-        return JSON.parse(stdout);
+        return stdout;
     } catch (e) {
-        throw new Errors.FabricError(`COMMIT CC ERROR`, e);
+        throw new Errors.FabricError(`QUERYAPPROVED CC ERROR`, e);
+    }
+}
+
+async function isApproved(channelName, ccName) {
+    try {
+        const result = await _queryApprovedChaincode(channelName, ccName);
+        JSON.parse(result);
+        return true;
+    } catch (e) {
+        return false;
     }
 }
 
@@ -251,7 +261,7 @@ async function _ccStates(channelName) {
             const version = cc.label.split(`_`)[1];
             if (!committedMap[name]) {
                 try {
-                    const approved = await _queryApprovedChaincode(channelName, name);
+                    const approved = JSON.parse(await _queryApprovedChaincode(channelName, name));
                     approved.name = name;
                     notCommittedCCs.push({
                         state: CHAINCODE_STATES.APPROVED,
@@ -372,13 +382,19 @@ module.exports = class Installation {
         _setLogger(loggerInstance);
     }
 
-    async prepareForCommit(chaincodeConfig) {
+    async prepareForCommit(chaincodeConfig, peerConfig) {
         let packageId = await _getPackageId(chaincodeConfig.packageName);
         if (!packageId) {
             // install here
             packageId = await _install(chaincodeConfig.packageName);
         }
         process.env.CC_PACKAGE_ID = packageId.package_id;
+        if (await isApproved(chaincodeConfig.channelId, chaincodeConfig.ccName)) {
+            const result = {}
+            result[peerConfig.orgName] = true;
+            return result;
+        }
+
         return _approve(chaincodeConfig);
     }
 
@@ -432,8 +448,8 @@ module.exports = class Installation {
         return _getChaincodePackageNames();
     }
 
-    ccStates(channelName, ccName) {
-        return _ccStates(channelName, ccName);
+    ccStates(channelName) {
+        return _ccStates(channelName);
     }
 
     caInitFolderPrep(node) {

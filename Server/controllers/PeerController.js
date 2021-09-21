@@ -159,7 +159,7 @@ module.exports = {
     async prepareForCommit(req, res, next) {
         try {
             req.logger.log({level: 'info', message: `Preparing for commit`});
-            const result = await req.installation.prepareForCommit(req.body.chaincodeConfig);
+            const result = await req.installation.prepareForCommit(req.body.chaincodeConfig, req.body.peerConfig);
             req.logger.log({level: 'info', message: `Preparation status: ${result[req.peerNode.orgName]}`});
             res.send(`Result for ${req.peerNode.orgName}: ${result[req.peerNode.orgName]}`);
         } catch (e) {
@@ -241,7 +241,7 @@ module.exports = {
     },
     async ccStates(req, res, next) {
         try {
-            const result = await req.installation.ccStates(req.body.channelName, req.body.ordererConfig);
+            const result = await req.installation.ccStates(req.body.channelName);
             res.send(JSON.stringify(result, null, 2));
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
