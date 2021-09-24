@@ -30,7 +30,7 @@
           </div>
           <DataTable v-if="showChannels" :value="channels" class="border p-mt-2 p-mb-6 p-ml-2 p-mr-2" v-model:selection="selectedChannel"
                      selectionMode="single"
-                     data-key="channelName">
+                     data-key="label">
             <Column field="label" header="Kanal Adı"></Column>
           </DataTable>
           <h6 class="p-text-center p-col" v-if="!showChannels">Kanal Bulunmamaktadır</h6>
