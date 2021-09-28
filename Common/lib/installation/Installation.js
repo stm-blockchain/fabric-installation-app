@@ -219,11 +219,11 @@ async function _queryApprovedChaincode(channelName, ccName) {
     }
 }
 
-async function isApproved(channelName, ccName) {
+async function _isApproved(channelName, ccName, seq) {
     try {
         const result = await _queryApprovedChaincode(channelName, ccName);
-        JSON.parse(result);
-        return true;
+        const parsedResult = JSON.parse(result);
+        return parseInt(seq) <= parsedResult.sequence;
     } catch (e) {
         return false;
     }
@@ -389,7 +389,7 @@ module.exports = class Installation {
             packageId = await _install(chaincodeConfig.packageName);
         }
         process.env.CC_PACKAGE_ID = packageId.package_id;
-        if (await isApproved(chaincodeConfig.channelId, chaincodeConfig.ccName)) {
+        if (await _isApproved(chaincodeConfig.channelId, chaincodeConfig.ccName, chaincodeConfig.seq)) {
             const result = {}
             result[peerConfig.orgName] = true;
             return result;
