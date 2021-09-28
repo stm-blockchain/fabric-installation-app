@@ -4,7 +4,8 @@ const context = require('../Common/lib/context');
 const { Installation, DockerApi, Logger } = require('../Common');
 const app = express();
 const { v4: uuidv4 } = require('uuid');
-const ErrorHandler = require('./controllers/ErrorHandler')
+const ErrorHandler = require('./controllers/ErrorHandler');
+const cors = require('cors');
 
 const inject = (req, res, next) => {
     const logger = Logger.getLogger(uuidv4());
@@ -12,9 +13,9 @@ const inject = (req, res, next) => {
     req.context = context;
     req.installation = new Installation(new DockerApi(), logger);
     req.logger = logger;
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "*");
-    res.header("Access-Control-Allow-Headers", "Content-Type")
+    // res.header("Access-Control-Allow-Origin", "*");
+    // res.header("Access-Control-Allow-Methods", "*");
+    // res.header("Access-Control-Allow-Headers", "Content-Type")
     next();
 }
 
@@ -24,6 +25,7 @@ const logRequest = (req, res, next) => {
     next();
 }
 app.use(bodyParser.json());
+app.use(cors());
 app.use(inject);
 app.use(logRequest);
 require('./routes')(app, context);
