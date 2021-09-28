@@ -252,14 +252,17 @@ async function _ccStates(channelName) {
     const installedCCs = await _getInstalledList();
     const commitedCCs = await _queryCommittedChaincodes(channelName);
     if (commitedCCs.chaincode_definitions) {
-        commitedCCs.chaincode_definitions.forEach(cc => committedMap[cc.name] = true);
+        commitedCCs.chaincode_definitions.forEach(cc => {
+            const key = `${cc.name}_${cc.version}`;
+            committedMap[key] = true
+        });
     }
 
     if (installedCCs.installed_chaincodes) {
         for (const cc of installedCCs.installed_chaincodes) {
             const name = cc.label.split(`_`)[0];
             const version = cc.label.split(`_`)[1];
-            if (!committedMap[name]) {
+            if (!committedMap[cc.label]) {
                 try {
                     const approved = JSON.parse(await _queryApprovedChaincode(channelName, name));
                     approved.name = name;
