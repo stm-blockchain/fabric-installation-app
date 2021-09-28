@@ -265,6 +265,7 @@ async function _ccStates(channelName) {
             if (!committedMap[cc.label]) {
                 try {
                     const approved = JSON.parse(await _queryApprovedChaincode(channelName, name));
+                    if (approved.version !== version) throw new Error("This is not the same cc as the approved one");
                     approved.name = name;
                     notCommittedCCs.push({
                         state: CHAINCODE_STATES.APPROVED,
