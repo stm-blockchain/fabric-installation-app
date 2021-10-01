@@ -13,9 +13,6 @@ const inject = (req, res, next) => {
     req.context = context;
     req.installation = new Installation(new DockerApi(), logger);
     req.logger = logger;
-    // res.header("Access-Control-Allow-Origin", "*");
-    // res.header("Access-Control-Allow-Methods", "*");
-    // res.header("Access-Control-Allow-Headers", "Content-Type")
     next();
 }
 
@@ -25,6 +22,7 @@ const logRequest = (req, res, next) => {
     next();
 }
 app.use(bodyParser.json());
+app.options('*', cors())
 app.use(cors());
 app.use(inject);
 app.use(logRequest);

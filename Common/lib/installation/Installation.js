@@ -30,8 +30,12 @@ async function _getPackageId(packageName) {
 async function _install(packageName) {
     try {
         logger.log({level: `debug`, message: `Installing chaincode: ${packageName}`});
-        await exec(FabricCommandGenerator.generateInstallCommand(packageName));
+        const {stdout, stderr} = await exec(FabricCommandGenerator.generateInstallCommand(packageName));
         logger.log({level: `debug`, message: `Chaincode ${packageName} installed successfully`});
+        logger.log({
+            level: `debug`,
+            message: `Approve state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`
+        });
         return _getPackageId(packageName);
     } catch (e) {
         if (e instanceof Errors.FabricError) throw e;
