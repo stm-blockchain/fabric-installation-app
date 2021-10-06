@@ -15,7 +15,7 @@ module.exports = class BaseNode {
     }
 
     IMAGES = {
-        FABRIC_CA: `hyperledger/fabric-ca:latest`,
+        FABRIC_CA: `hyperledger/fabric-ca:1.4.9`,
         FABRIC_PEER: `hyperledger/fabric-peer:2.3`,
         FABRIC_ORDERER: `hyperledger/fabric-orderer:2.3`,
         FABRIC_TOOLS: `hyperledger/fabric-tools:2.3`,
