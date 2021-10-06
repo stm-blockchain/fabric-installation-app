@@ -1,0 +1,44 @@
+--Node 14 LTS
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+--Docker 20.10.8
+sudo apt-get update
+sudo apt-get install \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+apt-cache madison docker-ce
+Kontrol => docker-ce | 5:20.10.8~3-0~ubuntu-focal | https://download.docker.com/linux/ubuntu focal/stable amd64 Packages
+sudo apt-get install docker-ce=5:20.10.8~3-0~ubuntu-focal docker-ce-cli=5:20.10.8~3-0~ubuntu-focal containerd.io
+sudo docker -v => Docker version 20.10.8, build 3967b7d
+test => sudo docker run hello-world
+
+-To manage as non-root user
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+test => docker run hello-world
+
+mkdir fabric
+cd fabric
+mkdir bin
+
+--Fabric
+wget https://github.com/hyperledger/fabric/releases/download/v2.3.1/hyperledger-fabric-linux-amd64-2.3.1.tar.gz
+wget https://github.com/hyperledger/fabric-ca/releases/download/v1.4.9/hyperledger-fabric-ca-linux-amd64-1.4.9.tar.gz
+tar -xvf hyperledger-fabric-linux-amd64-2.3.1.tar.gz
+tar -xvf hyperledger-fabric-ca-linux-amd64-1.4.9.tar.gz
+
+--Installation App
+git clone https://github.com/stm-blockchain/fabric-installation-app.git
+
+--Pull Images
+docker pull hyperledger/fabric-ca:latest \
