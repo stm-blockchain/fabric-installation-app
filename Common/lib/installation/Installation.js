@@ -30,8 +30,12 @@ async function _getPackageId(packageName) {
 async function _install(packageName) {
     try {
         logger.log({level: `debug`, message: `Installing chaincode: ${packageName}`});
-        await exec(FabricCommandGenerator.generateInstallCommand(packageName));
+        const {stdout, stderr} = await exec(FabricCommandGenerator.generateInstallCommand(packageName));
         logger.log({level: `debug`, message: `Chaincode ${packageName} installed successfully`});
+        logger.log({
+            level: `debug`,
+            message: `Approve state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`
+        });
         return _getPackageId(packageName);
     } catch (e) {
         if (e instanceof Errors.FabricError) throw e;
@@ -219,11 +223,11 @@ async function _queryApprovedChaincode(channelName, ccName) {
     }
 }
 
-async function isApproved(channelName, ccName) {
+async function _isApproved(channelName, ccName, seq) {
     try {
         const result = await _queryApprovedChaincode(channelName, ccName);
-        JSON.parse(result);
-        return true;
+        const parsedResult = JSON.parse(result);
+        return parseInt(seq) <= parsedResult.sequence;
     } catch (e) {
         return false;
     }
@@ -252,16 +256,20 @@ async function _ccStates(channelName) {
     const installedCCs = await _getInstalledList();
     const commitedCCs = await _queryCommittedChaincodes(channelName);
     if (commitedCCs.chaincode_definitions) {
-        commitedCCs.chaincode_definitions.forEach(cc => committedMap[cc.name] = true);
+        commitedCCs.chaincode_definitions.forEach(cc => {
+            const key = `${cc.name}_${cc.version}`;
+            committedMap[key] = true
+        });
     }
 
     if (installedCCs.installed_chaincodes) {
         for (const cc of installedCCs.installed_chaincodes) {
             const name = cc.label.split(`_`)[0];
             const version = cc.label.split(`_`)[1];
-            if (!committedMap[name]) {
+            if (!committedMap[cc.label]) {
                 try {
                     const approved = JSON.parse(await _queryApprovedChaincode(channelName, name));
+                    if (approved.version !== version) throw new Error("This is not the same cc as the approved one");
                     approved.name = name;
                     notCommittedCCs.push({
                         state: CHAINCODE_STATES.APPROVED,
@@ -389,7 +397,7 @@ module.exports = class Installation {
             packageId = await _install(chaincodeConfig.packageName);
         }
         process.env.CC_PACKAGE_ID = packageId.package_id;
-        if (await isApproved(chaincodeConfig.channelId, chaincodeConfig.ccName)) {
+        if (await _isApproved(chaincodeConfig.channelId, chaincodeConfig.ccName, chaincodeConfig.seq)) {
             const result = {}
             result[peerConfig.orgName] = true;
             return result;
