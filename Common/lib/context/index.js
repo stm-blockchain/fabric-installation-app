@@ -40,7 +40,8 @@ function _folderPrep() {
             `${process.env.HOME}/ttz/chaincodes`,
             `${process.env.HOME}/ttz/orderers`,
             `${process.env.HOME}/ttz/tlsRootCerts`,
-            `${process.env.HOME}/ttz/logs`]);
+            `${process.env.HOME}/ttz/logs`,
+            `${process.env.HOME}/ttz/peerOrganizations`]);
     logger.log({level: `debug`, message: `Folders prepared`});
 }
 
