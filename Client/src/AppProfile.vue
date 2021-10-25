@@ -3,7 +3,7 @@
     <!--		<div>-->
     <!--			<img src="assets/layout/images/profile.png" alt="" />-->
     <!--		</div>-->
-    <h1 class="username">Türk Tedarik Zinciri</h1>
+    <h1 class="username">Türk Ticaret Zinciri</h1>
     <h3 class="username">{{ orgName }}</h3>
 <!--    <button class="p-link layout-profile-link" @click="onClick">-->
 <!--      <span class="username">Claire Williams</span>-->
