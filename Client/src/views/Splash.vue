@@ -3,7 +3,7 @@
     <div class="p-grid p-jc-center p-align-center vertical-container">
       <div class="p-col p-text-center" style="margin-left: 15em; margin-right: 15em">
         <div class="p-card" style="padding-bottom: 15em; padding-top: 15em">
-          <h1>Türk Tedarik Zinciri</h1>
+          <h1>Türk Ticaret Zinciri</h1>
           <h5>Ağ Kurulum Uygulaması</h5>
           <div class="p-col-12">
             <InputText v-model="orgName" type="text" placeholder="Organizasyon Adı"

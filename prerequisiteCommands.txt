@@ -41,4 +41,11 @@ tar -xvf hyperledger-fabric-ca-linux-amd64-1.4.9.tar.gz
 git clone https://github.com/stm-blockchain/fabric-installation-app.git
 
 --Pull Images
-docker pull hyperledger/fabric-ca:latest \
+docker pull hyperledger/fabric-ca:1.4.9
+docker pull hyperledger/fabric-peer:2.3
+docker pull hyperledger/fabric-orderer:2.3
+docker pull hyperledger/fabric-tools:2.3
+docker pull hyperledger/fabric-ccenv:2.3
+docker pull hyperledger/fabric-nodeenv:2.3
+docker pull hyperledger/fabric-couchdb:latest
+docker pull postgres:latest

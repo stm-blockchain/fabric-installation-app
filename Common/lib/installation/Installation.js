@@ -306,7 +306,7 @@ async function _ccStates(channelName) {
 }
 
 async function _runContainerViaEngineApi(dockerService, config) {
-    logger.log({level: `debug`, message: `Running container via engine api: ${config}`});
+    logger.log({level: `debug`, message: `Running container via engine api: ${JSON.stringify(config, null, 2)}`});
     try {
         await _handleDockerNetwork(dockerService);
         logger.log({level: `debug`, message: `Creating the container`});
