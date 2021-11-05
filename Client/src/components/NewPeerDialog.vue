@@ -14,7 +14,7 @@
       <div class="p-col-6">
         <h6 class="p-text-left">Peer Şifre <span style="color:red;"> *</span></h6>
         <div class="p-inputgroup">
-          <InputText v-model="password" placeholder="Şifre girin"/>
+          <InputText type="password" v-model="password" placeholder="Şifre girin"/>
         </div>
       </div>
 
