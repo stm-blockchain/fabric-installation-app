@@ -67,10 +67,11 @@ async function _checkContainerExists() {
         return response.data.State.Running ? DB_CONTAINER_STATUS.CONTAINER_ALREADY_UP
             : DB_CONTAINER_STATUS.CONTAINER_DOWN;
     } catch (e) {
-        if (e.response.status === dockerConfig.NO_SUCH_CONTAINER) {
+        if (e.response && e.response.status === dockerConfig.NO_SUCH_CONTAINER) {
             logger.log({level: `debug`, message: `Postgres container does not exist`});
             return DB_CONTAINER_STATUS.NO_SUCH_CONTAINER;
         }
+        logger.log({level: `debug`, message: `CHECK CONTAINER EXISTS ERROR: \n${e}`});
         throw new Errors.DockerError(`CHECK CONTAINER EXISTS ERROR`, e);
     }
 }
