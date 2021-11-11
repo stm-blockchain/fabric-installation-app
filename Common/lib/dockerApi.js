@@ -7,6 +7,17 @@ const axios = axiosRef.create({
 })
 
 module.exports = class DockerApi {
+
+    listContainers() {
+        let queryParams = { all: true}
+        const params = new url.URLSearchParams(queryParams);
+        return axios.get(`/containers/json?${params}`);
+    }
+
+    listImages() {
+        return axios.get(`/images/json`);
+    }
+
     createContainer(configParams) {
         let queryParams = { name: `${configParams.Name}`}
         const params = new url.URLSearchParams(queryParams);
@@ -15,6 +26,12 @@ module.exports = class DockerApi {
 
     startContainer(params) {
         return axios.post(`/containers/${params.Id}/start`);
+    }
+
+    removeContainer(name) {
+        let queryParams = { force: true};
+        const params = new url.URLSearchParams(queryParams);
+        axios.delete(`/containers/${name}?${params}`);
     }
 
     checkNetwork(name) {
