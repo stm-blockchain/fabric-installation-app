@@ -1,33 +1,19 @@
 {
   "initClient": {
-    "orgName": "Org1",
-    "tlsCa": {
-      "userName": "tls-ca-admin",
-      "password": "tls-ca-adminpw",
-      "port": "7052",
-      "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82"
-    },
-    "orgCa": {
-      "userName": "org-ca-admin",
-      "password": "org-ca-adminpw",
-      "port": "7053",
-      "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82",
-      "adminName": "org-admin",
-      "adminSecret": "org-adminpw"
-    }
+    "orgName": "STM"
   },
   "initClient1": {
     "orgName": "Org1"
   },
   "initCa": {
-    "userName": "",
-    "password": "",
-    "port": "",
+    "userName": "qqq",
+    "password": "qqqq",
+    "port": "1",
     "isTls": false,
-    "orgName": "",
-    "csrHosts": "",
-    "adminName": "",
-    "adminSecret": ""
+    "orgName": "STM",
+    "csrHosts": "0.0.0.0",
+    "adminName": "qqq",
+    "adminSecret": "qqq"
   },
   "peers": [
     {
@@ -93,6 +79,14 @@
       "port": "7088",
       "csrHosts": "172.20.20.42,*.Org1.com",
       "id": 5
+    },
+    {
+      "peerName": "n",
+      "password": "n",
+      "orgName": "STM",
+      "port": "1",
+      "csrHosts": "0.0.0.0",
+      "id": 6
     }
   ],
   "joinChannel": {
