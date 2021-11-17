@@ -8,57 +8,79 @@
         <div class="p-col-6">
           <h6 class="p-text-left">Sunucu Admini Kullanıcı Adı<span style="color:red;"> *</span></h6>
           <div class="p-inputgroup">
-            <InputText v-model="userName" placeholder="Kullanıcı adı girin" :disabled="isDisabled"/>
+            <InputText v-model.trim="userName" placeholder="Kullanıcı adı girin" :disabled="isDisabled"
+              @input="v$.userName.$touch()" :class="{ 'p-invalid': v$.userName.$error}"/>
+          </div>
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.userName.$error" style="color: red; font-size: 0.75em">
+            Sunucu Admini Kullanıcı Adı girilmesi zorunludur
           </div>
         </div>
 
         <div class="p-col-6">
           <h6 class="p-text-left">Sunucu Admini Şifre <span style="color:red;"> *</span></h6>
           <div class="p-inputgroup">
-            <InputText type="password" v-model="password" placeholder="Şifre girin" :disabled="isDisabled"/>
+            <InputText type="password" v-model.trim="password" placeholder="Şifre girin" :disabled="isDisabled"
+                       @input="v$.password.$touch()" :class="{ 'p-invalid': v$.password.$error}"/>
+          </div>
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.password.$error" style="color: red; font-size: 0.75em">
+            Sunucu Admini Şifresi girilmesi zorunludur
           </div>
         </div>
 
         <div class="p-col-6" v-show="!isTls">
           <h6 class="p-text-left">Kurum Admini Kullanıcı Adı<span style="color:red;"> *</span></h6>
           <div class="p-inputgroup">
-            <InputText v-model="adminName" placeholder="Kullanıcı adı girin" :disabled="isDisabled"/>
+            <InputText v-model.trim="v$.adminName.$model" placeholder="Kullanıcı adı girin" :disabled="isDisabled"
+                       @input="v$.adminName .$touch()" :class="{ 'p-invalid': v$.adminName.$error}"/>
+          </div>
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.adminName.$error" style="color: red; font-size: 0.75em">
+            Kurum Admini Kullanıcı Adı girilmesi zorunludur
           </div>
         </div>
 
         <div class="p-col-6" v-show="!isTls">
           <h6 class="p-text-left">Kurum Admini Şifre <span style="color:red;"> *</span></h6>
           <div class="p-inputgroup">
-            <InputText type="password" v-model="adminSecret" placeholder="Şifre girin" :disabled="isDisabled"/>
+            <InputText type="password" v-model.trim="adminSecret" placeholder="Şifre girin" :disabled="isDisabled"
+                       @input="v$.adminSecret.$touch()" :class="{ 'p-invalid': v$.adminSecret.$error}"/>
+          </div>
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.adminSecret.$error" style="color: red; font-size: 0.75em">
+            Kurum Admini Şifre girilmesi zorunludur
           </div>
         </div>
 
         <div class="p-col-6">
           <h6 class="p-text-left">Host Adresleri<span style="color:red;"> *</span></h6>
           <div class="p-inputgroup">
-            <InputText v-model="hostAddresses" placeholder="eg. 172.20.20.82,*.Org1.com,..." :disabled="isDisabled"/>
+            <InputText v-model.trim="hostAddresses" placeholder="eg. 172.20.20.82,*.Org1.com,..." :disabled="isDisabled"
+                       @input="v$.hostAddresses.$touch()" :class="{ 'p-invalid': v$.hostAddresses.$error}"/>
+          </div>
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.hostAddresses.$error" style="color: red; font-size: 0.75em">
+            Bir veya daha fazla host IP adresinin aralarına ' , ' konarak girilmesi zorunludur
           </div>
         </div>
 
         <div class="p-col-6">
           <h6 class="p-text-left">Port<span style="color:red;"> *</span></h6>
           <div class="p-inputgroup">
-            <InputText v-model="port" placeholder="eg. 7052" :disabled="isDisabled"/>
+            <InputText v-model.trim="port" placeholder="eg. 7052" :disabled="isDisabled"
+                       @input="v$.port.$touch()" :class="{ 'p-invalid': v$.port.$error}"/>
           </div>
-        </div>
-        <div class="p-col-12 p-text-left" style="color: red; font-size: 0.75em">* ile işaretlenen alanlar CA sunucusunun
-          oluşturulabilmesi için zorunludur
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.port.$error" style="color: red; font-size: 0.75em">
+            Port girilmesi zorunludur
+          </div>
         </div>
         <div class="p-col-6">
         </div>
 
         <div class="p-col-3">
           <Button label="Önceki Adım" class="p-button-outlined p-col-12"
-                  icon="pi pi-arrow-circle-left" @click="onBackBtnClick"/>
+                  icon="pi pi-arrow-circle-left" @click="onBackBtnClick" />
         </div>
 
         <div class="p-col-3">
-          <Button :label="btnMsg" class="p-col-12" :icon="showForwardIcon()" @click="onNextStepClick"></Button>
+          <Button :label="btnMsg" class="p-col-12" :icon="showForwardIcon()" @click="onNextStepClick"
+                  :disabled="v$.$invalid"></Button>
         </div>
 
       </div>
@@ -67,7 +89,10 @@
 </template>
 
 <script>
-import { INIT_ITEMS, EVENTS } from "@/utilities/Utils";
+import useVuelidate from '@vuelidate/core'
+import { required, requiredIf, numeric } from '@vuelidate/validators'
+
+import { INIT_ITEMS, EVENTS, validateHostAddress } from "@/utilities/Utils";
 import CaService from "@/service/CaService";
 import EventService from "../service/EventService";
 
@@ -75,6 +100,9 @@ const SUMMARY = 'Ca Sunucu Oluştur';
 
 export default {
   name: "CaInput",
+  setup() {
+    return { v$: useVuelidate() };
+  },
   data() {
     return {
       btnMsg: '',
@@ -88,6 +116,16 @@ export default {
       isDisabled: false,
       title: '',
       eventService: null
+    }
+  },
+  validations() {
+    return {
+      userName: { required },
+      password: { required },
+      adminName: { requiredIfOrg: requiredIf(!this.isTls) },
+      adminSecret: { requiredIfOrg: requiredIf(!this.isTls) },
+      hostAddresses: { required, validateHostAddress },
+      port: { required, numeric }
     }
   },
   created() {
@@ -135,6 +173,7 @@ export default {
       if (!this.isDisabled) {
         this.send();
       } else this.navigate();
+      this.v$.$reset();
     },
     navigate() {
       if (this.isTls) {
