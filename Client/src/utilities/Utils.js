@@ -29,6 +29,14 @@ export const validateHostAddress = (hostAddresses) => {
     return wrongIps.length === 0;
 }
 
+export const validateNodeAddress = (nodeAddress) => {
+    const arr = nodeAddress.split(':');
+    if (arr.length === 2) {
+        return !validateIp(arr[0]) && isInDesiredForm(arr[1]);
+    }
+    return false;
+}
+
 function validateIp(ip) {
     if ( ip == null || ip === '' ) {
         return true;
@@ -47,4 +55,9 @@ function validateIp(ip) {
     }
 
     return !!ip.endsWith('.');
+}
+
+function isInDesiredForm(str) {
+    const n = Math.floor(Number(str));
+    return n !== Infinity && String(n) === str && n >= 0;
 }

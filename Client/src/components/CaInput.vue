@@ -11,9 +11,8 @@
             <InputText v-model.trim="userName" placeholder="Kullanıcı adı girin" :disabled="isDisabled"
               @input="v$.userName.$touch()" :class="{ 'p-invalid': v$.userName.$error}"/>
           </div>
-          <div class="p-invalid p-text-left p-mt-2" v-if="v$.userName.$error" style="color: red; font-size: 0.75em">*
-            ile işaretlenen alanlar CA sunucusunun
-            oluşturulabilmesi için zorunludur
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.userName.$error" style="color: red; font-size: 0.75em">
+            Sunucu Admini Kullanıcı Adı girilmesi zorunludur
           </div>
         </div>
 
@@ -23,9 +22,8 @@
             <InputText type="password" v-model.trim="password" placeholder="Şifre girin" :disabled="isDisabled"
                        @input="v$.password.$touch()" :class="{ 'p-invalid': v$.password.$error}"/>
           </div>
-          <div class="p-invalid p-text-left p-mt-2" v-if="v$.password.$error" style="color: red; font-size: 0.75em">*
-            ile işaretlenen alanlar CA sunucusunun
-            oluşturulabilmesi için zorunludur
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.password.$error" style="color: red; font-size: 0.75em">
+            Sunucu Admini Şifresi girilmesi zorunludur
           </div>
         </div>
 
@@ -35,9 +33,8 @@
             <InputText v-model.trim="v$.adminName.$model" placeholder="Kullanıcı adı girin" :disabled="isDisabled"
                        @input="v$.adminName .$touch()" :class="{ 'p-invalid': v$.adminName.$error}"/>
           </div>
-          <div class="p-invalid p-text-left p-mt-2" v-if="v$.adminName.$error" style="color: red; font-size: 0.75em">*
-            ile işaretlenen alanlar CA sunucusunun
-            oluşturulabilmesi için zorunludur
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.adminName.$error" style="color: red; font-size: 0.75em">
+            Kurum Admini Kullanıcı Adı girilmesi zorunludur
           </div>
         </div>
 
@@ -47,9 +44,8 @@
             <InputText type="password" v-model.trim="adminSecret" placeholder="Şifre girin" :disabled="isDisabled"
                        @input="v$.adminSecret.$touch()" :class="{ 'p-invalid': v$.adminSecret.$error}"/>
           </div>
-          <div class="p-invalid p-text-left p-mt-2" v-if="v$.adminSecret.$error" style="color: red; font-size: 0.75em">*
-            ile işaretlenen alanlar CA sunucusunun
-            oluşturulabilmesi için zorunludur
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.adminSecret.$error" style="color: red; font-size: 0.75em">
+            Kurum Admini Şifre girilmesi zorunludur
           </div>
         </div>
 
@@ -59,8 +55,8 @@
             <InputText v-model.trim="hostAddresses" placeholder="eg. 172.20.20.82,*.Org1.com,..." :disabled="isDisabled"
                        @input="v$.hostAddresses.$touch()" :class="{ 'p-invalid': v$.hostAddresses.$error}"/>
           </div>
-          <div class="p-invalid p-text-left p-mt-2" v-if="v$.hostAddresses.$error" style="color: red; font-size: 0.75em">* ile işaretlenen alanlar CA sunucusunun
-            oluşturulabilmesi için zorunludur
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.hostAddresses.$error" style="color: red; font-size: 0.75em">
+            Bir veya daha fazla host IP adresinin aralarına ' , ' konarak girilmesi zorunludur
           </div>
         </div>
 
@@ -70,9 +66,8 @@
             <InputText v-model.trim="port" placeholder="eg. 7052" :disabled="isDisabled"
                        @input="v$.port.$touch()" :class="{ 'p-invalid': v$.port.$error}"/>
           </div>
-          <div class="p-invalid p-text-left p-mt-2" v-if="v$.port.$error" style="color: red; font-size: 0.75em">*
-            ile işaretlenen alanlar CA sunucusunun
-            oluşturulabilmesi için zorunludur
+          <div class="p-invalid p-text-left p-mt-2" v-if="v$.port.$error" style="color: red; font-size: 0.75em">
+            Port girilmesi zorunludur
           </div>
         </div>
         <div class="p-col-6">
