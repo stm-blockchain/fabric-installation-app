@@ -5,7 +5,8 @@ module.exports = {
         try {
             req.logger.log({level: 'info', message: 'Building CaNode'});
             req.caNode = new CaNode(req.body.userName, req.body.password, req.body.port,
-                req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName, req.body.adminSecret);
+                req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName,
+                req.body.adminSecret, req.body.externalIp, req.body.internalIp);
             req.caNode.logger = req.logger;
             req.logger.log({level: 'info', message: 'Successfuly built CaNode'});
             next();
@@ -129,6 +130,8 @@ module.exports = {
             const responseBody = {}
             if(req.context.CA_NODES.tlsCaNode) {
                 responseBody.orgName = req.context.CA_NODES.tlsCaNode.orgName;
+                responseBody.externalIp = req.context.CA_NODES.tlsCaNode.externalIp;
+                responseBody.internalIp = req.context.CA_NODES.tlsCaNode.internalIp;
                 responseBody.tlsCa = {
                     userName: req.context.CA_NODES.tlsCaNode.name,
                     password: req.context.CA_NODES.tlsCaNode.secret,

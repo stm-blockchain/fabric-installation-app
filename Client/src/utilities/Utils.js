@@ -1,5 +1,7 @@
 export const INIT_ITEMS = {
     ORG_NAME: `orgName`,
+    EXTERNAL_IP: `externalIp`,
+    INTERNAL_IP: `internalIp`,
     TLS_CA: `tlsCa`,
     ORG_CA: `orgCa`
 }
@@ -27,6 +29,12 @@ export const validateHostAddress = (hostAddresses) => {
     const arr = hostAddresses.split(',');
     const wrongIps = arr.filter(validateIp);
     return wrongIps.length === 0;
+}
+
+export const validateSingleIp = (ip) => {
+    const result = validateIp(ip);
+    console.log("RESULT", result);
+    return !result;
 }
 
 export const validateNodeAddress = (nodeAddress) => {

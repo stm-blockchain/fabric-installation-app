@@ -2,7 +2,7 @@ const fileManager = require(`./files`)
 
 module.exports = class BaseNode {
 
-    constructor(userName, secret, orgName, csrHosts, port, type) {
+    constructor(userName, secret, orgName, csrHosts, port, type, externalIp, internalIp) {
         this.name = userName;
         this.secret = secret;
         this.orgName = orgName;
@@ -12,6 +12,8 @@ module.exports = class BaseNode {
         this.network = `ttz_docker_network`;
         this.BASE_PATH = `${process.env.HOME}/ttz/${this.orgName}`;
         this.host = "0.0.0.0"
+        this.externalIp = externalIp;
+        this.internalIp = internalIp;
     }
 
     IMAGES = {

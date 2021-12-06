@@ -1,7 +1,7 @@
 // tls ca init
 curl --header "Content-Type: application/json" --request POST \
---data '{"userName":"tls-ca-admin","password":"tls-ca-adminpw", "port":"7052", "isTls": true, "orgName": "Org1", "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82", "adminName": "org-admin", "adminSecret": "org-adminpw"}' \
-http://localhost:8080/initCa
+--data '{"userName":"tls-ca-admin","password":"tls-ca-adminpw", "port":"7052", "isTls": true, "orgName": "Org1", "csrHosts": "0.0.0.0,*.Org1.com,172.20.20.82", "adminName": "org-admin", "adminSecret": "org-adminpw", "externalIp": "213.74.41.46", "internalIp": "10.0.0.2"}' \
+http://localhost:5000/initCa
 
 // org ca init
 curl --header "Content-Type: application/json" --request POST \

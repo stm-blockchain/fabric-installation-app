@@ -4,7 +4,7 @@ const childProcess = require(`child_process`);
 const Errors = require(`./error`);
 
 module.exports = class PeerNode extends BaseNode {
-    constructor(peerName, password, orgName, port, csrHosts, publicIP) {
+    constructor(peerName, password, orgName, port, csrHosts, externalIp) {
         super(peerName, password, orgName, csrHosts, port, 2);
         this._port = port;
         this._csrHosts = csrHosts;
@@ -75,7 +75,7 @@ module.exports = class PeerNode extends BaseNode {
             },
             {
                 name: `CORE_PEER_GOSSIP_EXTERNALENDPOINT`,
-                value: `${publicIP}:${port}`
+                value: `${externalIp}:${port}`
             },
             {
                 name: `CORE_LEDGER_STATE_STATEDATABASE`,

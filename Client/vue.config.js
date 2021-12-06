@@ -1,7 +1,7 @@
 module.exports = {
     devServer: {
 	    allowedHosts: ['localhost'],
-        port: 8080,
+        port: 8081,
         https: false
     }
 }

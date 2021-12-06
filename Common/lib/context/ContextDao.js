@@ -6,7 +6,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const CONTEXT_DB_COMMANDS = {
     Create_Table: {
-        Base_Nodes: `CREATE TABLE IF NOT EXISTS base_nodes ( node_id uuid PRIMARY KEY, name VARCHAR(50), secret VARCHAR(50), org_name VARCHAR(50), csr_hosts VARCHAR(50), port INT NOT NULL, type INT NOT NULL);`,
+        Base_Nodes: `CREATE TABLE IF NOT EXISTS base_nodes ( node_id uuid PRIMARY KEY, name VARCHAR(50), secret VARCHAR(50), org_name VARCHAR(50), csr_hosts VARCHAR(50), port INT NOT NULL, type INT NOT NULL, external_ip VARCHAR(50), internal_ip VARCHAR(50));`,
         Orderer_Nodes: `CREATE TABLE IF NOT EXISTS orderer_nodes ( orderer_id uuid PRIMARY KEY, node_id uuid NOT NULL, admin_name VARCHAR(50), admin_secret VARCHAR(50),FOREIGN KEY (node_id) REFERENCES base_nodes (node_id));`,
         Ca_Nodes: `CREATE TABLE IF NOT EXISTS ca_nodes ( ca_id uuid PRIMARY KEY, node_id uuid NOT NULL, admin_name VARCHAR(50), admin_secret VARCHAR(50), is_tls BOOLEAN NOT NULL,FOREIGN KEY (node_id) REFERENCES base_nodes (node_id));`
     },
@@ -16,7 +16,7 @@ const CONTEXT_DB_COMMANDS = {
         Peer_Node: `SELECT * FROM base_nodes WHERE base_nodes.type = 2`
     },
     Insert_Data: {
-        Base_Node: (node, node_id) => `INSERT INTO base_nodes(node_id, name, secret, org_name, csr_hosts, port, type) VALUES (${`\'${node_id}\'`}, '${node.name}', '${node.secret}', '${node.orgName}', ${node.csrHosts}, ${node.port}, ${node.type});`,
+        Base_Node: (node, node_id) => `INSERT INTO base_nodes(node_id, name, secret, org_name, csr_hosts, port, type, external_ip, internal_ip) VALUES (${`\'${node_id}\'`}, '${node.name}', '${node.secret}', '${node.orgName}', ${node.csrHosts}, ${node.port}, ${node.type}, '${node.externalIp}', '${node.internalIp}');`,
         Orderer_Node: (node, node_id, type_id) => `INSERT INTO orderer_nodes(orderer_id, node_id, admin_name, admin_secret) VALUES (${`\'${type_id}\'`}, ${`\'${node_id}\'`}, ${`\'${node.adminName}\'`}, ${`\'${node.adminPw}\'`});`,
         Ca_Node: (node, node_id, type_id) => `INSERT INTO ca_nodes(ca_id, node_id, admin_name, admin_secret, is_tls) VALUES (${`\'${type_id}\'`}, ${`\'${node_id}\'`}, ${node.isTls ? null : `\'${node.adminName}\'`}, ${node.isTls ? null :  `\'${node.adminSecret}\'`}, ${node.isTls});`
     }

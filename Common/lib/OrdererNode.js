@@ -6,8 +6,8 @@ const Errors = require(`./error`);
 
 module.exports = class OrdererNode extends BaseNode {
     constructor(userName, password, orgName, port, csrHosts,
-                adminName, adminPw) {
-        super(userName, password, orgName, csrHosts, port, 3);
+                adminName, adminPw, externalIp, internalIp) {
+        super(userName, password, orgName, csrHosts, port, 3, externalIp, internalIp);
         this._password = password;
         this._csrHosts = csrHosts;
         this._adminName = adminName;

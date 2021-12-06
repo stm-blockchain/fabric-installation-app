@@ -5,7 +5,7 @@ module.exports = {
       try {
           req.logger.log({level: 'info', message: 'Building PeerNode'});
           req.peerNode = new PeerNode(req.body.peerName, req.body.password,
-              req.body.orgName, parseInt(req.body.port), `${req.body.csrHosts}`, req.body.publicIP);
+              req.body.orgName, parseInt(req.body.port), `${req.body.csrHosts}`, req.body.externalIp, req.body.internalIp);
           req.peerNode.logger = req.logger;
           req.peerNode.folderPrep();
           req.logger.log({level: 'info', message: 'Successfully built PeerNode'});

@@ -4,8 +4,8 @@ const Errors = require(`./error`);
 
 module.exports = class CaNode extends BaseNode {
 
-    constructor(userName, password, port, orgName, isTls, csrHosts, adminName, adminSecret) {
-        super(userName, password, orgName, csrHosts, port, 1);
+    constructor(userName, password, port, orgName, isTls, csrHosts, adminName, adminSecret, externalIp, internalIp) {
+        super(userName, password, orgName, csrHosts, port, 1, externalIp, internalIp);
         this._password = password;
         this._mspDir = `${isTls ? `tls-ca` : `org-ca`}/${userName}/msp`;
         this._isTls = isTls;
