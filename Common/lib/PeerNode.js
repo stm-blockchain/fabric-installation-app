@@ -4,8 +4,8 @@ const childProcess = require(`child_process`);
 const Errors = require(`./error`);
 
 module.exports = class PeerNode extends BaseNode {
-    constructor(peerName, password, orgName, port, csrHosts, externalIp) {
-        super(peerName, password, orgName, csrHosts, port, 2);
+    constructor(peerName, password, orgName, port, csrHosts, externalIp, internalIp) {
+        super(peerName, password, orgName, csrHosts, port, 2, externalIp, internalIp);
         this._port = port;
         this._csrHosts = csrHosts;
         this.ENV_FILE = [

@@ -48,18 +48,18 @@ function _loadNodeObjects(nodes) {
     logger.log({level: `debug`, message: `Loading node objects`});
     nodes.caNodes.forEach(caNode => {
         let nodeObject = new CaNode(caNode.name, caNode.secret, caNode.port, caNode.org_name,
-            caNode.is_tls, caNode.csr_hosts, caNode.admin_name, caNode.admin_secret, caNode.externalIp, caNode.internalIp);
+            caNode.is_tls, caNode.csr_hosts, caNode.admin_name, caNode.admin_secret, caNode.external_ip, caNode.internal_ip);
         caNode.is_tls ? CA_NODES.tlsCaNode = nodeObject : CA_NODES.orgCaNode = nodeObject;
     });
 
     nodes.peerNodes.forEach(peerNode => {
         PEER_NODES.push(new PeerNode(peerNode.name, peerNode.secret, peerNode.org_name,
-            peerNode.port, peerNode.csr_hosts, peerNode.externalIp, peerNode.internalIp));
+            peerNode.port, peerNode.csr_hosts, peerNode.external_ip, peerNode.internal_ip));
     });
 
     nodes.ordererNodes.forEach(ordererNode => {
         ORDERER_NODES.push(new OrdererNode(ordererNode.name, ordererNode.secret, ordererNode.org_name,
-            ordererNode.port, ordererNode.admin_name, ordererNode.admin_secret, ordererNode.externalIp, ordererNode.internalIp));
+            ordererNode.port, ordererNode.admin_name, ordererNode.admin_secret, ordererNode.external_ip, ordererNode.internal_ip));
     })
 }
 

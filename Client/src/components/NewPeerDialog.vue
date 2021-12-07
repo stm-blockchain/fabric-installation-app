@@ -30,7 +30,7 @@
         <h6 class="p-text-left">Host Adresleri<span style="color:red;"> *</span></h6>
         <div class="p-inputgroup">
           <InputText v-model.trim="csrHosts" placeholder="eg. 172.20.20.82,*.Org1.com,..."
-                     @input="v$.csrHosts.$touch()" :class="{ 'p-invalid': v$.csrHosts.$error}"/>
+                    :disabled="preLoadedHostAddressesUsed" @input="v$.csrHosts.$touch()" :class="{ 'p-invalid': v$.csrHosts.$error}"/>
         </div>
         <div class="p-invalid p-text-left p-mt-2" v-if="v$.csrHosts.$error" style="color: red; font-size: 0.75em">
           Bir veya daha fazla host IP adresinin aralarına ',' konarak girilmesi zorunludur
@@ -63,7 +63,7 @@ import useVuelidate from '@vuelidate/core';
 import { required, numeric } from '@vuelidate/validators';
 
 import EventService from "../service/EventService";
-import {EVENTS, INIT_ITEMS, validateHostAddress} from "@/utilities/Utils";
+import {EVENTS, INIT_ITEMS, setHostAddresses, validateHostAddress} from "@/utilities/Utils";
 
 const SUMMARY = 'Yeni Düğüm';
 export default {
@@ -95,14 +95,18 @@ export default {
           password: this.password,
           orgName: this.orgName,
           port: this.port,
-          csrHosts: this.csrHosts
+          csrHosts: this.csrHosts,
+          internalIp: localStorage.getItem(INIT_ITEMS.INTERNAL_IP),
+          externalIp: localStorage.getItem(INIT_ITEMS.EXTERNAL_IP)
         }
       });
     },
     clear() {
       this.peerName = '';
       this.password = '';
-      this.csrHosts = '';
+      const csrObj = setHostAddresses(this.hostAddresses, this.preLoadedHostAddressesUsed);
+      this.csrHosts = csrObj.hostAddresses;
+      this.preLoadedHostAddressesUsed = csrObj.isSet;
       this.port = '';
       this.isDisabled = false;
       this.v$.$reset();
@@ -111,6 +115,7 @@ export default {
   data() {
     return {
       display: false,
+      preLoadedHostAddressesUsed: false,
       peerName: '',
       password: '',
       orgName: localStorage.getItem(INIT_ITEMS.ORG_NAME),

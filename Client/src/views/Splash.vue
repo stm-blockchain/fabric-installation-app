@@ -5,42 +5,35 @@
         <div class="p-card" style="padding-bottom: 15em; padding-top: 15em">
           <h1>Türk Ticaret Zinciri</h1>
           <h5>Ağ Kurulum Uygulaması</h5>
-          <div class="p-col-12">
-            <InputText v-model="orgName" type="text" placeholder="Organizasyon Adı"
+          <div class="p-col-12" style="position: relative">
+            <InputText v-model.trim="orgName" type="text" placeholder="Kurum Adı"
                        class="p-col-4 p-text-center" :disabled="isOrgUp"
                        @input="v$.orgName.$touch()" :class="{ 'p-invalid': v$.orgName.$error}"></InputText>
+            <div class="p-m-1 to-one-third p-invalid p-text-left" v-if="v$.orgName.$error"
+                 style="color: red; font-size: 0.75em; ">
+              * Kurum adı girilmesi zorunludur
+            </div>
           </div>
-          <div class="p-col-12">
-            <InputText v-model="externalIp" type="text" placeholder="Dış IP"
+          <div class="p-col-12 p-mt-1" style="position: relative">
+            <InputText v-model.trim="internalIp" type="text" placeholder="İç IP"
                        class="p-col-2 p-text-center p-mr-1" :disabled="isOrgUp"
-                       @input="v$.externalIp.$touch()" :class="{ 'p-invalid': v$.externalIp.$error}"></InputText>
-            <InputText v-model="internalIp" type="text" placeholder="İç IP"
-                       class="p-col-2 p-text-center" :disabled="isOrgUp"
                        @input="v$.internalIp.$touch()" :class="{ 'p-invalid': v$.internalIp.$error}"></InputText>
-            <div class="p-col-4 p-m-0 p-p-0"></div>
-            <div class="p-invalid p-d-inline p-col-4" v-if="showErrorDiv()">
-
-              <p class="p-invalid p-text-left"
-                 style="color: red; font-size: 0.75em">
-                Geçerli bir Ip adresi girilmesi zorunludur
+            <InputText v-model.trim="externalIp" type="text" placeholder="Dış IP"
+                       class="p-col-2 p-text-center " :disabled="isOrgUp"
+                       @input="v$.externalIp.$touch()" :class="{ 'p-invalid': v$.externalIp.$error}"
+                       style="position: relative">
+            </InputText>
+            <div class="p-m-1 to-one-third">
+              <p class="p-invalid p-text-left" v-if="showErrorDiv()"
+                 style="color: red; font-size: 0.75em; ">
+                * Geçerli bir IP adresi girilmesi zorunludur
               </p>
             </div>
-
           </div>
-<!--          <div class="p-col-12">-->
-<!--            <p class="p-invalid p-d-inline p-mt-1 p-mr-1 p-col-2" v-if="v$.externalIp.$error"-->
-<!--               style="color: red; font-size: 0.75em">-->
-<!--              Geçerli bir Ip adresi girilmesi zorunludur-->
-<!--            </p>-->
-<!--            <p class="p-invalid p-d-inline p-mt-1 p-col-2" v-if="v$.internalIp.$error"-->
-<!--               style="color: red; font-size: 0.75em">-->
-<!--              Geçerli bir Ip adresi girilmesi zorunludur-->
-<!--            </p>-->
-<!--          </div>-->
-          <div class="p-col-12">
-            <Button :label="btnText" class="p-col p-col-4" @click="onOrganizationBtnClick"></Button>
+          <div class="p-col-12 p-mt-2">
+            <Button :label="btnText" class="p-col p-col-4" @click="onOrganizationBtnClick"
+                    :disabled="v$.$invalid"></Button>
           </div>
-
         </div>
       </div>
     </div>
@@ -82,7 +75,9 @@ export default {
     onOrganizationBtnClick() {
       if (!this.orgName.trim()) alert(`Plesae enter org name`);
       else {
-        localStorage.setItem(`orgName`, this.orgName);
+        localStorage.setItem(INIT_ITEMS.ORG_NAME, this.orgName);
+        localStorage.setItem(INIT_ITEMS.INTERNAL_IP, this.internalIp);
+        localStorage.setItem(INIT_ITEMS.EXTERNAL_IP, this.externalIp);
         this.$emit(EVENTS.NAVIGATE_TO_APP);
       }
     },
@@ -176,6 +171,11 @@ export default {
 
   p {
     margin: 0;
+  }
+
+  .to-one-third {
+    position: absolute;
+    left: 33%;
   }
 }
 </style>

@@ -52,7 +52,7 @@
         <div class="p-col-6">
           <h6 class="p-text-left">Host Adresleri<span style="color:red;"> *</span></h6>
           <div class="p-inputgroup">
-            <InputText v-model.trim="hostAddresses" placeholder="eg. 172.20.20.82,*.Org1.com,..." :disabled="isDisabled"
+            <InputText v-model.trim="hostAddresses" placeholder="eg. 172.20.20.82,*.Org1.com,..." :disabled="preLoadedHostAddressesUsed"
                        @input="v$.hostAddresses.$touch()" :class="{ 'p-invalid': v$.hostAddresses.$error}"/>
           </div>
           <div class="p-invalid p-text-left p-mt-2" v-if="v$.hostAddresses.$error" style="color: red; font-size: 0.75em">
@@ -92,7 +92,7 @@
 import useVuelidate from '@vuelidate/core'
 import { required, requiredIf, numeric } from '@vuelidate/validators'
 
-import { INIT_ITEMS, EVENTS, validateHostAddress } from "@/utilities/Utils";
+import { INIT_ITEMS, EVENTS, validateHostAddress, setHostAddresses } from "@/utilities/Utils";
 import CaService from "@/service/CaService";
 import EventService from "../service/EventService";
 
@@ -107,6 +107,7 @@ export default {
     return {
       btnMsg: '',
       isTls: false,
+      preLoadedHostAddressesUsed: false,
       userName: '',
       password: '',
       adminName: '',
@@ -138,6 +139,9 @@ export default {
     initTls() {
       this.clear();
       this.isTls = true;
+      const csrObj = setHostAddresses(this.hostAddresses, this.preLoadedHostAddressesUsed);
+      this.hostAddresses = csrObj.hostAddresses;
+      this.preLoadedHostAddressesUsed = csrObj.isSet;
       this.title = 'TLS CA Sunucu Bilgilerini Girin';
       if (localStorage.getItem(INIT_ITEMS.TLS_CA)) {
         this.isDisabled = true;
@@ -153,6 +157,9 @@ export default {
     initOrg() {
       this.clear();
       this.isTls = false;
+      const csrObj = setHostAddresses(this.hostAddresses, this.preLoadedHostAddressesUsed);
+      this.hostAddresses = csrObj.hostAddresses;
+      this.preLoadedHostAddressesUsed = csrObj.isSet;
       this.title = 'ORG CA Sunucu Bilgilerini Girin';
       if (localStorage.getItem(INIT_ITEMS.ORG_CA)) {
         this.isDisabled = true;
@@ -197,7 +204,9 @@ export default {
         orgName: localStorage.getItem(INIT_ITEMS.ORG_NAME),
         csrHosts: this.hostAddresses,
         adminName: this.adminName,
-        adminSecret: this.adminSecret
+        adminSecret: this.adminSecret,
+        internalIp: localStorage.getItem(INIT_ITEMS.INTERNAL_IP),
+        externalIp: localStorage.getItem(INIT_ITEMS.EXTERNAL_IP),
       }
     },
     async send() {

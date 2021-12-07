@@ -25,6 +25,21 @@ export const RESPONSE_STATE = {
     ERROR: 'error'
 }
 
+export function setHostAddresses() {
+    console.log("Internal", localStorage.getItem(INIT_ITEMS.INTERNAL_IP));
+    console.log("External", localStorage.getItem(INIT_ITEMS.EXTERNAL_IP));
+    if (localStorage.getItem(INIT_ITEMS.INTERNAL_IP) && localStorage.getItem(INIT_ITEMS.EXTERNAL_IP)) {
+        return {
+            hostAddresses: `0.0.0.0,${localStorage.getItem(INIT_ITEMS.INTERNAL_IP)},${localStorage.getItem(INIT_ITEMS.EXTERNAL_IP)}`,
+            isSet: true
+        }
+    }
+    return {
+        hostAddresses: ``,
+        isSet: false
+    }
+}
+
 export const validateHostAddress = (hostAddresses) => {
     const arr = hostAddresses.split(',');
     const wrongIps = arr.filter(validateIp);
