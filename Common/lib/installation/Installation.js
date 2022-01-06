@@ -485,4 +485,12 @@ module.exports = class Installation {
     createMspFolder(caNode) {
         _createMspFolder(caNode)
     }
+
+    async registerUser(candidateNode, caNode) {
+        return _register(candidateNode, caNode);
+    }
+
+    async enrollUser(candidateNode, caNode) {
+        return _caEnroll(candidateNode, caNode);
+    }
 }

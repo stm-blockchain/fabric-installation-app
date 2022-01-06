@@ -33,8 +33,24 @@ module.exports = (app, context) => {
     app.get('/initClient',
         CaController.initClient)
 
+    app.post('/registerUser',
+        CaController.checkRegisterBody,
+        CaController.registerUser)
+
     app.get('/peers',
         PeerController.getPeers)
+
+    app.post('/enrollPeer',
+        PeerController.getOrBuildPeer,
+        PeerController.checkEnrollBody,
+        PeerController.buildLightCaNode,
+        PeerController.enrollPeer)
+
+    app.post('/startPeer',
+        PeerController.getOrBuildPeer,
+        PeerController.startCouchDB,
+        PeerController.startPeer,
+        PeerController.updateContext)
 
     app.post('/channels',
         PeerController.getPeer,

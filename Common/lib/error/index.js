@@ -54,6 +54,14 @@ class GenericError extends BaseError {
     }
 }
 
+class FaultyReqBodyError extends BaseError {
+    constructor(message, cause) {
+        super(message, cause);
+        this.name = `Faulty Request Body Error`;
+    }
+}
+
+
 module.exports = {
     BaseError: BaseError,
     FabricError: FabricError,
@@ -62,5 +70,6 @@ module.exports = {
     ContextObjError: ContextObjError,
     FolderStructureError: FolderStructureError,
     CommandGenerationError: CommandGenerationError,
-    GenericError: GenericError
+    GenericError: GenericError,
+    FaultyReqBodyError: FaultyReqBodyError
 }

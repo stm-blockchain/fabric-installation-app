@@ -2,6 +2,7 @@ const { PeerNode, Errors } = require("../../Common/index");
 
 module.exports = {
     async buildPeerNode(req, res, next) {
+        if (req.hasOwnProperty('peerNode') && req.peerNode) next();
       try {
           req.logger.log({level: 'info', message: 'Building PeerNode'});
           req.peerNode = new PeerNode(req.body.peerName, req.body.password,
@@ -112,6 +113,19 @@ module.exports = {
             next(e);
         }
     },
+    async getOrBuildPeer(req, res, next) {
+      try {
+          req.logger.log({level: 'info', message: 'Trying to get peer'});
+          req.peerNode = req.context.getPeer(req.body.peerConfig);
+          next();
+      } catch (e) {
+          if (!(e instanceof Errors.BaseError)) {
+              const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER GET PEER DURING ENROLL`, e);
+              next(wrappedError);
+          }
+          next(e);
+      }
+    },
     async setUpCliEnv(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'Setting up CLI env'});
@@ -179,7 +193,10 @@ module.exports = {
                 res.status(400).send("All organizations must approve the chaincode\n");
             }
             await req.installation.commitChaincode(req.body.commitConfig);
-            req.logger.log({level: 'info', message: `Chaincode: ${req.body.commitConfig} successfully commited to channel: ${req.body.channelId}`});
+            req.logger.log({
+                level: 'info',
+                message: `Chaincode: ${JSON.stringify(req.body.commitConfig, null, 2)} successfully commited to channel: ${req.body.channelId}`
+            });
             res.send("ok\n")
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
@@ -247,6 +264,52 @@ module.exports = {
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR QUERYAPPROVED CHAINCODES`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+    checkEnrollBody(req, res, next) {
+        if ((!req.body.hasOwnProperty('host') && req.body.host) ||
+            (!req.body.hasOwnProperty('port') && req.body.port) ||
+            (!req.body.hasOwnProperty('isTls') && req.body.isTls)){
+            next(new Errors.FaultyReqBodyError('Faulty Register Body'), new Error());
+        }
+        next();
+    },
+    /*
+    Light Ca Node means that actual ca node runs on a remote machine
+    and light node only contains infiormation enought to communicate with the actual ca node
+     */
+    buildLightCaNode(req, res, next) {
+        req.logger.log({level: 'info', message: 'Building light Ca Node'});
+        try {
+            req.caNodeLight = new CaNode('-', '-', req.body.port, '-', req.body.isTls, '-', '-', '-');
+            req.caNodeLight = req.body.host; // This is just temporary, host should be injected through constructor
+            req.logger.log({level: 'info', message: 'Successfully Built Light Ca Node'});
+            next();
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR BUILDING LIGHT CA NODE`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+    async enrollPeer(req, res, next) {
+        try {
+            req.logger.log({
+                level: 'info',
+                message: `Enrolling peer ${JSON.stringify(req.peerNode, null, 2)} to CaNode ${JSON.stringify(req.caNodeLight, null, 2)}`
+            });
+            await req.installation.enrollUser(req.peerNode, req.caNodeLight);
+            req.logger.log({
+                level: 'info',
+                message: `Enrollment successful`
+            });
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR ENROLLING PEER`, e);
                 next(wrappedError);
             }
             next(e);

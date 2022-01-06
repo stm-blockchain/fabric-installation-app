@@ -157,5 +157,33 @@ module.exports = {
             }
             next(e);
         }
+    },
+    checkRegisterBody(req, res, next) {
+        req.logger.log({level: 'info', message: 'Checking request body'});
+        if ((!req.body.hasOwnProperty('name') && req.body.name) ||
+            (!req.body.hasOwnProperty('secret') && req.body.secret) ||
+            (!req.body.hasOwnProperty('nodeType') && req.body.nodeType) ||
+            (!req.body.hasOwnProperty('isTls') && req.body.isTls)){
+            req.logger.log({level: 'info', message: `Request body invalid: ${JSON.stringify(req.body, null, 2)}`});
+            next(new Errors.FaultyReqBodyError('Faulty Register Body'), new Error());
+        }
+        req.logger.log({level: 'info', message: 'Request body valid'});
+        next();
+    },
+
+    async registerUser(req, res, next) {
+        try {
+            req.logger.log({level: 'info', message: `${req.body.isTls ? 'TLS' : 'ORG'} Ca Node registering user started`});
+            const caNode = req.body.isTls ? req.context.CA_NODES.tlsCaNode : req.context.CA_NODES.orgCaNode;
+            await req.installation.registerUser(req.body, caNode);
+            req.logger.log({level: 'info', message: `${req.body.isTls ? 'TLS' : 'ORG'} Ca Node registeration successful`});
+            res.send('Successfully registered');
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR REGISTERING USER TO ${caNode.name}`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
     }
 }
