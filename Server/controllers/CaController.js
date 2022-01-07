@@ -160,14 +160,16 @@ module.exports = {
     },
     checkRegisterBody(req, res, next) {
         req.logger.log({level: 'info', message: 'Checking request body'});
-        if ((!req.body.hasOwnProperty('name') && req.body.name) ||
-            (!req.body.hasOwnProperty('secret') && req.body.secret) ||
-            (!req.body.hasOwnProperty('nodeType') && req.body.nodeType) ||
-            (!req.body.hasOwnProperty('isTls') && req.body.isTls)){
+        if (!(req.body.hasOwnProperty('name') && req.body.name) ||
+            !(req.body.hasOwnProperty('secret') && req.body.secret) ||
+            !(req.body.hasOwnProperty('nodeType') && req.body.nodeType) ||
+            !(req.body.hasOwnProperty('orgName') && req.body.orgName) ||
+            !(req.body.hasOwnProperty('isTls') && req.body.isTls)){
             req.logger.log({level: 'info', message: `Request body invalid: ${JSON.stringify(req.body, null, 2)}`});
-            next(new Errors.FaultyReqBodyError('Faulty Register Body'), new Error());
+            next(new Errors.FaultyReqBodyError('Faulty Register Body', new Error()));
         }
         req.logger.log({level: 'info', message: 'Request body valid'});
+        req.body.BASE_PATH = `${process.env.HOME}/ttz/${req.body.orgName}`;
         next();
     },
 
