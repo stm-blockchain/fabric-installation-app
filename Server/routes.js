@@ -42,6 +42,7 @@ module.exports = (app, context) => {
 
     app.post('/enrollPeer',
         PeerController.getOrBuildPeer,
+        PeerController.buildPeerNode,
         PeerController.checkEnrollBody,
         PeerController.buildLightCaNode,
         PeerController.enrollPeer)

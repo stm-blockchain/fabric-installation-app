@@ -1,23 +1,23 @@
-const { PeerNode, Errors } = require("../../Common/index");
+const {PeerNode, Errors} = require("../../Common/index");
 
 module.exports = {
     async buildPeerNode(req, res, next) {
         if (req.hasOwnProperty('peerNode') && req.peerNode) next();
-      try {
-          req.logger.log({level: 'info', message: 'Building PeerNode'});
-          req.peerNode = new PeerNode(req.body.peerName, req.body.password,
-              req.body.orgName, parseInt(req.body.port), `${req.body.csrHosts}`, req.body.externalIp, req.body.internalIp);
-          req.peerNode.logger = req.logger;
-          req.peerNode.folderPrep();
-          req.logger.log({level: 'info', message: 'Successfully built PeerNode'});
-          next();
-      } catch (e) {
-          if (!(e instanceof Errors.BaseError)) {
-              const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER BUILD PEER NODE`, e);
-              next(wrappedError);
-          }
-          next(e);
-      }
+        try {
+            req.logger.log({level: 'info', message: 'Building PeerNode'});
+            req.peerNode = new PeerNode(req.body.peerName, req.body.password,
+                req.body.orgName, parseInt(req.body.port), `${req.body.csrHosts}`, req.body.externalIp, req.body.internalIp);
+            req.peerNode.logger = req.logger;
+            req.peerNode.folderPrep();
+            req.logger.log({level: 'info', message: 'Successfully built PeerNode'});
+            next();
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER BUILD PEER NODE`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
     },
     async tlsRegisterEnroll(req, res, next) {
         try {
@@ -50,18 +50,18 @@ module.exports = {
         }
     },
     async startCouchDB(req, res, next) {
-      try {
-          req.logger.log({level: 'info', message: 'Starting CouchDB container'});
-          await req.installation.runContainerViaEngineApi(req.peerNode.generateCouchDBConfig());
-          req.logger.log({level: 'info', message: 'CouchDB container successfully started'});
-          next();
-      } catch (e) {
-          if (!(e instanceof Errors.BaseError)) {
-              const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER START COUCHDB`, e);
-              next(wrappedError);
-          }
-          next(e);
-      }
+        try {
+            req.logger.log({level: 'info', message: 'Starting CouchDB container'});
+            await req.installation.runContainerViaEngineApi(req.peerNode.generateCouchDBConfig());
+            req.logger.log({level: 'info', message: 'CouchDB container successfully started'});
+            next();
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER START COUCHDB`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
     },
     async startPeer(req, res, next) {
         try {
@@ -91,7 +91,7 @@ module.exports = {
             next(e);
         }
     },
-    async getPeer(req, res, next){
+    async getPeer(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'Getting peer'});
             const peer = req.context.getPeer(req.body.peerConfig);
@@ -114,17 +114,17 @@ module.exports = {
         }
     },
     async getOrBuildPeer(req, res, next) {
-      try {
-          req.logger.log({level: 'info', message: 'Trying to get peer'});
-          req.peerNode = req.context.getPeer(req.body.peerConfig);
-          next();
-      } catch (e) {
-          if (!(e instanceof Errors.BaseError)) {
-              const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER GET PEER DURING ENROLL`, e);
-              next(wrappedError);
-          }
-          next(e);
-      }
+        try {
+            req.logger.log({level: 'info', message: 'Trying to get peer'});
+            req.peerNode = req.context.getPeer(req.body.peerConfig);
+            next();
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER GET PEER DURING ENROLL`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
     },
     async setUpCliEnv(req, res, next) {
         try {
@@ -186,10 +186,16 @@ module.exports = {
     },
     async commitChaincode(req, res, next) {
         try {
-            req.logger.log({level: 'info', message: `Commiting chaincode: ${req.body.commitConfig} to channel: ${req.body.channelId}`});
+            req.logger.log({
+                level: 'info',
+                message: `Commiting chaincode: ${req.body.commitConfig} to channel: ${req.body.channelId}`
+            });
             const isReadyForCommit = await req.installation.isReadyForCommit(req.body.commitConfig);
             if (!isReadyForCommit) {
-                req.logger.log({level: 'info', message: `All organizations must approve the chaincode: ${req.body.commitConfig}`});
+                req.logger.log({
+                    level: 'info',
+                    message: `All organizations must approve the chaincode: ${req.body.commitConfig}`
+                });
                 res.status(400).send("All organizations must approve the chaincode\n");
             }
             await req.installation.commitChaincode(req.body.commitConfig);
@@ -272,7 +278,7 @@ module.exports = {
     checkEnrollBody(req, res, next) {
         if ((!req.body.hasOwnProperty('host') && req.body.host) ||
             (!req.body.hasOwnProperty('port') && req.body.port) ||
-            (!req.body.hasOwnProperty('isTls') && req.body.isTls)){
+            (!req.body.hasOwnProperty('isTls') && req.body.isTls)) {
             next(new Errors.FaultyReqBodyError('Faulty Register Body'), new Error());
         }
         next();
