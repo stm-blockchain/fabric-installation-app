@@ -276,10 +276,11 @@ module.exports = {
         }
     },
     checkEnrollBody(req, res, next) {
-        if ((!req.body.hasOwnProperty('host') && req.body.host) ||
-            (!req.body.hasOwnProperty('port') && req.body.port) ||
-            (!req.body.hasOwnProperty('isTls') && req.body.isTls)) {
-            next(new Errors.FaultyReqBodyError('Faulty Register Body'), new Error());
+        if (!(req.body.hasOwnProperty('caNodeConfig') && req.body.caNodeConfig) ||
+            !(req.body.hasOwnProperty('host') && req.body.host) ||
+            !(req.body.hasOwnProperty('port') && req.body.port) ||
+            !(req.body.hasOwnProperty('isTls') && req.body.isTls !== null)) {
+            return next(new Errors.FaultyReqBodyError('Faulty Register Body'), new Error());
         }
         next();
     },
@@ -290,8 +291,8 @@ module.exports = {
     buildLightCaNode(req, res, next) {
         req.logger.log({level: 'info', message: 'Building light Ca Node'});
         try {
-            req.caNodeLight = new CaNode('-', '-', req.body.port, '-', req.body.isTls, '-', '-', '-');
-            req.caNodeLight = req.body.host; // This is just temporary, host should be injected through constructor
+            req.caNodeLight = new CaNode('-', '-', req.body.caNodeConfig.port, '-', req.body.caNodeConfig.isTls, '-', '-', '-');
+            req.caNodeLight.host = req.body.caNodeConfig.host; // This is just temporary, host should be injected through constructor
             req.logger.log({level: 'info', message: 'Successfully Built Light Ca Node'});
             next();
         } catch (e) {

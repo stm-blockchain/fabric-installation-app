@@ -166,7 +166,7 @@ module.exports = {
             !(req.body.hasOwnProperty('orgName') && req.body.orgName) ||
             !(req.body.hasOwnProperty('isTls') && req.body.isTls !== null)){
             req.logger.log({level: 'info', message: `Request body invalid: ${JSON.stringify(req.body, null, 2)}`});
-            next(new Errors.FaultyReqBodyError('Faulty Register Body', new Error()));
+            return next(new Errors.FaultyReqBodyError('Faulty Register Body', new Error()));
         }
         req.logger.log({level: 'info', message: 'Request body valid'});
         req.body.BASE_PATH = `${process.env.HOME}/ttz/${req.body.orgName}`;
