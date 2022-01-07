@@ -164,7 +164,7 @@ module.exports = {
             !(req.body.hasOwnProperty('secret') && req.body.secret) ||
             !(req.body.hasOwnProperty('nodeType') && req.body.nodeType) ||
             !(req.body.hasOwnProperty('orgName') && req.body.orgName) ||
-            !(req.body.hasOwnProperty('isTls') && req.body.isTls === null)){
+            !(req.body.hasOwnProperty('isTls') && req.body.isTls !== null)){
             req.logger.log({level: 'info', message: `Request body invalid: ${JSON.stringify(req.body, null, 2)}`});
             next(new Errors.FaultyReqBodyError('Faulty Register Body', new Error()));
         }
