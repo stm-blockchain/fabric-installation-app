@@ -154,7 +154,7 @@ async function _caEnroll(candidateNode, caNode) {
         logger.log({level: `debug`, message: `Enrolling`});
         let command = caNode ? FabricCommandGenerator.generateEnrollCommand(candidateNode, caNode)
             : FabricCommandGenerator.generateEnrollCommand(candidateNode);
-        await exec(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
+        if (!fs.existsSync(`${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)) await exec(`cp ${candidateNode.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
         process.env.FABRIC_CA_CLIENT_HOME = `${candidateNode.BASE_PATH}/fabric-ca/client`
         process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${candidateNode.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
         logger.log({level: `debug`, message: `Enroll command: ${command}`});
