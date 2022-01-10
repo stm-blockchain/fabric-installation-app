@@ -310,7 +310,7 @@ module.exports = {
         try {
             req.logger.log({
                 level: 'info',
-                message: `Enrolling peer ${JSON.stringify(req.peerNode, null, 2)} to CaNode ${JSON.stringify(req.caNodeLight, null, 2)}`
+                message: `Enrolling peer ${JSON.stringify(req.peerNode.name, null, 2)} to CaNode ${JSON.stringify(req.caNodeLight.name, null, 2)}`
             });
             await req.installation.enrollUser(req.peerNode, req.caNodeLight);
             req.logger.log({
