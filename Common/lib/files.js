@@ -98,3 +98,7 @@ exports.mkdir = (paths) => {
 exports.getFileNames = (folderName) => {
     return fileManager.getFileNames(folderName);
 }
+
+exports.fileExists = (fullPath) => {
+    return fs.existsSync(fullPath);
+}
