@@ -276,12 +276,15 @@ module.exports = {
         }
     },
     checkEnrollBody(req, res, next) {
+        req.logger.log({level: 'info', message: 'Checking request body'});
         if (!(req.body.hasOwnProperty('caNodeConfig') && req.body.caNodeConfig) ||
-            !(req.body.hasOwnProperty('host') && req.body.host) ||
-            !(req.body.hasOwnProperty('port') && req.body.port) ||
-            !(req.body.hasOwnProperty('isTls') && req.body.isTls !== null)) {
-            return next(new Errors.FaultyReqBodyError('Faulty Register Body'), new Error());
+            !(req.body.caNodeConfig.hasOwnProperty('host') && req.body.host) ||
+            !(req.body.caNodeConfig.hasOwnProperty('port') && req.body.port) ||
+            !(req.body.caNodeConfig.hasOwnProperty('isTls') && req.body.isTls !== null)) {
+            req.logger.log({level: 'info', message: 'Request body faulty'});
+            return next(new Errors.FaultyReqBodyError('Faulty Register Body', new Error()));
         }
+        req.logger.log({level: 'info', message: 'Request body valid'});
         next();
     },
     /*
