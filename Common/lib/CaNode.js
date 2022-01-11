@@ -42,7 +42,7 @@ module.exports = class CaNode extends BaseNode {
             },
             {
                 name: `FABRIC_CA_SERVER_CSR_HOSTS`,
-                value: `0.0.0.0`
+                value: `${csrHosts}`
             },
             {
                 name: `FABRIC_CA_SERVER_DEBUG`,
