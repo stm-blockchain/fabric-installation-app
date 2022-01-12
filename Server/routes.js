@@ -33,6 +33,12 @@ module.exports = (app, context) => {
     app.get('/initClient',
         CaController.initClient)
 
+    app.post('/initRemoteOrg', async (req, res) => {
+        req.body.BASE_PATH = `${process.env.HOME}/ttz/${req.body.orgName}`;
+        req.installation.caInitFolderPrep(req.body);
+        res.send("ok");
+    })
+
     app.post('/registerUser',
         CaController.checkRegisterBody,
         CaController.registerUser)
@@ -49,6 +55,7 @@ module.exports = (app, context) => {
 
     app.post('/startPeer',
         PeerController.getOrBuildPeer,
+        PeerController.buildPeerNode,
         PeerController.startCouchDB,
         PeerController.startPeer,
         PeerController.updateContext)

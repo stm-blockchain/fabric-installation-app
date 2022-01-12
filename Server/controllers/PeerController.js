@@ -2,7 +2,7 @@ const { PeerNode, CaNode, Errors} = require("../../Common/index");
 
 module.exports = {
     async buildPeerNode(req, res, next) {
-        if (req.hasOwnProperty('peerNode') && req.peerNode) next();
+        if (req.hasOwnProperty('peerNode') && req.peerNode !== null) next();
         try {
             req.logger.log({level: 'info', message: 'Building PeerNode'});
             req.peerNode = new PeerNode(req.body.peerName, req.body.password,
@@ -317,6 +317,8 @@ module.exports = {
                 level: 'info',
                 message: `Enrollment successful`
             });
+            req.peerNode.arrangeFolderStructure(req.caNodeLight);
+            res.send("Successfully enrolled");
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR ENROLLING PEER`, e);
