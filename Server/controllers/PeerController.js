@@ -275,14 +275,35 @@ module.exports = {
             next(e);
         }
     },
-    checkEnrollBody(req, res, next) {
+    checkStartPeerBody(req, res, next) {
         req.logger.log({level: 'info', message: 'Checking request body'});
-        if (!(req.body.hasOwnProperty('caNodeConfig') && req.body.caNodeConfig) ||
-            !(req.body.caNodeConfig.hasOwnProperty('host') && req.body.caNodeConfig.host) ||
-            !(req.body.caNodeConfig.hasOwnProperty('port') && req.body.caNodeConfig.port) ||
-            !(req.body.caNodeConfig.hasOwnProperty('isTls') && req.body.caNodeConfig.isTls !== null)) {
-            req.logger.log({level: 'info', message: 'Request body faulty'});
-            return next(new Errors.FaultyReqBodyError('Faulty Register Body', new Error()));
+        if (!(req.body.hasOwnProperty('tlsCaConfig') && req.body.tlsCaConfig) ||
+            !(req.body.tlsCaConfig.hasOwnProperty('host') && req.body.tlsCaConfig.host) ||
+            !(req.body.tlsCaConfig.hasOwnProperty('port') && req.body.tlsCaConfig.port) ||
+            !(req.body.tlsCaConfig.hasOwnProperty('isTls') && req.body.tlsCaConfig.isTls !== null) ||
+            !(req.body.tlsCaConfig.hasOwnProperty('username') && req.body.tlsCaConfig.username) ||
+            !(req.body.tlsCaConfig.hasOwnProperty('password') && req.body.tlsCaConfig.password)) {
+            req.logger.log({level: 'info', message: 'Request body faulty: tlsCaConfig'});
+            return next(new Errors.FaultyReqBodyError('Faulty Register Body: tlsCaConfig', new Error()));
+        }
+        if (!(req.body.hasOwnProperty('orgCaConfig') && req.body.orgCaConfig) ||
+            !(req.body.orgCaConfig.hasOwnProperty('host') && req.body.orgCaConfig.host) ||
+            !(req.body.orgCaConfig.hasOwnProperty('port') && req.body.orgCaConfig.port) ||
+            !(req.body.orgCaConfig.hasOwnProperty('isTls') && req.body.orgCaConfig.isTls !== null) ||
+            !(req.body.orgCaConfig.hasOwnProperty('username') && req.body.orgCaConfig.username) ||
+            !(req.body.orgCaConfig.hasOwnProperty('password') && req.body.orgCaConfig.password)) {
+            req.logger.log({level: 'info', message: 'Request body faulty: orgCaConfig'});
+            return next(new Errors.FaultyReqBodyError('Faulty Register Body: orgCaConfig', new Error()));
+        }
+        if (!(req.body.hasOwnProperty('peerName') && req.body.peerName) ||
+            !(req.body.hasOwnProperty('port') && req.body.port) ||
+            !(req.body.hasOwnProperty('password') && req.body.password) ||
+            !(req.body.hasOwnProperty('orgName') && req.body.orgName) ||
+            !(req.body.hasOwnProperty('externalIp') && req.body.externalIp) ||
+            !(req.body.hasOwnProperty('internalIp') && req.body.internalIp) ||
+            !(req.body.hasOwnProperty('csrHosts') && req.body.csrHosts)) {
+            req.logger.log({level: 'info', message: 'Request body faulty: peer'});
+            return next(new Errors.FaultyReqBodyError('Faulty Register Body: peer', new Error()));
         }
         req.logger.log({level: 'info', message: 'Request body valid'});
         next();
@@ -308,17 +329,29 @@ module.exports = {
     },
     async enrollPeer(req, res, next) {
         try {
+            const peerConfig = {
+                peerName: req.peerNode.name,
+                csrHosts: req.peerNode.csrHosts,
+                BASE_PATH: `${req.peerNode.BASE_PATH}`
+            }
+            // Enroll to TLS Ca Node first
             req.logger.log({
                 level: 'info',
-                message: `Enrolling peer ${JSON.stringify(req.peerNode.name, null, 2)} to CaNode ${JSON.stringify(req.caNodeLight.name, null, 2)}`
+                message: `Enrolling peer: ${req.peerNode.name} to tlsCaNode at ${req.body.tlsCaConfig.host}:${req.body.tlsCaConfig.port}`
             });
-            await req.installation.enrollUser(req.peerNode, req.caNodeLight);
+            await req.installation.enrollUser(req.body.tlsCaConfig, peerConfig);
+            req.logger.log({ level: 'info', message: `Enrollment to tlsCaNode is successful`});
+            req.peerNode.arrangeFolderStructure(req.body.tlsCaConfig); // arrange folders for tls msp files
+            req.logger.log({ level: 'info', message: `Folder structure for tlsCaNode is arrenged`});
+            // Then enroll to ORG Ca Node
             req.logger.log({
                 level: 'info',
-                message: `Enrollment successful`
+                message: `Enrolling peer: ${req.peerNode.name} to orgCaNode at ${req.body.orgCaConfig.host}:${req.body.orgCaConfig.port}`
             });
-            req.peerNode.arrangeFolderStructure(req.caNodeLight);
-            res.send("Successfully enrolled");
+            await req.installation.enrollUser(req.body.orgCaConfig, peerConfig);
+            req.logger.log({ level: 'info', message: `Enrollment to orgCaNode is successful`});
+            req.peerNode.arrangeFolderStructure(req.body.orgCaConfig); // arrange folders for org msp files
+            next();
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR ENROLLING PEER`, e);

@@ -168,6 +168,25 @@ async function _caEnroll(candidateNode, caNode) {
     }
 }
 
+async function _enrollRemotePeer(caConfig, peerConfig) {
+    try {
+        logger.log({level: `debug`, message: `Enrolling peer to remote ca`});
+        const command = FabricCommandGenerator.generateEnrollCommandRemote(caConfig, peerConfig.peerName, peerConfig.csrHosts);
+        if (!fileManager.fileExists(`${peerConfig.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`))
+            await exec(`cp ${peerConfig.BASE_PATH}/fabric-ca/server/tls-ca/crypto/ca-cert.pem ${peerConfig.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`)
+        process.env.FABRIC_CA_CLIENT_HOME = `${peerConfig.BASE_PATH}/fabric-ca/client`
+        process.env.FABRIC_CA_CLIENT_TLS_CERTFILES = `${peerConfig.BASE_PATH}/fabric-ca/client/tls-ca-cert.pem`
+        logger.log({level: `debug`, message: `Enroll command: ${command}`});
+        const {stdout, stderr} = await exec(command);
+        logger.log({
+            level: `debug`,
+            message: `Enroll state: \n---------- BEGIN STDOUT ----------\n${stdout}\n---------- END STDOUT ----------\n`
+        });
+    } catch (e) {
+        throw new Errors.FabricError(`PEER ENROLL TO REMOTE CA ERROR`, e);
+    }
+}
+
 async function _joinChannel(blockPath) {
     try {
         logger.log({level: `debug`, message: `Joining channel using the genesis block: ${blockPath}`});
@@ -490,7 +509,7 @@ module.exports = class Installation {
         return _register(candidateNode, caNode);
     }
 
-    async enrollUser(candidateNode, caNode) {
-        return _caEnroll(candidateNode, caNode);
+    async enrollUser(caConfig, userConfig) {
+        return _enrollRemotePeer(caConfig, userConfig);
     }
 }

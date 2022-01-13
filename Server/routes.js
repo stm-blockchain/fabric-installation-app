@@ -46,16 +46,10 @@ module.exports = (app, context) => {
     app.get('/peers',
         PeerController.getPeers)
 
-    app.post('/enrollPeer',
-        PeerController.getOrBuildPeer,
+    app.post('/startPeerRemote',
+        PeerController.checkStartPeerBody,
         PeerController.buildPeerNode,
-        PeerController.checkEnrollBody,
-        PeerController.buildLightCaNode,
-        PeerController.enrollPeer)
-
-    app.post('/startPeer',
-        PeerController.getOrBuildPeer,
-        PeerController.buildPeerNode,
+        PeerController.enrollPeer,
         PeerController.startCouchDB,
         PeerController.startPeer,
         PeerController.updateContext)

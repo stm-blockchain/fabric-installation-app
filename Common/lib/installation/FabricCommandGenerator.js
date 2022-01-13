@@ -49,6 +49,21 @@ module.exports = {
             throw new Errors.CommandGenerationError(`ERROR GENERATING ENROLL CMD`, e);
         }
     },
+    generateEnrollCommandRemote(config, peerName, csrHosts) {
+        try {
+            let command = [Commands.FABRIC_CA.FABRIC_CA_CLIENT, Commands.FABRIC_CA.ENROLL,
+                "-u", `https://${config.username}:${config.password}@${config.host}:${config.port}`,
+                "-M", `${config.isTls ? `tls-ca` : `org-ca`}/${peerName}/msp`,
+                "--csr.hosts", csrHosts];
+
+            if (config.isTls) command = command.concat(["--enrollment.profile", `tls`]);
+
+            command.push(Commands.OS.TO_STDOUT);
+            return command.join(" ");
+        } catch (e) {
+            throw new Errors.CommandGenerationError(`ERROR GENERATING ENROLL CMD`, e);
+        }
+    },
     generateRegisterCommand(candidateNode, caNode) {
         if (!(caNode instanceof CaNode)) {
             throw new Errors.CommandGenerationError(`NOT AN INSTANCE OF CaNde`, new Error());
