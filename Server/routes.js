@@ -50,7 +50,6 @@ module.exports = (app, context) => {
         PeerController.checkStartPeerBody,
         PeerController.buildPeerNode,
         PeerController.enrollPeer,
-        PeerController.startCouchDB,
         PeerController.startPeer,
         PeerController.updateContext)
 

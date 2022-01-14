@@ -6,7 +6,7 @@ module.exports = {
             req.logger.log({level: 'info', message: 'Building CaNode'});
             req.caNode = new CaNode(req.body.userName, req.body.password, req.body.port,
                 req.body.orgName, req.body.isTls, req.body.csrHosts, req.body.adminName,
-                req.body.adminSecret, req.body.externalIp, req.body.internalIp);
+                req.body.adminSecret);
             req.caNode.logger = req.logger;
             req.logger.log({level: 'info', message: 'Successfuly built CaNode'});
             next();

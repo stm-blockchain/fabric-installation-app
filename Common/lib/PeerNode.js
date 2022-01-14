@@ -4,10 +4,11 @@ const childProcess = require(`child_process`);
 const Errors = require(`./error`);
 
 module.exports = class PeerNode extends BaseNode {
-    constructor(peerName, password, orgName, port, csrHosts, externalIp, internalIp) {
-        super(peerName, password, orgName, csrHosts, port, 2, externalIp, internalIp);
+    constructor(peerName, password, orgName, port, csrHosts, externalIp, internalIp, couchDbConfig) {
+        super(peerName, password, orgName, csrHosts, port, 2);
         this._port = port;
         this._csrHosts = csrHosts;
+        this.couchDbConfig = couchDbConfig;
         this.ENV_FILE = [
             {
                 name: `CORE_PEER_ID`,
@@ -83,15 +84,15 @@ module.exports = class PeerNode extends BaseNode {
             },
             {
                 name: `CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS`,
-                value: `${peerName}.${orgName}.com.couchdb:5984`
+                value: `${couchDbConfig.host}:${couchDbConfig.port}`
             },
             {
                 name: `CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME`,
-                value: `dbadmin`
+                value: `${couchDbConfig.username}`
             },
             {
                 name: `CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD`,
-                value: `dbadminpw`
+                value: `${couchDbConfig.password}`
             }
         ]
     }

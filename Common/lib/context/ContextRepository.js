@@ -54,7 +54,12 @@ function _loadNodeObjects(nodes) {
 
     nodes.peerNodes.forEach(peerNode => {
         PEER_NODES.push(new PeerNode(peerNode.name, peerNode.secret, peerNode.org_name,
-            peerNode.port, peerNode.csr_hosts, peerNode.external_ip, peerNode.internal_ip));
+            peerNode.port, peerNode.csr_hosts, peerNode.external_ip, peerNode.internal_ip, {
+                host: peerNode.couchdb_host,
+                port: peerNode.couchdb_port,
+                username: peerNode.couchdb_username,
+                password: peerNode.couchdb_password
+            }));
     });
 
     nodes.ordererNodes.forEach(ordererNode => {

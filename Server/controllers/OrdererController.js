@@ -6,7 +6,7 @@ module.exports = {
             req.logger.log({level: 'info', message: 'Building OrdererNode'});
             req.ordererNode = new OrdererNode(req.body.userName, req.body.password,
                 req.body.orgName, parseInt(req.body.port), req.body.csrHosts,
-                req.body.adminName, req.body.adminPw, req.body.externalIp, req.body.internalIp);
+                req.body.adminName, req.body.adminPw);
             req.ordererNode.logger = req.logger;
             req.ordererNode.folderPrep();
             req.logger.log({level: 'info', message: 'Successfuly built OrdererNode'});

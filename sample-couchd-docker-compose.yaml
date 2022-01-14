@@ -1,0 +1,25 @@
+version: '2'
+
+services:
+  peer11.redhat.com.couchdb:
+    container_name: peer11.redhat.com.couchdb
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=dbadmin
+      - COUCHDB_PASSWORD=dbadminpw
+    ports:
+      - 5985:5984
+    volumes:
+      - /home/ttz/db/redhat/peer11/couchdb:/opt/couchdb/data
+
+
+  peer12.redhat.com.couchdb:
+    container_name: peer12.redhat.com.couchdb
+    image: hyperledger/fabric-couchdb
+    environment:
+      - COUCHDB_USER=dbadmin
+      - COUCHDB_PASSWORD=dbadminpw
+    ports:
+      - 5986:5984
+    volumes:
+      - /home/ttz/db/redhat/peer12/couchdb:/opt/couchdb/data

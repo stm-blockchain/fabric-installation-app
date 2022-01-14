@@ -1,12 +1,21 @@
-const { PeerNode, CaNode, Errors} = require("../../Common/index");
+const {PeerNode, CaNode, Errors} = require("../../Common/index");
 
 module.exports = {
     async buildPeerNode(req, res, next) {
         if (req.hasOwnProperty('peerNode') && req.peerNode !== null) next();
         try {
+            if (!req.body.hasOwnProperty("couchDbConfig")) {
+                req.body.couchDbConfig = {
+                    host: `${req.body.peerName}.${req.body.orgName}.com.couchdb`,
+                    port: `5984`,
+                    username: `dbadmin`,
+                    password: `dbadminpw`
+                };
+            }
             req.logger.log({level: 'info', message: 'Building PeerNode'});
             req.peerNode = new PeerNode(req.body.peerName, req.body.password,
-                req.body.orgName, parseInt(req.body.port), `${req.body.csrHosts}`, req.body.externalIp, req.body.internalIp);
+                req.body.orgName, parseInt(req.body.port), `${req.body.csrHosts}`,
+                req.body.externalIp, req.body.internalIp, req.body.couchDbConfig);
             req.peerNode.logger = req.logger;
             req.peerNode.folderPrep();
             req.logger.log({level: 'info', message: 'Successfully built PeerNode'});
@@ -340,16 +349,16 @@ module.exports = {
                 message: `Enrolling peer: ${req.peerNode.name} to tlsCaNode at ${req.body.tlsCaConfig.host}:${req.body.tlsCaConfig.port}`
             });
             await req.installation.enrollUser(req.body.tlsCaConfig, peerConfig);
-            req.logger.log({ level: 'info', message: `Enrollment to tlsCaNode is successful`});
+            req.logger.log({level: 'info', message: `Enrollment to tlsCaNode is successful`});
             req.peerNode.arrangeFolderStructure(req.body.tlsCaConfig); // arrange folders for tls msp files
-            req.logger.log({ level: 'info', message: `Folder structure for tlsCaNode is arrenged`});
+            req.logger.log({level: 'info', message: `Folder structure for tlsCaNode is arrenged`});
             // Then enroll to ORG Ca Node
             req.logger.log({
                 level: 'info',
                 message: `Enrolling peer: ${req.peerNode.name} to orgCaNode at ${req.body.orgCaConfig.host}:${req.body.orgCaConfig.port}`
             });
             await req.installation.enrollUser(req.body.orgCaConfig, peerConfig);
-            req.logger.log({ level: 'info', message: `Enrollment to orgCaNode is successful`});
+            req.logger.log({level: 'info', message: `Enrollment to orgCaNode is successful`});
             req.peerNode.arrangeFolderStructure(req.body.orgCaConfig); // arrange folders for org msp files
             next();
         } catch (e) {

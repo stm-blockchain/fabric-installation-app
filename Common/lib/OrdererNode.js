@@ -6,8 +6,8 @@ const Errors = require(`./error`);
 
 module.exports = class OrdererNode extends BaseNode {
     constructor(userName, password, orgName, port, csrHosts,
-                adminName, adminPw, externalIp, internalIp) {
-        super(userName, password, orgName, csrHosts, port, 3, externalIp, internalIp);
+                adminName, adminPw) {
+        super(userName, password, orgName, csrHosts, port, 3);
         this._password = password;
         this._csrHosts = csrHosts;
         this._adminName = adminName;
@@ -172,7 +172,7 @@ module.exports = class OrdererNode extends BaseNode {
                 `--id.type client`,
                 `-u https://${caNode.host}:${caNode.port}`,
                 `-M ${caNode.mspDir}`,
-            `2>&1`];
+                `2>&1`];
 
             return commandList.join(` `);
         } catch (e) {
