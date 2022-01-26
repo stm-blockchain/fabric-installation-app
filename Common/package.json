@@ -11,6 +11,8 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.21.1",
+    "fabric-client": "^1.4.19",
+    "fabric-common": "^2.2.11",
     "pg": "^8.6.0",
     "uuid": "^8.3.2",
     "winston": "^3.3.3"
