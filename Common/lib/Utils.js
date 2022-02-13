@@ -1,3 +1,4 @@
+const fs = require('fs');
 const { Wallets } = require('fabric-network');
 
 function _buildCCP(ccpPath) {
