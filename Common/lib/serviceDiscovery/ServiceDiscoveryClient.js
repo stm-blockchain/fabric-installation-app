@@ -114,3 +114,7 @@ async function main() {
 }
 
 main().then(() => console.log("ok"));
+
+module.exports = class ServiceDiscoveryClient {
+
+}

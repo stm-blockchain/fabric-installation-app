@@ -480,7 +480,9 @@ module.exports = class Installation {
     }
 
     caInitFolderPrep(node) {
-        let paths = [`${node.BASE_PATH}/fabric-ca/server/tls-ca/crypto/`,
+        let paths = [`${node.BASE_PATH}/channels`,
+            `${node.BASE_PATH}/credentials/Wallet`,
+            `${node.BASE_PATH}/fabric-ca/server/tls-ca/crypto/`,
             `${node.BASE_PATH}/fabric-ca/server/org-ca/crypto/`,
             `${node.BASE_PATH}/fabric-ca/server/org-ca/tls/`,
             `${node.BASE_PATH}/fabric-ca/client/org-ca/`,
