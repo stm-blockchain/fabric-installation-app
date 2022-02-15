@@ -5,6 +5,14 @@ const BASE = process.env.HOME;
 
 class ManageFile {
 
+    readFile(filePath) {
+        try {
+            return fs.readFileSync(filePath);
+        } catch (e) {
+            throw new Errors.FolderStructureError(`READ ERROR`, e);
+        }
+    }
+
     createDirectory(parameters) {
         parameters.unshift(BASE)
         let fullPath = parameters.join("/");
@@ -101,4 +109,8 @@ exports.getFileNames = (folderName) => {
 
 exports.fileExists = (fullPath) => {
     return fs.existsSync(fullPath);
+}
+
+exports.readFile = (filePath) => {
+    return fileManager.readFile(filePath);
 }

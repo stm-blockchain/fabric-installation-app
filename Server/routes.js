@@ -12,6 +12,7 @@ module.exports = (app, context) => {
         CaController.enroll,
         CaController.createOrgMsp,
         CaController.orgAdminRegisterAndEnroll,
+        CaController.createAdminWallet,
         CaController.updateContext);
 
     app.post(`/initPeer`,

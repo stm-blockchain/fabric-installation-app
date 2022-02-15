@@ -1,0 +1,22 @@
+{
+  "name": "ttz-test-network",
+  "version": "1.0.0",
+  "organizations": {
+	"azureOne": {
+	  "mspid": "azureOne",
+	  "peers": [
+		"peer1.azureOne.com"
+	  ]
+	}
+  },
+  "peers": {
+	"peer1.azureOne.com": {
+	  "url": "grpcs://13.79.160.160:7054",
+	  "main": true,
+	  "tlsCACerts": {
+		"path": "/home/test/WebstormProjects/fabric-dapp/serviceDiscoveryTest/azureOne/azureOne-tls-ca-cert.pem"
+	  }
+	}
+  }
+}
+

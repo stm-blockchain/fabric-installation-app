@@ -99,6 +99,7 @@ module.exports = {
             await req.installation.runBasicCmd(`Register org admin`, req.caNode.generateOrgAdminRegisterCommand());
             await req.installation.runBasicCmd(`Enroll org admin`, req.caNode.generateOrgAdminEnrollCommand());
             await req.installation.runBasicCmd(`Copy config`, `cp ${process.env.FABRIC_CFG_PATH}/config.yaml ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp`);
+            await req.installation.runBasicCmd(`Copy config`, `mv ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp/keystore/*_sk ${req.caNode.BASE_PATH}/fabric-ca/client/org-ca/${req.caNode.adminName}/msp/keystore/key.pem`);
             req.logger.log({level: 'info', message: 'Org Admin register & enroll successful'});
             next();
         } catch (e) {
@@ -183,6 +184,21 @@ module.exports = {
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR REGISTERING USER TO ${caNode.name}`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+
+    async createAdminWallet(req, res, next) {
+        try {
+            req.logger.log({level: 'info', message: `ORG Ca Admin wallet creation started`});
+            await req.installation.createWallet(`Admin`, req.caNode.orgName, `org-ca/org-admin/msp`);
+            req.logger.log({level: 'info', message: `ORG Ca Admin wallet creation successful`});
+            next();
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR CA CONTROLLER ADMIN WALLET CREATION`, e);
                 next(wrappedError);
             }
             next(e);

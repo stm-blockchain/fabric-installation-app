@@ -61,6 +61,12 @@ class FaultyReqBodyError extends BaseError {
     }
 }
 
+class WalletCreationError extends BaseError {
+    constructor(message, cause) {
+        super(message, cause);
+        this.name = `Wallet Creation Error`;
+    }
+}
 
 module.exports = {
     BaseError: BaseError,
@@ -71,5 +77,6 @@ module.exports = {
     FolderStructureError: FolderStructureError,
     CommandGenerationError: CommandGenerationError,
     GenericError: GenericError,
-    FaultyReqBodyError: FaultyReqBodyError
+    FaultyReqBodyError: FaultyReqBodyError,
+    WalletCreationError: WalletCreationError
 }

@@ -1,4 +1,5 @@
 const childProcess = require("child_process");
+const path = require('path');
 const util = require("util");
 const exec = util.promisify(childProcess.exec);
 const CaNode = require(`../CaNode`);
@@ -7,6 +8,7 @@ const Errors = require(`../error`);
 const fileManager = require("../files");
 const FabricCommandGenerator = require(`./FabricCommandGenerator`);
 const { CHAINCODE_STATES } = require(`../Utils`)
+const { Wallets } = require('fabric-network');
 
 let dockerNetworkExists = false
 let logger;
@@ -398,6 +400,29 @@ function _getChaincodePackageNames() {
     }
 }
 
+async function _createWallet(userName, orgName, relativeMspPath) {
+    try {
+        const credPath = `${process.env.HOME}/ttz/${orgName}/fabric-ca/client/${relativeMspPath}`
+        let newWallet = await Wallets.newFileSystemWallet(`${process.env.HOME}/ttz/${orgName}/credentials/Wallet`);
+
+        const cert = fileManager.readFile(path.join(credPath, 'signcerts', 'cert.pem')).toString();
+        const key = fileManager.readFile(path.join(credPath, 'keystore', 'key.pem')).toString();
+
+        const identityLabel = userName;
+        const identity = {
+            credentials: {
+                certificate: cert,
+                privateKey: key,
+            },
+            mspId: orgName,
+            type: 'X.509',
+        };
+        await newWallet.put(identityLabel, identity);
+    } catch (e) {
+        throw Errors.WalletCreationError(`ERROR CREATING WALLET FOR USER: ${userName}`, e);
+    }
+}
+
 function _setLogger(loggerInstance) {
     logger = loggerInstance;
 }
@@ -481,7 +506,7 @@ module.exports = class Installation {
 
     caInitFolderPrep(node) {
         let paths = [`${node.BASE_PATH}/channels`,
-            `${node.BASE_PATH}/credentials/Wallet`,
+            `${node.BASE_PATH}/credentials`,
             `${node.BASE_PATH}/fabric-ca/server/tls-ca/crypto/`,
             `${node.BASE_PATH}/fabric-ca/server/org-ca/crypto/`,
             `${node.BASE_PATH}/fabric-ca/server/org-ca/tls/`,
@@ -513,5 +538,9 @@ module.exports = class Installation {
 
     async enrollUser(caConfig, userConfig) {
         return _enrollRemotePeer(caConfig, userConfig);
+    }
+
+    async createWallet(userName, orgName, relativeMspPath) {
+        return _createWallet(userName, orgName, relativeMspPath);
     }
 }
