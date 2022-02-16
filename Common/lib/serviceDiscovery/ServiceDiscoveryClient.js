@@ -103,7 +103,7 @@ async function _getSuitableTargetList(orgName) {
 
     const others = discoverers.filter(async (element) => {
         return element.orgName === orgName &&
-            await element.discoverer.checkConnection();
+            await _checkDiscovererConnection(element.discoverer);
     });
 
     return others;
@@ -133,7 +133,7 @@ function _checkDsExists(channelName) {
 }
 
 async function _checkDiscovererConnection(discoverer) {
-    return await discoverer.checkConnection(false);
+    return await discoverer.checkConnection(true);
 }
 
 async function _createDiscoveryService(channelName) {

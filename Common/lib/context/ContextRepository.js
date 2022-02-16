@@ -1,5 +1,6 @@
 const CaNode = require("../CaNode");
 const PeerNode = require("../PeerNode");
+const RemotePeerNode = require("../RemotePeerNode");
 const OrdererNode = require("../OrdererNode");
 const ContextDao = require(`./ContextDao`);
 const db = require("../db");
@@ -53,13 +54,20 @@ function _loadNodeObjects(nodes) {
     });
 
     nodes.peerNodes.forEach(peerNode => {
-        PEER_NODES.push(new PeerNode(peerNode.name, peerNode.secret, peerNode.org_name,
-            peerNode.port, peerNode.csr_hosts, peerNode.external_ip, peerNode.internal_ip, {
-                host: peerNode.couchdb_host,
-                port: peerNode.couchdb_port,
-                username: peerNode.couchdb_username,
-                password: peerNode.couchdb_password
-            }));
+        let builtPeer;
+        if (peerNode.secret === RemotePeerNode.REMOTE_INDICATOR) {
+            builtPeer = new RemotePeerNode(peerNode.name, peerNode.org_name, peerNode.host,
+                peerNode.port);
+        } else {
+            builtPeer = new PeerNode(peerNode.name, peerNode.secret, peerNode.org_name,
+                peerNode.port, peerNode.csr_hosts, peerNode.external_ip, peerNode.internal_ip, {
+                    host: peerNode.couchdb_host,
+                    port: peerNode.couchdb_port,
+                    username: peerNode.couchdb_username,
+                    password: peerNode.couchdb_password
+                });
+        }
+        PEER_NODES.push(builtPeer);
     });
 
     nodes.ordererNodes.forEach(ordererNode => {

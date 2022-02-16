@@ -459,7 +459,7 @@ module.exports = class Installation {
     }
 
     createCliEnv(peerNode) {
-        if (!peerNode || !(peerNode instanceof PeerNode)) {
+        if (!peerNode || !(peerNode instanceof PeerNode) || !(peerNode instanceof RemotePeerNode)) {
             throw new Errors.NodeTypeError(`CLI ENV ERROR: Given object is not an instance of PeerNode`, new Error());
         }
 

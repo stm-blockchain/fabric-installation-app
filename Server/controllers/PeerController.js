@@ -1,4 +1,4 @@
-const {PeerNode, CaNode, Errors} = require("../../Common/index");
+const {PeerNode, RemotePeerNode, CaNode, Errors} = require("../../Common/index");
 
 module.exports = {
     async buildPeerNode(req, res, next) {
@@ -23,6 +23,24 @@ module.exports = {
         } catch (e) {
             if (!(e instanceof Errors.BaseError)) {
                 const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER BUILD PEER NODE`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
+    async buildRemotePeerNode(req, res, next) {
+        if (req.hasOwnProperty('peerNode') && req.peerNode !== null) next();
+        try {
+            req.logger.log({level: 'info', message: 'Building RemotePeerNode'});
+            req.peerNode = new RemotePeerNode(req.body.peerName,
+                req.body.orgName, req.body.host, parseInt(req.body.port));
+            req.peerNode.logger = req.logger;
+            req.peerNode.folderPrep();
+            req.logger.log({level: 'info', message: 'Successfully built RemotePeerNode'});
+            next();
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER BUILD REMOTE PEER NODE`, e);
                 next(wrappedError);
             }
             next(e);

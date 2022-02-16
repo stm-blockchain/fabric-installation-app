@@ -54,6 +54,10 @@ module.exports = (app, context) => {
         PeerController.startPeer,
         PeerController.updateContext)
 
+    app.post('/addRemotePeer',
+        PeerController.buildRemotePeerNode,
+        PeerController.updateContext)
+
     app.post('/channels',
         PeerController.getPeer,
         PeerController.setUpCliEnv,
