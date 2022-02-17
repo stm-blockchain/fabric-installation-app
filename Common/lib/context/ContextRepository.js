@@ -31,6 +31,7 @@ function _updateContextObject(node) {
                 CA_NODES.orgCaNode = node;
             break;
         case PeerNode:
+        case RemotePeerNode:
             PEER_NODES.push(node);
             break;
         case OrdererNode:
