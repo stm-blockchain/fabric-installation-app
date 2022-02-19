@@ -167,12 +167,28 @@ module.exports = {
             next(e);
         }
     },
+    async setBlockPath(res, req, next) {
+        try {
+            let blockPath;
+            if (req.peerNode && req.peerNode instanceof PeerNode) {
+                blockPath = `${req.peerNode.BASE_PATH}/peers/${req.peerNode.name}/${req.body.channelName}.genesis.block`
+            } else if (req.peerNode && req.peerNode instanceof RemotePeerNode) {
+                blockPath = `${req.peerNode.BASE_PATH}/peers/remote/${req.peerNode.name}/${req.body.channelName}.genesis.block`
+            }
+            req.blockPath = blockPath;
+            next();
+        } catch (e) {
+            if (!(e instanceof Errors.BaseError)) {
+                const wrappedError = new Errors.GenericError(`ERROR PEER CONTROLLER SET BLOCK PATH`, e);
+                next(wrappedError);
+            }
+            next(e);
+        }
+    },
     async fetchGenesisBlock(req, res, next) {
         try {
             req.logger.log({level: 'info', message: 'Fetching genesis block'});
-            const blockPath = `${req.peerNode.BASE_PATH}/peers/${req.peerNode.name}/${req.body.channelName}.genesis.block`
-            await req.installation.fetchGenesisBlock(req.peerNode, req.body.ordererConfig, req.body.channelName, blockPath)
-            req.blockPath = blockPath;
+            await req.installation.fetchGenesisBlock(req.peerNode, req.body.ordererConfig, req.body.channelName, req.blockPath)
             req.logger.log({level: 'info', message: 'Genesis block fetched successfully'});
             next();
         } catch (e) {
