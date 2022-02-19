@@ -4,6 +4,7 @@ const util = require("util");
 const exec = util.promisify(childProcess.exec);
 const CaNode = require(`../CaNode`);
 const PeerNode = require(`../PeerNode`);
+const RemotePeerNode = require('../RemotePeerNode');
 const Errors = require(`../error`);
 const fileManager = require("../files");
 const FabricCommandGenerator = require(`./FabricCommandGenerator`);
