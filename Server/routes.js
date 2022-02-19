@@ -74,6 +74,7 @@ module.exports = (app, context) => {
     app.post(`/joinChannel`,
         PeerController.getPeer,
         PeerController.setUpCliEnv,
+        PeerController.setBlockPath,
         PeerController.fetchGenesisBlock,
         PeerController.joinChannel)
 
