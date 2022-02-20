@@ -1,3 +1,5 @@
+# A shell script to automate the basic flow of the app in a local environment
+
 printf "\nCreate Org1"
 printf "\nTLS Init"
 curl --header "Content-Type: application/json" --request POST \
