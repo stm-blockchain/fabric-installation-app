@@ -1,3 +1,5 @@
+## Shell script to make an orderer create a channel
+
 export BASE_PATH=/home/ttz/ttz/Org1
 
 export FABRIC_CFG_PATH=/home/ttz/fabric/config
