@@ -74,7 +74,7 @@ apt-cache madison docker-ce
 
 You should something like below this
 
-![ubuntu-docker-output](docker-version-out.png)
+![ubuntu-docker-output](docs/images/docker-version-out.png)
 
 Select the version you wish to install and run the command like this
 
@@ -108,7 +108,7 @@ sudo yum list docker-ce --showduplicates | sort -r
 
 You should see something like below
 
-![rhel-docker-output](docker-ce-redhat.png)
+![rhel-docker-output](docs/images/docker-ce-redhat.png)
 
 And to install Docker 20.10.8 use the below command
 
@@ -157,7 +157,7 @@ pm2 logs docker-check --lines 1000 --nostream
 
 Check the logs and make sure everything is working. Below the last a few lines of a successful execution;
 
-![docker-check](docker-check.png)
+![docker-check](docs/images/docker-check.png)
 
 ###### Troubleshoot
 If you run into any problems please make sure you follow the steps below first and then try again the 
@@ -233,6 +233,68 @@ peer version
 ```
 
 Expexted Output 
-![peer-output](peer.png)
+
+![peer-output](docs/images/peer.png)
 
 ## Running The App
+1. **Port Check**
+
+   Since the ports 5000 and 8080 will be used by the system by default 
+you better make sure they are not being used by any other processes. 
+Also you have to make sure that any other 
+ports you will use for orderers, peers, ca nodes etc. will be empty too.
+You can use the below command to check if a port is being used or not;
+     1. ```shell
+           # Do this for all of the ports you will use 
+           sudo ss -lptn 'sport = :5000' 
+        ```
+        Expected Output 
+        
+        ![port-check](docs/images/port-check.png)
+
+
+2. **Start Backend Service**
+   1. ```shell
+      cd fabric-installation-app  
+      ```
+   2. ```shell
+      # You should have been installed dependencies for Common/ during the Docker Check phase above 
+      npm i Server/  
+      ```   
+   3. ```shell
+      pm2 start --only ttz-installation-server  
+      ```
+      In order for above command to work you should be in the same folder as `ecosystem.config.js` file
+    
+   4. Check Logs
+      ```shell
+      pm2 logs ttz-installation-server --lines 1000   
+      ```
+      Expected Output
+      ```
+      .
+      .
+      .
+      Listening: http://localhost:5000
+      ```
+      
+3. **Start Client App**
+   1. ```shell
+      cd fabric-installation-app/Client  
+      ```
+   2. ```shell
+      npm run build
+      ```
+   3. Serve dist/ file via nginx
+      4. Sample nginx server configuration( the one used during tests )
+         ```text
+         server {
+            listen       8080;
+            server_name  localhost;
+            root /usr/share/nginx/ttz-install-client/dist;
+            location / {
+            }
+         }
+         ```
+         
+4. **Go to http://localhost:8080 from Google Chrome**
